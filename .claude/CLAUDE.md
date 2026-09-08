@@ -92,8 +92,15 @@ TC를 바꾸면 연결된 테스트의 어설션이 여전히 기대결과와 �
 
 ## 알려진 기술부채 (정리 대상)
 
-- `pages/payment_page.py` `filling_address()`: `self.city.fill(state)` → `self.state.fill(state)` 버그. state 필드가 안 채워지는데 테스트가 통과 → TC-PAY 커버리지 구멍.
-- `pages/payment_page.py`: `button1/button2/button3`가 모두 동일 셀렉터. 의미 기반 이름으로 분리 필요.
-- `conftest.py`: `cart_ready` fixture의 `yield` 뒤 `return page`는 도달 불가.
-- `product_search_test.py`, `add_to_cart_test.py`: 셀렉터가 테스트 본문에 흩어짐. POM으로 집약 필요.
 - `utils/`: 비어 있음.
+- `pages/catalog_page.py` `CartPage.remove_buttons`: 장바구니 행 삭제 버튼에 앱이 `data-test`를 안 줘서 `a.btn.btn-danger` 클래스 셀렉터 사용 중.
+- 결제 `checkPayment()`(앱): 첫 Confirm 클릭 시 `of(this.state)`(undefined)를 반환 → 상황에 따라 Confirm 2회가 필요할 수 있음. **real-bug 후보** — 재현되면 수리하지 말고 보고.
+- Billing Address: 로그인 사용자 주소 자동채움(`getDetails`) + 우편번호 자동조회가 폼 입력과 race. 현재는 `wait_for_load_state("networkidle")` + 로딩 대기로 우회.
+
+### 정리 완료 (2026-09-08, PR #2)
+
+- ~~`filling_address()` `self.city.fill(state)` 버그~~ → 수정, `fill_billing_address()`로 이름 변경.
+- ~~`button1/button2/button3` 동일 셀렉터~~ → `proceed_from_cart/signin/address` + `[data-test="proceed-1/2/3"]`.
+- ~~`conftest.py` 도달 불가 `return page`~~ → 제거.
+- ~~`product_search_test.py`, `add_to_cart_test.py` 셀렉터 흩어짐~~ → `pages/catalog_page.py`로 집약.
+- ~~`login_page.login()`이 실패 케이스에도 `/account` URL 대기~~ → `submit()`/`login()` 분리.

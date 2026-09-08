@@ -11,25 +11,26 @@ def test_landing_page(page):
 # 도메인 없는 잘못된 이메일 형식
 @pytest.mark.tc("QA-02")
 def test_invalid_email_format(login_page):
-    login_page.login("customer2", "welcome01")
+    login_page.submit("customer2", "welcome01")
 
-    expect(login_page.page.locator("#email-error")).to_be_visible()
+    expect(login_page.email_error).to_be_visible()
     expect(login_page.page.get_by_text("Email format is invalid")).to_be_visible()
+
 
 # 도메인 포함 잘못된 이메일 형식
 @pytest.mark.tc("QA-03")
 def test_invalid_email(login_page):
-    login_page.login("customer23@practicesoftwaretesting.com", "welcome01")
+    login_page.submit("customer23@practicesoftwaretesting.com", "welcome01")
 
-    expect(login_page.page.locator('[data-test="login-error"]')).to_be_visible()
+    expect(login_page.login_error).to_be_visible()
     expect(login_page.page.get_by_text("Invalid email or password")).to_be_visible()
 
 
 @pytest.mark.tc("QA-04")
 def test_invalid_password(login_page):
-    login_page.login("customer2@practicesoftwaretesting.com", "welcome02")
+    login_page.submit("customer2@practicesoftwaretesting.com", "welcome02")
 
-    expect(login_page.page.locator('[data-test="login-error"]')).to_be_visible()
+    expect(login_page.login_error).to_be_visible()
     expect(login_page.page.get_by_text("Invalid email or password")).to_be_visible()
 
 
