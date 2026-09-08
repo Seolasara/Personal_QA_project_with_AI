@@ -66,6 +66,13 @@ automation:
 - Page Object의 속성 이름은 의미 기반으로 (`proceed_from_cart`, `billing_postcode`). `button1/button2` 금지.
 - fixture는 `conftest.py`. cleanup은 `yield` 뒤에.
 
+## Confluence 연동
+
+- `.mcp.json`에 Atlassian 공식 Remote MCP 서버 등록됨 (`https://mcp.atlassian.com/v2/mcp`, OAuth).
+- 최초 사용: Claude Code에서 `/mcp` → `atlassian` → Authenticate (브라우저 OAuth).
+- 동기화 방향: **원본은 `testcases/*.md`.** `/tc-sync push`로 Confluence에 발행, `/tc-sync pull`로 Confluence 스펙 변경을 repo에 반영(자동 수리 금지, `needs-review` 표시).
+- CI 헤드리스에서는 OAuth 불가 → CI는 Confluence를 건드리지 않는다. 나중에 필요하면 API 토큰 + Confluence REST를 별도 시크릿으로.
+
 ## 에이전트 가드레일 (중요)
 
 - 실패는 반드시 **먼저 분류**한다: `real-bug` / `selector-drift` / `timing` / `spec-change` / `test-bug`.
