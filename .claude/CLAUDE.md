@@ -16,7 +16,8 @@
 |---|---|
 | `testcases/*.md` | TC 원본. yaml frontmatter + 마크다운 본문. **이게 원본, Confluence는 렌더 뷰.** |
 | `testplan.md` | 테스트 플랜 |
-| `traceability.md` | TC ↔ 테스트 노드ID 매트릭스 (마커 스캔으로 생성) |
+| `traceability.md` | TC ↔ 테스트 노드ID 매트릭스 (마커 스캔으로 생성, 직접 편집 금지) |
+| `scripts/` | 유지보수 스크립트 (`gen_traceability.py` 등) |
 | `playwright-demo/` | pytest + Playwright 스크립트. **pytest는 이 디렉토리를 rootdir로 실행.** |
 | `playwright-demo/pages/` | Page Object. 셀렉터는 전부 여기 모은다. |
 | `playwright-demo/tests/` | 테스트. 셀렉터를 테스트 본문에 직접 쓰지 않는다. |
@@ -30,6 +31,7 @@ cd playwright-demo
 source .venv/bin/activate            # 또는 .venv/bin/pytest 직접 호출
 pytest                               # 전체
 pytest -m smoke                      # PR 게이트용 빠른 서브셋
+pytest -m tc                         # TC 연결된 테스트만
 pytest tests/payment_test.py -k checkout
 ```
 
@@ -39,24 +41,30 @@ pytest tests/payment_test.py -k checkout
 
 ## TC 포맷
 
+`testcases/QA-NN.md` — ID는 Confluence "Test Case 설계" 표(page 360539)와 맞춰 `QA-01` ~ 유지.
+
 ```markdown
 ---
-id: TC-PAY-001
-title: Cash on Delivery 결제 완료
-priority: P1            # P0~P3
-component: payment
-confluence_page_id: <page id>          # sync 대상 (없으면 미발행)
+id: QA-12
+title: Confirm 버튼 클릭 시 결제 완료 확인
+priority: P1            # P1(상) / P2(중) / P3(하)
+component: payment     # main | login | product | cart | payment | logout
+confluence_page_id: 360539            # sync 대상 (없으면 미발행)
 automation:
   status: automated                   # automated | manual | planned
   test: playwright-demo/tests/payment_test.py::test_payment_checkout
 ---
-## 사전조건
+## 조건
 - ...
 ## 스텝
 1. <행동> → <기대결과>
+## 비고
+- ...
 ```
 
-테스트 쪽에서 `@pytest.mark.tc("TC-PAY-001")`로 역참조한다. TC를 바꾸면 연결된 테스트의 어설션이 여전히 기대결과와 맞는지 확인한다.
+테스트 쪽에서 `@pytest.mark.tc("QA-12")`로 역참조한다. `python scripts/gen_traceability.py`로
+`traceability.md`를 재생성하며, frontmatter의 `test`와 실제 마커가 어긋나면 non-zero로 종료한다(CI 게이트).
+TC를 바꾸면 연결된 테스트의 어설션이 여전히 기대결과와 맞는지 확인한다.
 
 ## Playwright 컨벤션
 
@@ -84,8 +92,15 @@ automation:
 
 ## 알려진 기술부채 (정리 대상)
 
-- `pages/payment_page.py` `filling_address()`: `self.city.fill(state)` → `self.state.fill(state)` 버그. state 필드가 안 채워지는데 테스트가 통과 → TC-PAY 커버리지 구멍.
-- `pages/payment_page.py`: `button1/button2/button3`가 모두 동일 셀렉터. 의미 기반 이름으로 분리 필요.
-- `conftest.py`: `cart_ready` fixture의 `yield` 뒤 `return page`는 도달 불가.
-- `product_search_test.py`, `add_to_cart_test.py`: 셀렉터가 테스트 본문에 흩어짐. POM으로 집약 필요.
 - `utils/`: 비어 있음.
+- `pages/catalog_page.py` `CartPage.remove_buttons`: 장바구니 행 삭제 버튼에 앱이 `data-test`를 안 줘서 `a.btn.btn-danger` 클래스 셀렉터 사용 중.
+- 결제 `checkPayment()`(앱): 첫 Confirm 클릭 시 `of(this.state)`(undefined)를 반환 → 상황에 따라 Confirm 2회가 필요할 수 있음. **real-bug 후보** — 재현되면 수리하지 말고 보고.
+- Billing Address: 로그인 사용자 주소 자동채움(`getDetails`) + 우편번호 자동조회가 폼 입력과 race. 현재는 `wait_for_load_state("networkidle")` + 로딩 대기로 우회.
+
+### 정리 완료 (2026-09-08, PR #2)
+
+- ~~`filling_address()` `self.city.fill(state)` 버그~~ → 수정, `fill_billing_address()`로 이름 변경.
+- ~~`button1/button2/button3` 동일 셀렉터~~ → `proceed_from_cart/signin/address` + `[data-test="proceed-1/2/3"]`.
+- ~~`conftest.py` 도달 불가 `return page`~~ → 제거.
+- ~~`product_search_test.py`, `add_to_cart_test.py` 셀렉터 흩어짐~~ → `pages/catalog_page.py`로 집약.
+- ~~`login_page.login()`이 실패 케이스에도 `/account` URL 대기~~ → `submit()`/`login()` 분리.
