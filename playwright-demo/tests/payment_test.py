@@ -1,7 +1,9 @@
+import pytest
 from playwright.sync_api import expect
 from pages.payment_page import PaymentPage
 
 
+@pytest.mark.tc("QA-11")
 def test_checkout_button(cart):
     payment = PaymentPage(cart)
 
@@ -41,6 +43,7 @@ def test_checkout_button(cart):
     expect(payment.confirm).to_be_enabled()
 
 
+@pytest.mark.tc("QA-12")
 def test_payment_checkout(cart):
     payment = PaymentPage(cart)
 

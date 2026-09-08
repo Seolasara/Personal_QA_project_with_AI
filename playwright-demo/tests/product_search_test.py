@@ -1,7 +1,9 @@
 import re
+import pytest
 from playwright.sync_api import expect
 
 
+@pytest.mark.tc("QA-07")
 def test_product_checkbox(loggedin_home):
     page = loggedin_home
 
@@ -12,6 +14,7 @@ def test_product_checkbox(loggedin_home):
     expect(page.get_by_role("checkbox", name="Hammer")).to_be_checked()
 
 
+@pytest.mark.tc("QA-08")
 def test_product_get(loggedin_home):
     page = loggedin_home
 

@@ -1,6 +1,9 @@
 import re
+import pytest
 from playwright.sync_api import expect
 
+
+@pytest.mark.tc("QA-09")
 def test_cart_button(cart_ready):
     page = cart_ready
     # 장바구니 버튼 활성화 확인
@@ -12,6 +15,7 @@ def test_cart_button(cart_ready):
     expect(page.get_by_label("Product added to shopping cart.")).to_be_visible()
 
 
+@pytest.mark.tc("QA-10")
 def test_cart_check(cart_ready):
     page = cart_ready
     # 수량 1개 이상 확인
