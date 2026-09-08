@@ -1,0 +1,11 @@
+# 직접 사용하는 패키지만 최상위에 둠. 나머지는 전이 의존성.
+playwright==1.62.0
+pytest==9.1.1
+pytest-playwright==0.9.0
+pytest-base-url==2.1.0
+pytest-json-report==1.5.0
+
+# 설치:
+#   python3 -m venv .venv && source .venv/bin/activate
+#   pip install -r requirements.txt
+#   playwright install chromium
