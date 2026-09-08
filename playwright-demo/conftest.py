@@ -21,10 +21,16 @@ def pytest_runtest_makereport(item, call):
     """
     outcome = yield
     report = outcome.get_result()
-    if report.when != "call" or not report.failed:
+    # call 실패 + fixture(setup) 실패 모두 대상
+    if report.when not in ("call", "setup") or not report.failed:
         return
 
-    page = item.funcargs.get("page")
+    # setup 도중 실패면 funcargs 가 아직 없을 수 있음 → best effort.
+    # 그 경우 pytest-playwright 의 trace.zip(retain-on-failure)이 폴백.
+    try:
+        page = item.funcargs.get("page")
+    except Exception:
+        page = None
     if page is None:
         return
 
