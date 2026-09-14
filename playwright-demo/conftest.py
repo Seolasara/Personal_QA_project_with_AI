@@ -10,6 +10,14 @@ HOME_URL = "https://practicesoftwaretesting.com"
 SNAPSHOT_DIR = Path(__file__).parent / "test-results" / "dom-snapshots"
 
 
+def pytest_html_results_table_header(cells):
+    cells.insert(1, "<th>TC</th>")
+
+
+def pytest_html_results_table_row(report, cells):
+    cells.insert(1, f"<td>{getattr(report, 'tc_id', '') or ''}</td>")
+
+
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     """테스트 실패 시 DOM 스냅샷을 남긴다 (에이전트 triage/수리 입력용).
@@ -21,6 +29,11 @@ def pytest_runtest_makereport(item, call):
     """
     outcome = yield
     report = outcome.get_result()
+
+    # TC 마커를 리포트에 실어 pytest-html 표의 TC 컬럼에 노출
+    marker = item.get_closest_marker("tc")
+    report.tc_id = marker.args[0] if marker else ""
+
     # call 실패 + fixture(setup) 실패 모두 대상
     if report.when not in ("call", "setup") or not report.failed:
         return

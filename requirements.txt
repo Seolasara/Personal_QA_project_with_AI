@@ -4,7 +4,8 @@ pytest==9.1.1
 pytest-playwright==0.9.0
 pytest-base-url==2.1.0
 pytest-json-report==1.5.0
-pyyaml==6.0.3          # scripts/gen_traceability.py 등
+pytest-html==4.2.0     # test-results/report.html
+pyyaml==6.0.3          # scripts/gen_traceability.py, gen_test_report.py 등
 
 # 설치 (venv 는 playwright-demo/.venv 하나만 사용):
 #   cd playwright-demo

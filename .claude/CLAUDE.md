@@ -37,6 +37,9 @@ pytest tests/payment_test.py -k checkout
 
 - 실패 시 `test-results/`에 trace(zip)와 스크린샷이 남는다.
 - 머신리더블 결과: `test-results/report.json` (pytest-json-report).
+- 사람이 보는 결과: `test-results/report.html` (pytest-html, TC 컬럼 포함) +
+  `python scripts/gen_test_report.py` 로 생성하는 `test-results/test-report.md`
+  (TC별 pass/fail 표 + 실패 상세). 테스트플랜의 "Test 결과" 단계 산출물.
 - 의존성: `requirements.txt` + `playwright install chromium`. playwright 버전은 핀 고정.
 
 ## TC 포맷
