@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 
+from config import TOOLSHOP_EMAIL, TOOLSHOP_PASSWORD
 from pages.catalog_page import CatalogPage, ProductDetailPage
 from pages.login_page import LoginPage
 
@@ -83,7 +84,7 @@ def login_page(page):
 
 @pytest.fixture
 def loggedin_home(login_page):
-    login_page.login("customer2@practicesoftwaretesting.com", "welcome01")
+    login_page.login(TOOLSHOP_EMAIL, TOOLSHOP_PASSWORD)
     login_page.page.get_by_title("Practice Software Testing - Toolshop").click()
     return login_page.page
 

@@ -17,6 +17,7 @@ trace/
 *.webm
 
 # 로컬 시크릿
+.env
 .env.local
 *.secret
 
