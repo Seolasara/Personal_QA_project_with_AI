@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "confluence": {
+      "command": "/Users/sara/Documents/ai 연습/Personal QA Project/playwright-demo/.venv/bin/python",
+      "args": [
+        "/Users/sara/Documents/ai 연습/Personal QA Project/.agents/plugins/confluence_mcp.py"
+      ]
+    }
+  }
+}
+
