@@ -3,6 +3,18 @@
     "atlassian": {
       "type": "http",
       "url": "https://mcp.atlassian.com/v2/mcp"
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ],
+      "env": {}
+    },
+    "jira": {
+      "type": "http",
+      "url": "https://mcp.atlassian.com/v2/mcp"
     }
   }
 }

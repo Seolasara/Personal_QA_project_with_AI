@@ -1,35 +1,76 @@
 # Personal QA Project
+개인 테스트 경험 + AI 에이전트 + LLM judge 점검을 하나로 묶은 AI assisted QA 워크플로우 설계 프로젝트.
 
-개인 QA 프로세스 + QA AI 에이전트 + LLM judge 평가를 하나로 묶은 프로젝트.
-테스트 대상은 공개 데모 사이트 <https://practicesoftwaretesting.com> (Toolshop).
+## QA 대상 서비스
+- URL: https://practicesoftwaretesting.com
+- 기획/스펙: https://github.com/testsmith-io/practice-software-testing
 
-## 목적
-1. QA 하고자하는 대상 서비스의 기획 문서와 요구사항을 분석하여 QA 프로세스를 수립한다.
-2. 테스트케이스(TC)를 코드로 관리하고 Confluence와 동기화한다.
-3. Playwright(pytest) UI 자동화 스크립트를 유지한다.
-4. pytest 프레임워크로 API requests 스크립트를 유지한다.
-5. 에이전트가 QA 프로세스의 개선점을 분석하고 제안한다.
-6. 에이전트가 테스트 실패를 분류(triage)하고, 스펙/셀렉터 변경으로 인한 실패를 수리한다.
-7. LLM judge가 에이전트의 수리 결과를 채점한다.
+## 목표
+1. QA 대상 서비스의 기획 문서와 요구사항을 분석하여 AI와 함께 QA 프로세스를 수립한다.
+2. AI QA 에이전트를 활용하여 반복 작업을 자동화하고, 리스트 예방 중심의 품질 관리를 위한 워크플로우를 설계한다.
+   - 에이전트가 테스트 실패를 분류하고 스펙, 셀렉터 변경으로 인한 실패를 수리하며, LLM judge가 수리 결과를 채점한다.
+3. 생성된 산출물을 체계적으로 관리하고 식별한 이슈의 중요도를 분류하여 지속적으로 추적, 모니터링한다.
+4. 프로세스를 지속적으로 개선하여 안정적인 QA 워크플로우를 완성시킨다.
 
-## 저장소 구조
-- `playwright-demo/` — UI 자동화(Playwright/pytest). 컨벤션은 [playwright-demo/CLAUDE.md](playwright-demo/CLAUDE.md).
-- `testcases/` — TC 원본(마크다운) + Confluence 동기화. 규칙은 [testcases/CLAUDE.md](testcases/CLAUDE.md).
-- `scripts/` — 리포트/트레이서빌리티 생성, CI 게이트 스크립트. 규칙은 [scripts/CLAUDE.md](scripts/CLAUDE.md).
-- `.agents/plugins/` — Confluence MCP 서버(자격증명 취급). **Gemini/Antigravity 전용** — Claude Code(`.mcp.json`)에는 등록하지 않는다.
-  규칙은 [.agents/CLAUDE.md](.agents/CLAUDE.md) — **변경 전 반드시 확인** (수정하면 Gemini 쪽에도 영향).
+## 규칙 문서와 폴더
+- 계층: 전역 `~/.claude/CLAUDE.md`(모든 프로젝트 공통) > 이 파일(프로젝트 공통) > 테스트 종류별 폴더 `CLAUDE.md` > 서브에이전트(`.claude/agents/`)와 스킬(`.claude/skills/`)
+  - 위 계층의 내용을 아래 계층에 다시 쓰지 않는다. 한 테스트 종류에만 해당하면 그 폴더 `CLAUDE.md`에, 한 역할이나 작업에만 해당하면 그 에이전트나 스킬에 쓴다.
+- 테스트 종류별 폴더(현재 두 종류)
+  - [playwright-demo/CLAUDE.md](playwright-demo/CLAUDE.md): UI e2e(Playwright, pytest)
+  - [api-demo/CLAUDE.md](api-demo/CLAUDE.md): API(httpx, pytest)
+- `.claude/` 폴더
+  - `agents/`: 서브에이전트 정의와 역할 행동 지침
+  - `skills/`: `/이름`으로 실행하는 작업 절차와 그 작업의 규칙. 스킬 폴더 안의 SKILL.md 하나에 둔다.
+  - `guides/`: 산출물 작성 형식(백로그, Jira 이슈). 쓰는 단계에서만 읽는다.
+  - `docs/`: 참고 자료. 기능 스펙(`specs/v5/`), 스펙 분석(`spec analysis/`), 백로그(`backlog/`), 설계 문서, 문서 지도(`README.md`)
+  - `.claude/rules/`는 세션마다 자동으로 읽히므로 쓰지 않는다.
+- `scripts/`: 점검과 리포트 스크립트. 시트와 네트워크를 직접 읽지 않고 로컬 파일(CSV, JSON, md)만 처리한다.
+- 어떤 작업에 어떤 문서와 스크립트를 쓰는지는 `.claude/docs/README.md`(문서 지도)에 있다. 위치를 모르면 먼저 본다.
 
-## 에이전트 가드레일 (중요)
-- 변경 전 관련 파일을 먼저 읽는다.
-- 큰 변경은 근거를 포함하여 계획을 **먼저 제안**하고 진행 여부를 묻는다. 
-- 에이전트는 사용자 허락이 있을 때만 **draft PR만** 생성한다. main 직접 push·머지·auto-merge 금지.
-- pr/커밋 생성 시 **무엇을, 왜** 바꾸는지 변경 의도와 범위를 명확히 한다.
-- 실패는 반드시 **먼저 분류**한다: `real-bug` / `selector-drift` / `timing` / `spec-change` / `test-bug`.
-- **`real-bug`로 분류되면 코드를 수정하지 않는다.** 이슈/PR에 근거와 함께 보고만 한다.
-- 수리 시 **금지**: 어설션 삭제·약화, `wait_for_timeout` 추가/증량, `skip`/`xfail` 마킹, 검증 셀렉터를 항상 존재하는 것으로 바꿔치기.
-- judge는 항상 **별도 세션**에서 실행한다 (수리 에이전트의 대화 맥락을 물려주지 않는다).
-- CI 헤드리스에서는 Confluence(MCP OAuth)를 건드리지 않는다. repo 수정 + PR까지만.
-- 민감 정보, 토큰, 운영 설정은 출력하지 않는다.
+## 판단 기준
+- 동작의 정답은 스펙이다. 스펙과 라이브가 다르면 스펙을 따르고, 불일치는 백로그에 올린다. 종류별 스펙 문서와 확인 순서는 각 폴더 `CLAUDE.md`에 있다.
+- 기능 요구사항(User Story, AC)은 `.claude/docs/specs/v5/00_index.md`에서 해당 기능 파일만 골라 읽는다. 기능 관련 작업 중 동작을 모르거나 판단이 필요하면 먼저 이 파일을 확인한다. 통째로 읽거나 기억으로 쓰지 않는다. 스펙에 없으면 라이브로 확인하고 안건으로 올린다.
+- 서비스 소스의 기준 변형은 `sprint5`다. 서비스 레포의 `sprint5-with-bugs` 같은 다른 변형은 분석, TC, 실패 분류의 기준으로 쓰지 않는다.
+- 서비스 소스 코드는 원인 추정의 근거로만 쓰고, 기대 동작의 근거로 쓰지 않는다.
+- 라이브 데이터 값(상품명, 가격, 건수, id, 시각)은 DB 리셋과 데이터 변경으로 바뀌므로 기대결과와 어설션에 고정값으로 쓰지 않는다. 스키마와 요청 조건에서 정해지는 관계(필터, 정렬, 단건-목록 일치)만 확인한다.
+- 라이브에서 확인한 사실은 확인 날짜와 함께 기록한다.
+- 확인하지 않은 것은 '추정' 또는 '후보'로 쓰고 확인 방법을 붙인다. 추측을 사실처럼 쓰지 않는다.
+- 이슈 중요도는 High/Medium/Low 3단계이고, 결함이 실제로 일으키는 영향으로 정한다. 기준은 `.claude/guides/issue-severity.md`에 있다.
+
+## 승인과 안전
+- 사용자 승인 지점: TC 확정, 전체 테스트 실행, Jira 등록(Notion "이슈 검수" DB 체크), wiki 게시, 커밋과 PR
+- 의미 있는 작업 하나(스킬이나 에이전트 완성, 스크립트 배치 통과, 문서 구조 변경)가 끝나면 커밋 단위와 메시지를 제안하고 승인받아 커밋한다. 세션 마무리 때 커밋 안 된 변경이 있으면 알린다.
+- 결제 확정, 계정 잠금(로그인 3회 실패) 같은 되돌릴 수 없는 동작은 하지 않고 보고한다.
+- 테스트가 만든 데이터는 테스트가 끝나면 정리한다. 방법은 각 폴더 `CLAUDE.md`에 있다.
+- 계정 값은 각 폴더의 `.env`에 있고, 계정별 용도는 각 폴더 `CLAUDE.md`에 있다.
+
+## 산출물과 위치
+- TC: 테스트 종류별 구글 시트. 주소는 각 폴더 `CLAUDE.md`에 있다.
+  - 테스트 하나가 TC 하나다. TC ID 접두어는 시트 탭과 같게 쓰고(현재 `UI_`, `API_`), 테스트에 시트 ID를 그대로 연결한다(pytest는 `@pytest.mark.tc("ID")`).
+  - 점검용 CSV는 `https://docs.google.com/spreadsheets/d/<파일 ID>/gviz/tq?tqx=out:csv&sheet=<탭>`으로 받는다.
+- 스펙 분석: `.claude/docs/spec analysis/ui|api/`. 실행 이력은 `analysis-log.md`와 Notion "Document-Analyzer 분석" DB.
+- 이슈 후보: `.claude/docs/backlog/`(인덱스 `00_index.md`, 형식 `.claude/guides/backlog-format.md`)
+- 리얼버그: Jira 프로젝트 `QA`, 이슈 유형 "버그"
+  - Notion "이슈 검수" DB(`collection://beb91aef-0900-4169-95f4-4bbbedc2d1fc`)에 후보를 "검수 대기"로 올리고, 승인 체크된 행만 Jira에 등록한 뒤 Jira 키를 적는다.
+  - 제목, 본문, 등록 전 중복 확인은 `.claude/guides/jira-issue-format.md`(샘플 QA-4), 레이블, 에픽, 증거 형식은 각 폴더 `CLAUDE.md`를 따른다.
+- 안건과 결과 보고서: Confluence
+  - 결과 보고서는 "Test Result Report"(11665420) 하위에 "Test Result Report (YYYY-MM-DD)"로 쓰고, 템플릿은 "Test result Report Template"(11632643)이다. BTS 섹션은 JQL 기반 이슈 목록 표로 채운다.
+- 작업 일지: Notion "QA AI Agent 업무 일지"(아래 "세션 마무리")
+
+## 실패 분류와 가드레일
+- 실패는 반드시 먼저 `test-triage` 스킬의 6분류로 분류한다. 결과 보고서에서는 4그룹으로 묶는다.
+  - 리얼버그: `real-bug` / 테스트버그: `test-bug`, `selector-drift`, `spec-change` / flaky: `timing`, `env`
+  - 안건: 스펙 불일치 중 에러 응답 정의가 없는 것, 스펙 예시값과 다른 것(백로그 불일치 유형 B, C: `.claude/guides/backlog-format.md`)
+- 리얼버그만 Jira에 올린다. 테스트버그와 flaky는 보고서에만 쓰고, 안건은 wiki 문서로 올린다.
+- **`real-bug`로 분류되면 코드를 수정하지 않는다.** 근거와 함께 보고만 한다.
+- 수리할 때 실패를 숨기지 않는다. 어설션 삭제·약화, `skip`, 임의 `xfail`을 금지한다. 백로그에 등록된 real-bug만 strict xfail로 고정할 수 있다(방법은 `script-write` 스킬의 "xfail 규칙"). 종류 전용 금지 항목은 각 폴더 `CLAUDE.md`에 있다.
+- judge는 항상 **별도 세션**에서 실행한다(수리 에이전트의 대화 맥락을 물려주지 않는다).
+- CI 헤드리스에서는 Confluence(MCP OAuth)를 건드리지 않는다. repo 수정과 PR까지만 한다.
+
+## 세션 마무리
+- 작업 일지 DB: Notion "QA AI Agent 업무 일지"(`collection://a4482c3b-9a5a-40f0-979c-6e8196b78770`, "AI Report" 페이지 하위).
+- 세션 이름은 `session-notes.md` 목록(sara/gugu/study/qq 등) 기준이다.
+- `Phase`, `상태` 속성은 기존 항목 값을 참고해 채운다.
 
 ## 코드 스타일
 - 현재 코드 스타일을 따른다.
