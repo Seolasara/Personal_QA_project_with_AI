@@ -84,6 +84,25 @@ def login_page(page):
 
 
 @pytest.fixture
+def blocked_login_requests(login_page):
+    """로그인 페이지 진입 상태에서 로그인 API 요청을 기록하고 차단한다.
+
+    클라이언트 검증 TC(공란, 비밀번호 길이)용. 요청이 서버에 닿지 않아
+    클라이언트 검증이 깨져도 로그인 실패가 쌓여 계정이 잠기지 않는다(3회 잠금).
+    반환값: 시도된 로그인 요청 URL 목록 (비어 있으면 미전송).
+    """
+    attempts = []
+
+    def _block(route):
+        attempts.append(route.request.url)
+        route.abort()
+
+    login_page.page.route(LoginPage.LOGIN_API_PATTERN, _block)
+    yield attempts
+    login_page.page.unroute(LoginPage.LOGIN_API_PATTERN, _block)
+
+
+@pytest.fixture
 def loggedin_home(login_page):
     login_page.login(TOOLSHOP_EMAIL, TOOLSHOP_PASSWORD)
     login_page.page.get_by_title("Practice Software Testing - Toolshop").click()
@@ -93,6 +112,17 @@ def loggedin_home(login_page):
 @pytest.fixture
 def catalog(loggedin_home) -> CatalogPage:
     return CatalogPage(loggedin_home)
+
+
+@pytest.fixture
+def guest_catalog(page) -> CatalogPage:
+    """비로그인 상태로 메인 페이지에 진입해 첫 상품 목록이 그려진 상태.
+
+    로그인이 필요 없는 상품 조회 TC(필터, 정렬, 검색)용. 계정 잠금과 무관하게 동작한다.
+    """
+    guest = CatalogPage(page)
+    guest.open_loaded()
+    return guest
 
 
 @pytest.fixture

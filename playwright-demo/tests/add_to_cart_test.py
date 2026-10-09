@@ -4,6 +4,7 @@ import pytest
 from playwright.sync_api import expect
 
 from pages.catalog_page import CartPage, to_amount
+from pages.payment_page import PaymentPage
 
 
 @pytest.mark.tc("UI_24")
@@ -78,6 +79,29 @@ def test_cart_quantity_update_totals(cart):
     expect(cart_page.cart_total).to_have_text(expected_line_total)
 
 
+@pytest.mark.tc("UI_28")
+def test_cart_quantity_corrected_to_bounds(cart):
+    cart_page = CartPage(cart)
+
+    # 1. 장바구니 리스트에 상품 노출
+    expect(cart_page.rows).to_have_count(1)
+    product_name = cart_page.product_titles.first.inner_text().strip()
+    quantity = cart_page.row_quantity(product_name)
+
+    # 2. 수량 "0" 입력 후 입력란 밖 클릭 → 수량 "1"로 보정되어 노출
+    cart_page.set_row_quantity(product_name, "0")
+    expect(quantity).to_have_value("1")
+
+    # 3. 수량 "1000000000" 입력 후 입력란 밖 클릭 → 수량 "999999999"로 보정되어 노출
+    cart_page.set_row_quantity(product_name, "1000000000")
+    try:
+        expect(quantity).to_have_value("999999999")
+    except AssertionError:
+        if quantity.input_value() == "99":
+            pytest.xfail("백로그 #16: 수량 상한이 스펙(999999999)과 다름. 실제 상한 99로 보정됨")
+        raise
+
+
 @pytest.mark.tc("UI_29")
 def test_cart_total_with_two_products(cart_two_items):
     cart_page = CartPage(cart_two_items)
@@ -140,3 +164,24 @@ def test_cart_remove_last_item_shows_empty(cart):
     expect(cart_page.rows).to_have_count(0)
     # 2-2. "Your shopping cart is empty" 문구 노출
     expect(cart_page.empty_message).to_be_visible()
+
+
+@pytest.mark.tc("UI_32")
+def test_cart_remove_all_hides_proceed_to_checkout(cart):
+    cart_page = CartPage(cart)
+    checkout = PaymentPage(cart)
+
+    # 1. 장바구니 리스트에 상품 1건 노출
+    expect(cart_page.rows).to_have_count(1)
+    product_name = cart_page.product_titles.first.inner_text().strip()
+
+    # 2. [Proceed to checkout] 버튼 노출
+    expect(checkout.proceed_from_cart).to_be_visible()
+
+    cart_page.remove_item(product_name)
+
+    # 3. 상품 행이 제거된 상태로 노출
+    expect(cart_page.row(product_name)).to_have_count(0)
+    expect(cart_page.rows).to_have_count(0)
+    # 4. [Proceed to checkout] 버튼 미노출 상태로 노출
+    expect(checkout.proceed_from_cart).to_be_hidden()

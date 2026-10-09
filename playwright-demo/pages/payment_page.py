@@ -7,6 +7,9 @@ class PaymentPage:
     각 단계 진행 버튼은 앱에서 data-test="proceed-1/2/3", 결제 확정은 "finish".
     """
 
+    # 우편번호 자동조회 API (country+postal_code+house_number 입력 시 debounce 300ms 후 호출)
+    POSTCODE_LOOKUP_PATTERN = "**/postcode-lookup**"
+
     def __init__(self, page: Page):
         self.page = page
 
@@ -30,11 +33,27 @@ class PaymentPage:
         self.state = page.locator('[data-test="state"]')
         self.postcode_lookup_loading = page.locator('[data-test="postcode-lookup-loading"]')
         self.proceed_from_address = page.locator('[data-test="proceed-3"]')
+        # 비울 수 있는 필수 텍스트 필드 (UI_33). Country는 placeholder 옵션이 disabled라
+        # UI로 빈 값을 고를 수 없어 제외한다(2026-10-10 확인).
+        self.billing_text_fields = {
+            "street": self.street,
+            "city": self.city,
+            "state": self.state,
+            "house_number": self.house_number,
+            "postal_code": self.postcode,
+        }
 
         # step 4: payment
         self.payment_method = page.locator('[data-test="payment-method"]')
         self.confirm = page.locator('[data-test="finish"]')
         self.success_message = page.locator('[data-test="payment-success-message"]')
+        # 같은 finish 버튼이 첫 클릭 전에는 "Check payment", 결제 검증 성공 후에는 "Confirm" 라벨이 된다.
+        self.check_payment_button = page.locator('[data-test="finish"]')
+
+        # 결제 완료 (인보이스). 앱에 data-test 가 없다. 번호 span 의 id="invoice-number" 는
+        # innerHTML 주입 시 제거되어 없으므로(2026-10-10 확인) 템플릿 컨테이너 id 아래 span 을 쓴다.
+        self.order_confirmation = page.locator("#order-confirmation")
+        self.invoice_number = self.order_confirmation.locator("span")
 
     # --- 단계 이동 --------------------------------------------------------
     def go_to_signin_step(self) -> None:
@@ -73,9 +92,20 @@ class PaymentPage:
         self.city.fill(city)
         self.state.fill(state)
 
+    def block_postcode_lookup(self) -> None:
+        """우편번호 자동조회 요청을 차단한다.
+
+        자동조회 응답이 입력 직후 street/city/state 를 덮어써(2026-10-10 확인) 입력값 검증이
+        흔들린다. 필수값 검증 TC(UI_33)처럼 자동조회가 검증 대상이 아닐 때만 쓴다.
+        """
+        self.page.route(self.POSTCODE_LOOKUP_PATTERN, lambda route: route.abort())
+
     def select_payment_method(self, value: str) -> None:
         # value 예: "cash-on-delivery", "bank-transfer"
         self.payment_method.select_option(value)
+
+    def check_payment(self) -> None:
+        self.check_payment_button.click()
 
     def confirm_payment(self) -> None:
         self.confirm.click()
