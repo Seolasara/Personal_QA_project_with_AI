@@ -20,7 +20,7 @@ from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _common import ROOT, tc_for  # noqa: E402
+from _common import DEMOS, ROOT, tc_for  # noqa: E402
 
 FAIL = ("failed", "error")
 MASKS = (
@@ -66,6 +66,11 @@ def reason(test: dict) -> str:
         return "서버 응답 없음 또는 5xx(env 후보)"
     if "Timeout" in first:
         return "요소 대기 시간 초과"
+    m = re.search(r"Differing items:\s*\n\s*\{'(\w+)': '([^']*)'\} != \{'\w+': '([^']*)'\}", msg)
+    if m:
+        return f"응답 바디 불일치({m.group(1)}: 기대 \"{m.group(3)[:40]}\", 실제 \"{m.group(2)[:40]}\")"
+    if re.match(r"(AssertionError: )?assert [\[{]", first):
+        return "응답 바디 불일치"
     if first.startswith("AssertionError: "):
         return first[len("AssertionError: "):][:80]
     return first.split(":")[0][:60] or "원인 불명"
@@ -115,7 +120,7 @@ def evidence(test: dict, tc: str, backlog: dict[str, list[str]], branch: str) ->
 
 def load(kind: str, path: Path) -> dict:
     data = json.loads(path.read_text(encoding="utf-8"))
-    demo = path.resolve().parent.parent  # <demo>/test-results/report.json
+    demo = DEMOS[kind]  # nodeid 기준 폴더. 보관본(test-runs/)을 읽어도 마커는 현재 테스트 코드에서 찾는다
     tests = data.get("tests", [])
     summary = data.get("summary", {})
     rows = []
