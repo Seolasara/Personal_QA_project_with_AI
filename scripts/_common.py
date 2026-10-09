@@ -11,7 +11,6 @@ ROOT = Path(__file__).resolve().parent.parent
 DEMO = ROOT / "playwright-demo"
 REPORT = DEMO / "test-results" / "report.json"
 SNAP_DIR = DEMO / "test-results" / "dom-snapshots"
-TESTCASES_DIR = ROOT / "testcases"
 
 TC_MARKER_RE = re.compile(r'@pytest\.mark\.tc\(\s*["\']([^"\']+)["\']\s*\)')
 DEF_RE = re.compile(r"^\s*def\s+(test_\w+)\s*\(")

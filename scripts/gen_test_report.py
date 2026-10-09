@@ -3,7 +3,7 @@
 
 repo 루트에서:  playwright-demo/.venv/bin/python scripts/gen_test_report.py
 
-읽는 것: playwright-demo/test-results/report.json (pytest-json-report) + testcases/*.md
+읽는 것: playwright-demo/test-results/report.json (pytest-json-report)
 출력: test-results/test-report.md (덮어쓰기)
 
 pytest.ini 의 --html=test-results/report.html 은 이 리포트의 자매품 —
@@ -17,12 +17,9 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-import yaml
-
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _common import DEMO, REPORT, ROOT, tc_for  # noqa: E402
 
-TESTCASES_DIR = ROOT / "testcases"
 OUT = DEMO / "test-results" / "test-report.md"
 
 OUTCOME_LABEL = {
@@ -33,18 +30,6 @@ OUTCOME_LABEL = {
     "xfailed": "🟡 xfail",
     "xpassed": "🟡 xpass",
 }
-
-
-def load_tc_meta() -> dict[str, dict]:
-    out: dict[str, dict] = {}
-    for md in sorted(TESTCASES_DIR.glob("*.md")):
-        text = md.read_text(encoding="utf-8")
-        if not text.startswith("---"):
-            continue
-        fm = yaml.safe_load(text.split("---", 2)[1])
-        tc_id = str(fm.get("id", md.stem))
-        out[tc_id] = {"title": fm.get("title", ""), "priority": fm.get("priority", "")}
-    return out
 
 
 def git(*args: str) -> str:
@@ -64,7 +49,6 @@ def main() -> int:
     data = json.loads(REPORT.read_text(encoding="utf-8"))
     tests = data.get("tests", [])
     summary = data.get("summary", {})
-    tc_meta = load_tc_meta()
 
     created = data.get("created")
     run_time = (
@@ -94,27 +78,26 @@ def main() -> int:
 
     lines.append("## TC 별 결과")
     lines.append("")
-    lines.append("| TC | 제목 | 우선순위 | 결과 | 소요(s) | 테스트 |")
-    lines.append("|---|---|---|---|---|---|")
+    lines.append("| TC | 결과 | 소요(s) | 테스트 |")
+    lines.append("|---|---|---|---|")
 
     rows = []
     for t in tests:
         nodeid = t["nodeid"]
         tc_id = tc_for(nodeid) or "—"
-        meta = tc_meta.get(tc_id, {})
         outcome = t.get("outcome", "?")
         call = t.get("call") or {}
         dur = call.get("duration", t.get("setup", {}).get("duration", 0)) or 0
-        rows.append((tc_id, meta.get("title", ""), meta.get("priority", ""), outcome, dur, nodeid))
+        rows.append((tc_id, outcome, dur, nodeid))
 
-    # TC 순서(QA-01, QA-02 ...) 로 정렬, TC 없는 건 뒤로
+    # TC 순서(API_01, API_02 ...) 로 정렬, TC 없는 건 뒤로
     rows.sort(key=lambda r: (r[0] == "—", r[0]))
 
-    for tc_id, title, priority, outcome, dur, nodeid in rows:
+    for tc_id, outcome, dur, nodeid in rows:
         label = OUTCOME_LABEL.get(outcome, outcome)
-        lines.append(f"| {tc_id} | {title} | {priority} | {label} | {dur:.2f} | `{nodeid}` |")
+        lines.append(f"| {tc_id} | {label} | {dur:.2f} | `{nodeid}` |")
 
-    fails = [r for r in rows if r[3] in ("failed", "error")]
+    fails = [r for r in rows if r[1] in ("failed", "error")]
     lines.append("")
     lines.append("## 실패 상세")
     lines.append("")
