@@ -25,6 +25,7 @@ pytest            # 전체
 pytest -m tc      # TC 마커 붙은 테스트만
 ```
 - 의존성은 `requirements.txt`, venv는 `api-demo/.venv` (playwright-demo와 별도).
+- 결과 리포트: `python3 ../scripts/gen_test_report.py --type api` → `test-results/test-report.md`.
 - 계정은 코드에 쓰지 않고 `config.py`가 `.env`에서 읽는다. 최초 1회 `cp .env.example .env`.
 - 계정별 용도
   - customer3(`API_EMAIL`): API 테스트 기본 계정. UI 계정(customer2)과 분리해 한쪽 계정 잠금(423)이 다른 쪽에 영향 주지 않게 한다.
@@ -42,7 +43,6 @@ pytest -m tc      # TC 마커 붙은 테스트만
 - xfail 교훈 사례: Cart addItem 302를 real-bug로 pin했다가 `Accept: application/json` 헤더 누락(test-bug)으로 밝혀졌다(2026-09-28, 백로그 #4).
 
 ## 아직 안 한 것
-- api-demo 결과 리포트 (`gen_test_report.py`는 UI 결과만 읽는다. 방식은 백로그에서 재검토).
 - `scripts/script_lint.py`, `tc_marker_check.py`는 UI와 API만 다룬다. 새 테스트 종류가 생기면 확장한다.
 - 마커 ID와 시트 ID는 `scripts/tc_marker_check.py`로 확인한다.
 - schemathesis (negative-case 자동 생성).

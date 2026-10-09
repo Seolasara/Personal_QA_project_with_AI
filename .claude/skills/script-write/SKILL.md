@@ -42,7 +42,7 @@ TC 원본은 구글 시트이고, 테스트 하나가 TC 하나다. 종류별 �
 - 병렬 배치에서는 리포트가 서로 덮어쓰지 않게 출력 경로만 임시 경로로 바꾼다. ex: `--json-report-file=<임시>/report.json --html=<임시>/report.html --output=<임시>`. `-o addopts=""`는 실패 시 trace 저장까지 꺼서 원인을 못 보므로 쓰지 않는다.
 - 전체 실행은 사용자가 허락했을 때만 다음 순서로 한다.
   - 각 폴더에서 전체 테스트를 1회 실행한다.
-  - UI는 `playwright-demo/.venv/bin/python scripts/gen_test_report.py`로 `test-results/test-report.md`를 만든다. API는 아직 리포트 스크립트가 없어서 pytest 결과 요약을 보고에 쓴다.
+  - `python3 scripts/gen_test_report.py --type ui|api`로 각 폴더의 `test-results/test-report.md`를 만든다.
   - 리포트에 실패 분류와 근거를 붙여 보고한다.
 
 ## 4. 작성 후 점검 체크리스트

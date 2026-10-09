@@ -20,7 +20,7 @@ pytest tests/payment_test.py -k checkout
 ```
 - 실패 시 `test-results/`에 trace(zip)/스크린샷.
 - 머신리더블: `test-results/report.json`. 사람용: `test-results/report.html`,
-  `python ../scripts/gen_test_report.py` → `test-results/test-report.md`.
+  `python3 ../scripts/gen_test_report.py --type ui` → `test-results/test-report.md`.
 - 의존성: `requirements.txt` + `playwright install chromium` (버전 핀 고정).
 - 테스트 계정: 코드에 하드코딩하지 않는다. `config.py`가 `.env`(gitignore 대상)에서 읽는다.
   최초 1회 `cp .env.example .env` 후 값 채우기. CI는 `.env` 대신 같은 이름의 환경변수를 시크릿으로 주입.
