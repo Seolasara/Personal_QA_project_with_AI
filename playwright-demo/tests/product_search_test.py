@@ -6,7 +6,7 @@ from playwright.sync_api import expect
 from pages.catalog_page import ProductDetailPage
 
 
-@pytest.mark.tc("QA-07")
+@pytest.mark.tc("UI_09")
 def test_product_checkbox(catalog):
     # 체크박스 선택
     catalog.filter_by_category("Hammer")
@@ -14,7 +14,7 @@ def test_product_checkbox(catalog):
     expect(catalog.category_checkbox("Hammer")).to_be_checked()
 
 
-@pytest.mark.tc("QA-08")
+@pytest.mark.tc("UI_17")
 def test_product_get(catalog):
     catalog.filter_by_category("Hammer")
 
@@ -35,3 +35,66 @@ def test_product_get(catalog):
     expect(detail.unit_price).to_be_visible()
     expect(detail.quantity).to_be_visible()
     expect(detail.add_to_cart).to_be_visible()
+
+
+@pytest.mark.tc("UI_18")
+def test_product_quantity_plus_minus(product_detail):
+    detail = product_detail
+
+    # 2. 수량 "1" 노출
+    expect(detail.quantity).to_have_value("1")
+
+    detail.increase()
+    # 3. 수량 "2" 노출
+    expect(detail.quantity).to_have_value("2")
+
+    detail.decrease()
+    # 4. 수량 "1" 노출
+    expect(detail.quantity).to_have_value("1")
+
+
+@pytest.mark.tc("UI_19")
+def test_product_quantity_minus_at_one_stays_one(product_detail):
+    detail = product_detail
+
+    # 2. 수량 "1" 노출
+    expect(detail.quantity).to_have_value("1")
+
+    detail.decrease()
+    # 3. 수량 "1" 유지 상태로 노출
+    expect(detail.quantity).to_have_value("1")
+
+
+@pytest.mark.tc("UI_20")
+def test_product_quantity_zero_or_negative_corrected_to_one(product_detail):
+    detail = product_detail
+
+    detail.set_quantity("0")
+    # 2. 수량 "1"로 보정되어 노출
+    expect(detail.quantity).to_have_value("1")
+
+    detail.set_quantity("-1")
+    # 3. 수량 "1"로 보정되어 노출
+    expect(detail.quantity).to_have_value("1")
+
+
+@pytest.mark.tc("UI_21")
+def test_product_quantity_cleared_corrected_to_one(product_detail):
+    detail = product_detail
+
+    detail.set_quantity("")
+    # 2. 수량 "1"로 보정되어 노출
+    expect(detail.quantity).to_have_value("1")
+
+
+@pytest.mark.tc("UI_22")
+@pytest.mark.xfail(
+    strict=True,
+    reason="백로그 #16: 수량 상한이 스펙(999999999)과 다름. 실제 상한 99라 100이 99로 보정됨",
+)
+def test_product_quantity_upper_bound(product_detail):
+    detail = product_detail
+
+    detail.set_quantity("100")
+    # 2. 수량 "100" 유지 상태로 노출
+    expect(detail.quantity).to_have_value("100")

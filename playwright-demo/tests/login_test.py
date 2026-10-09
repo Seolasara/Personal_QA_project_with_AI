@@ -4,14 +4,14 @@ from playwright.sync_api import expect
 from config import TOOLSHOP_EMAIL, TOOLSHOP_PASSWORD
 
 
-@pytest.mark.tc("QA-01")
+@pytest.mark.tc("UI_01")
 def test_landing_page(page):
     page.goto("https://practicesoftwaretesting.com")
     expect(page).to_have_title("Practice Software Testing - Toolshop - v5.0")
 
 
 # 도메인 없는 잘못된 이메일 형식
-@pytest.mark.tc("QA-02")
+@pytest.mark.tc("UI_03")
 def test_invalid_email_format(login_page):
     login_page.submit("customer2", TOOLSHOP_PASSWORD)
 
@@ -20,7 +20,7 @@ def test_invalid_email_format(login_page):
 
 
 # 도메인 포함 잘못된 이메일 형식
-@pytest.mark.tc("QA-03")
+@pytest.mark.tc("UI_04")
 def test_invalid_email(login_page):
     login_page.submit("customer23@practicesoftwaretesting.com", TOOLSHOP_PASSWORD)
 
@@ -28,7 +28,7 @@ def test_invalid_email(login_page):
     expect(login_page.page.get_by_text("Invalid email or password")).to_be_visible()
 
 
-@pytest.mark.tc("QA-04")
+@pytest.mark.tc("UI_05")
 def test_invalid_password(login_page):
     login_page.submit(TOOLSHOP_EMAIL, "welcome02")
 
@@ -36,7 +36,7 @@ def test_invalid_password(login_page):
     expect(login_page.page.get_by_text("Invalid email or password")).to_be_visible()
 
 
-@pytest.mark.tc("QA-05")
+@pytest.mark.tc("UI_07")
 def test_login(login_page):
     login_page.login(TOOLSHOP_EMAIL, TOOLSHOP_PASSWORD)
 
@@ -45,7 +45,7 @@ def test_login(login_page):
     expect(login_page.page.get_by_role("button", name="Jack Howe")).to_be_visible()
 
 
-@pytest.mark.tc("QA-06")
+@pytest.mark.tc("UI_08")
 def test_loggedin_home(loggedin_home):
     page = loggedin_home
     expect(page).to_have_url("https://practicesoftwaretesting.com/")

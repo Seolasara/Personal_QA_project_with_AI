@@ -2,7 +2,7 @@ import pytest
 from playwright.sync_api import expect
 
 
-@pytest.mark.tc("QA-13")
+@pytest.mark.tc("UI_38")
 def test_logout(loggedin_home):
     page = loggedin_home
 

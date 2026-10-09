@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 import pytest
+from playwright.sync_api import expect
 
 from config import TOOLSHOP_EMAIL, TOOLSHOP_PASSWORD
 from pages.catalog_page import CatalogPage, ProductDetailPage
@@ -115,6 +116,23 @@ def cart_ready(product_detail):
     remove_buttons = page.locator("a.btn.btn-danger")
     if remove_buttons.count():
         remove_buttons.first.click()
+
+
+@pytest.fixture
+def cart_two_items(catalog):
+    """서로 다른 상품 2종(Hammer, Pliers 카테고리 첫 상품)을 담고 장바구니 페이지로 이동한 상태의 page.
+
+    장바구니는 브라우저 context의 sessionStorage(cart_id)에 묶여 테스트마다 새로 시작하므로 cleanup은 두지 않는다.
+    """
+    for category in ("Hammer", "Pliers"):
+        catalog.open()
+        catalog.filter_by_category(category)
+        catalog.open_first_product()
+        detail = ProductDetailPage(catalog.page)
+        detail.add()
+        expect(detail.added_toast).to_be_visible()
+    catalog.open_cart()
+    return catalog.page
 
 
 @pytest.fixture

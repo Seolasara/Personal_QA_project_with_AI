@@ -12,7 +12,7 @@ BILLING = dict(
 )
 
 
-@pytest.mark.tc("QA-11")
+@pytest.mark.tc("UI_34")
 def test_checkout_button(cart):
     payment = PaymentPage(cart)
 
@@ -40,7 +40,7 @@ def test_checkout_button(cart):
     expect(payment.confirm).to_be_enabled()
 
 
-@pytest.mark.tc("QA-12")
+@pytest.mark.tc("UI_35")
 def test_payment_checkout(cart):
     payment = PaymentPage(cart)
 
