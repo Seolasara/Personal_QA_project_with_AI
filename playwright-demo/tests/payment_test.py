@@ -121,6 +121,7 @@ def test_payment_checkout(cart):
 
 
 @pytest.mark.tc("UI_36")
+@pytest.mark.smoke
 def test_payment_confirm_shows_invoice_number(cart):
     payment = PaymentPage(cart)
     _go_to_payment_step(payment)

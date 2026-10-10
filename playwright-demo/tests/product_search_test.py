@@ -186,6 +186,7 @@ def test_product_search_no_results(guest_catalog):
 
 
 @pytest.mark.tc("UI_17")
+@pytest.mark.smoke
 def test_product_get(catalog):
     catalog.filter_by_category("Hammer")
 

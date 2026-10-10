@@ -8,6 +8,7 @@ from pages.payment_page import PaymentPage
 
 
 @pytest.mark.tc("UI_24")
+@pytest.mark.smoke
 def test_cart_button(cart_ready):
     detail = cart_ready
 

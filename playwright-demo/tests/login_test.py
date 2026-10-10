@@ -5,6 +5,7 @@ from config import TOOLSHOP_EMAIL, TOOLSHOP_PASSWORD
 
 
 @pytest.mark.tc("UI_01")
+@pytest.mark.smoke
 def test_landing_page(page):
     page.goto("https://practicesoftwaretesting.com")
     expect(page).to_have_title("Practice Software Testing - Toolshop - v5.0")
@@ -77,6 +78,7 @@ def test_password_length_invalid(login_page, blocked_login_requests):
 
 
 @pytest.mark.tc("UI_07")
+@pytest.mark.smoke
 def test_login(login_page):
     login_page.login(TOOLSHOP_EMAIL, TOOLSHOP_PASSWORD)
 
