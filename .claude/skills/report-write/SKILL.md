@@ -16,26 +16,8 @@ argument-hint: "[test-runs/<일시> | latest]"
 - 사인오프 기준: 각 QA plan(UI 65702, API 5996545)의 사인오프 기준. 미해결 High 결함 0건이 기본이다.
 - 시작 전 확인: 노션 "이슈 검수"에 이 실행의 "분류 수정 대기"나 등록 안 된 승인 real-bug가 남아 있으면 쓰지 않고 그 목록을 보고한다.
 
-## 2. 보고서 구성
-위치: Confluence "Test Result Report"(11665420) 하위, 제목 `Test Result Report (YYYY-MM-DD)`. 템플릿 "Test result Report Template"(11632643)의 섹션 순서를 따르고 4~6번을 덧붙인다.
-1. Test Result Summary
-   - Test Period(실행 일시), Environment(사이트 URL, 브라우저, 도구 버전), Build / Version(커밋과 브랜치), Tester(사라 AI, 검토자), Comment(사인오프 판정 한 줄)
-2. Test Scope
-   - UI, API별 대상 기능(대분류)과 TC 수, 자동/수동 TC 수, 제외 범위
-3. Test Result (TC 커버리지 포함)
-   - Total, Pass, Fail, Blocked, xfail, Pass Rate(통과/전체). Blocked는 실행하지 못한 TC(수동 미실행, 사전 조건 미충족)
-   - 대분류별 표: 대분류, 전체, 통과, 실패, xfail
-   - 커버리지: 시트 TC 수 대비 자동화된 TC 수
-4. BTS Status
-   - 이번 실행에서 새로 등록한 이슈: 키, 제목, 중요도, TC
-   - 남은 이슈(위 JQL) 표: 키, 제목, 중요도, 상태, 관련 TC. 표 위에 JQL을 적는다.
-   - Known Issues: xfail로 고정된 백로그 항목과 Jira 키
-5. 실패 분류
-   - 리포트 그룹(리얼버그, 테스트버그, flaky, 안건)별 건수와 TC, 처리 결과(등록, 수리, 보류). 노션 이슈 행 링크를 붙인다.
-   - 안건: 스펙 판단이 필요한 항목과 백로그 링크. 승인된 안건은 wiki 안건 문서 대상으로 표시한다.
-6. 사인오프와 다음 조치
-   - 판정: 사인오프 기준 충족 여부와 근거(미해결 High 결함 수)
-   - 다음 조치: 보류 항목, 수리 대상, 다음 실행 계획
+## 2. 보고서 형식
+- `.claude/guides/test-report-format.md`를 따른다(섹션 6개: Summary, Scope, Result와 커버리지, BTS Status, 실패 분류, 사인오프와 다음 조치).
 
 ## 3. 작성 절차
 1. 1번 입력을 모아 수치를 맞춘다. report.json 합계, 노션 실행 행, Slack 본문의 숫자가 같은지 확인한다.
