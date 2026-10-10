@@ -23,6 +23,7 @@
 4. 전체 테스트를 실행하고 실패를 분류할 때
    - `.claude/skills/test-run/SKILL.md`: 사전 점검, 실행, 보관(`test-runs/`), Slack 보고
    - `.claude/skills/test-triage/SKILL.md`: 사라가 보관본 실패를 분류·분석하고 백로그, 노션 "이슈 검수" 후보, Slack에 기록(`/test-triage`)
+   - `.claude/guides/notion-test-record-format.md`: 노션 실행 행과 이슈 행의 본문, 증거 형식
    - `.claude/skills/issue-register/SKILL.md`, `.claude/agents/Issue-Reporter.md`: 승인된 real-bug의 Jira 등록(`/issue-register`)
    - `.claude/docs/backlog/00_index.md`: 이미 등록된 항목인지 먼저 확인한다.
 5. 백로그에 기록할 때

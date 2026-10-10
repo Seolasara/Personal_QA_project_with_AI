@@ -48,7 +48,8 @@ argument-hint: "[ui|api|all]"
 
 ## 6. 노션 "테스트 실행" 행
 - "테스트 실행" DB(`collection://de613125-b2b2-40af-842a-9f1265e9376c`)에 행 1개를 만든다.
-  - 실행: `YYYY-MM-DD HH:MM 전체 실행` / 실행 일시 / 커밋(해시와 브랜치) / UI 결과, API 결과(`40/45 통과, 실패 1, xfail 4` 형식) / 실패 수, xfail 수 / 보관 경로 / Slack 채널 링크
+  - 속성은 `.claude/guides/notion-test-record-format.md` 2번을 따른다. UI 결과, API 결과는 `40/45 통과, 실패 1, xfail 4` 형식이고 통과 수, 전체 수를 함께 채운다.
+  - 본문은 요약과 통과 현황까지 쓴다. 실패 현황은 `/test-triage`가 채운다.
   - 진행 상태: 실패나 xpass가 있으면 "분류 대기", 없으면 "등록 완료"(분류할 실패 없음)
 
 ## 7. 결과 보고
