@@ -45,7 +45,10 @@ def test_postcode_without_country(api_client):
     response = postcode_client.get_postcode(postcode=POSTCODE)
 
     assert response.status_code == 422
-    assert response.json() == {"message": "Resource not found"}
+    result = PostcodeValidationError.model_validate(response.json())
+    msg = "The country field is required."
+    assert result.message == msg
+    assert result.errors == {"country": [msg]}
 
 
 @pytest.mark.tc("API_90")

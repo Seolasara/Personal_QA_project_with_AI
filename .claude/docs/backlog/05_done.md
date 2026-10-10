@@ -34,3 +34,11 @@
      - 스펙: `status`는 string이고 예시만 "COMPLETED"다.
      - 라이브: `AWAITING_FULFILLMENT`
      - 시트(수정 전): `AWAITING_SHIPMENT`(출처 불명)
+
+### #27 우편번호 country 누락 테스트가 시트와 다른 응답 바디를 기대함
+- 문제 정의: API_89 테스트가 422 응답 바디를 `{"message": "Resource not found"}`로 비교한다. 시트 기대결과는 `"The country field is required."`와 `errors.country`다.
+- 발생 배경: 2026-10-10 첫 전체 실행(`test-runs/2026-10-10-0239`)의 `/test-triage`에서 발견.
+- 추정 원인과 근거: 스크립트 작성 때 다른 TC(404 응답)의 기대 바디를 옮겨 적은 것으로 추정한다. 상태 코드 422는 통과했고, 라이브 바디가 시트 기대결과와 같다(2026-10-10 보관본). 스펙(`api-docs.json` `/postcode-lookup`)은 422를 `UnprocessableEntityResponse`로만 정의한다.
+- 분류와 상태: test-bug(high) / 해결(2026-10-10): 어설션을 시트 기대결과대로 고치고 API_90과 같은 `PostcodeValidationError` 검증으로 맞춤, 단독 실행 통과 / 발견 2026-10-10, 마지막 확인 2026-10-10 단독 실행
+- 대상 TC
+  1. [API_89] 필수 파라미터 누락 우편번호 조회 실패 확인
