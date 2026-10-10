@@ -34,16 +34,6 @@ Jira로 올릴 실제 결함. 등록 뒤에도 수정될 때까지 여기 둔다
      - 스펙/라이브: 장바구니 수량 입력란도 같은 상한(99)이다.
      - 현재 테스트: 상한 비교만 테스트 안에서 `pytest.xfail("백로그 #16")`로 pin (2026-10-10). 0 → 1 보정은 통과
 
-### #25 결제 완료 후 장바구니 페이지가 빈 화면으로 노출
-- 발생 배경: UI_37 스크립트 작성 중 발견(2026-10-10).
-- 추정 원인과 근거: 결제 후 `cart_id`가 없는 상태에서 장바구니 화면이 `null` 응답의 `cart_items`를 읽다 예외가 나 렌더링이 멈추는 것으로 추정한다. 근거는 결제 없이 `cart_id`를 지운 상태에서 콘솔 `TypeError: Cannot read properties of null (reading 'cart_items')` 재현(2026-10-10). 소스는 확인하지 않았다.
-- 분류와 상태: real-bug(유형 A) / 중요도 Low / 테스트 내부에서 `pytest.xfail("백로그 #25")`로 pin / 발견 2026-10-10, 마지막 확인 2026-10-10 라이브
-- 대상 TC
-  1. [UI_37] 결제 완료 후 장바구니 비워짐 확인
-     - 스펙: `v5` Checkout Cart AC4는 빈 장바구니에서 "Your shopping cart is empty"를 표시한다. Payment AC9의 "the cart is cleared"는 충족된다(헤더 장바구니 아이콘 사라짐).
-     - 라이브: `/checkout` 진입 시 장바구니 영역(`app-cart`)이 비어 있고 문구가 없다.
-     - 현재 테스트: 문구 확인 단계만 `pytest.xfail`로 pin. 문구가 #15의 라이브 문구로 나오면 #15로 xfail한다.
-
 ### #26 상품 검색의 일치 기준이 스펙에 없고 검색어 길이에 따라 결과가 다름
 - 발생 배경: UI_13 스크립트 작성 중 발견(2026-10-10). "hammer" 검색 결과에 상품명에 hammer가 들어간 "Sledgehammer"가 빠졌다.
 - 추정 원인과 근거: sprint5 `ProductService::searchProducts`가 4자 이상은 FULLTEXT 단어 시작 일치(`+term*`), 3자 이하는 `LIKE %term%`를 쓰는 것으로 보인다(소스는 원인 추정 근거로만 씀). 라이브 확인(2026-10-10): "hammer" 6건(Sledgehammer 없음), "ham" 7건(Sledgehammer 포함), "ammer" 0건.

@@ -261,6 +261,14 @@ class CartPage:
         # 장바구니 행 삭제 버튼: 앱에 data-test 가 없어 클래스 셀렉터 사용 (기술부채)
         self.remove_buttons = page.locator("a.btn.btn-danger")
 
+    def open(self) -> None:
+        """URL(/checkout)로 직접 진입하고 장바구니 조회 요청이 끝날 때까지 기다린다 (UI_37).
+
+        빈 장바구니는 본문에 표시할 요소가 없어(2026-10-10 확인) 요소 대기 대신 네트워크 안정 시점을 쓴다.
+        """
+        self.page.goto(self.URL)
+        self.page.wait_for_load_state("networkidle")
+
     def row(self, title: str):
         """상품명으로 장바구니 행을 찾는다."""
         return self.rows.filter(

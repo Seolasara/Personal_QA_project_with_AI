@@ -1,4 +1,4 @@
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Page, Response, expect
 
 
 class PaymentPage:
@@ -8,7 +8,6 @@ class PaymentPage:
     """
 
     # 우편번호 자동조회 API (country+postal_code+house_number 입력 시 debounce 300ms 후 호출)
-    POSTCODE_LOOKUP_PATTERN = "**/postcode-lookup**"
 
     def __init__(self, page: Page):
         self.page = page
@@ -31,17 +30,7 @@ class PaymentPage:
         self.street = page.locator('[data-test="street"]')
         self.city = page.locator('[data-test="city"]')
         self.state = page.locator('[data-test="state"]')
-        self.postcode_lookup_loading = page.locator('[data-test="postcode-lookup-loading"]')
         self.proceed_from_address = page.locator('[data-test="proceed-3"]')
-        # 비울 수 있는 필수 텍스트 필드 (UI_33). Country는 placeholder 옵션이 disabled라
-        # UI로 빈 값을 고를 수 없어 제외한다(2026-10-10 확인).
-        self.billing_text_fields = {
-            "street": self.street,
-            "city": self.city,
-            "state": self.state,
-            "house_number": self.house_number,
-            "postal_code": self.postcode,
-        }
 
         # step 4: payment
         self.payment_method = page.locator('[data-test="payment-method"]')
@@ -72,33 +61,53 @@ class PaymentPage:
         self.proceed_from_address.click()
 
     # --- 폼 입력 --------------------------------------------------------
-    def fill_billing_address(
-        self,
-        country: str,
-        *,
-        postcode: str,
-        house_number: str,
-        street: str,
-        city: str,
-        state: str,
-    ) -> None:
+    # --- 우편번호 조회 결과를 쓰는 Billing 입력 (UI_33~UI_37) ---------------
+    # Country, Postcode, House number 를 채우면 GET /postcode-lookup 응답으로
+    # Street, City, State 가 덮어써진다. Postcode 를 비울 때는 조회가 일어나지 않는다(2026-10-10 확인).
+    @property
+    def selected_country(self):
+        return self.country.locator("option:checked")
+
+    def _is_postcode_lookup(self, response: Response) -> bool:
+        return "/postcode-lookup" in response.url and response.request.method == "GET"
+
+    def fill_address_by_lookup(self, country: str, *, postcode: str, house_number: str) -> dict:
+        """Country, Postcode, House number 를 입력하고 우편번호 조회 응답(JSON)을 돌려준다.
+
+        조회 결과가 Street, City, State 에 반영될 때까지 기다린다.
+        """
         self.country.select_option(label=country)
         self.postcode.fill(postcode)
-        self.house_number.fill(house_number)
-        # country+postcode+house_number 입력 시 자동 주소조회가 트리거되어
-        # street/city/state 를 덮어쓸 수 있으므로, 조회 로딩이 끝난 뒤 나머지 입력.
-        expect(self.postcode_lookup_loading).to_be_hidden()
-        self.street.fill(street)
-        self.city.fill(city)
-        self.state.fill(state)
+        with self.page.expect_response(self._is_postcode_lookup) as info:
+            self.house_number.fill(house_number)
+        return self._wait_lookup_applied(info.value)
 
-    def block_postcode_lookup(self) -> None:
-        """우편번호 자동조회 요청을 차단한다.
+    def refill_postcode(self, postcode: str) -> dict:
+        """Postcode 만 다시 입력하고 우편번호 조회 응답(JSON)을 돌려준다."""
+        with self.page.expect_response(self._is_postcode_lookup) as info:
+            self.postcode.fill(postcode)
+        return self._wait_lookup_applied(info.value)
 
-        자동조회 응답이 입력 직후 street/city/state 를 덮어써(2026-10-10 확인) 입력값 검증이
-        흔들린다. 필수값 검증 TC(UI_33)처럼 자동조회가 검증 대상이 아닐 때만 쓴다.
-        """
-        self.page.route(self.POSTCODE_LOOKUP_PATTERN, lambda route: route.abort())
+    def clear_postcode(self) -> None:
+        self.postcode.fill("")
+
+    def _wait_lookup_applied(self, response: Response) -> dict:
+        lookup = response.json()
+        expect(self.state).to_have_value(lookup["state"])
+        return lookup
+
+    # --- 결제 방법과 결제 검증 (UI_34, UI_35) ----------------------------
+    @property
+    def selected_payment_method(self):
+        return self.payment_method.locator("option:checked")
+
+    def check_payment_and_wait(self) -> Response:
+        """[Check payment]를 누르고 결제 검증 요청(POST /payment/check)의 응답을 돌려준다."""
+        with self.page.expect_response(
+            lambda r: "/payment/check" in r.url and r.request.method == "POST"
+        ) as info:
+            self.check_payment_button.click()
+        return info.value
 
     def select_payment_method(self, value: str) -> None:
         # value 예: "cash-on-delivery", "bank-transfer"

@@ -38,7 +38,7 @@ pytest tests/payment_test.py -k checkout
 ## 이 폴더의 기술부채
 - `pages/catalog_page.py` `CartPage.remove_buttons`: `data-test` 없어 `a.btn.btn-danger` 클래스 셀렉터 사용 중.
 - 결제 `checkPayment()`(앱): 첫 Confirm 클릭 시 `of(this.state)`(undefined) 반환 가능. **real-bug 후보 — 재현되면 수리하지 말고 보고.**
-- Billing Address: 로그인 사용자 주소 자동채움 + 우편번호 자동조회가 폼 입력과 race. `networkidle` + 로딩 대기로 우회 중.
+- Billing Address: 로그인 사용자 주소 자동채움 + 우편번호 자동조회가 폼 입력과 race(백로그 #7). Street, City, State는 직접 입력하지 않고 `/postcode-lookup` 응답을 기다려 조회 결과를 쓴다.
 
 ## 아직 안 한 것
 - `scripts/script_lint.py`, `tc_marker_check.py`, `gen_test_report.py`는 UI와 API만 다룬다. 새 테스트 종류가 생기면 확장한다.
