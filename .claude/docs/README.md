@@ -20,6 +20,7 @@
    - `.claude/skills/script-write/SKILL.md`: 스크립트 작성 포맷과 방법(공통 규칙, xfail 규칙, 실행 규칙, 작성 후 점검 체크리스트)
    - `.claude/agents/Script-Writer.md`: 작업 순서와 업무 규칙
    - 해당 종류 폴더의 `CLAUDE.md`: `playwright-demo/` 또는 `api-demo/`의 구조, 컨벤션, 시트 주소
+   - `.claude/docs/flows/ui-flows.md`: UI 화면 흐름과 실제 UI 표기(UI 스크립트만)
    - `.claude/docs/backlog/00_index.md`: xfail을 붙일 때 대상 항목 확인
 4. 전체 테스트를 실행하고 실패를 분류할 때
    - `.claude/skills/test-run/SKILL.md`: 사전 점검, 실행, 보관(`test-runs/`), Slack 보고

@@ -23,6 +23,7 @@ cd api-demo
 source .venv/bin/activate
 pytest            # 전체
 pytest -m tc      # TC 마커 붙은 테스트만
+pytest -m "not spec_undefined"   # /test-run 전체 실행 기준
 ```
 - 의존성은 `requirements.txt`, venv는 `api-demo/.venv` (playwright-demo와 별도).
 - 결과 리포트: `python3 ../scripts/gen_test_report.py --type api` → `test-results/test-report.md`.
@@ -30,7 +31,7 @@ pytest -m tc      # TC 마커 붙은 테스트만
 - 계정별 용도
   - customer3(`API_EMAIL`): API 테스트 기본 계정. UI 계정(customer2)과 분리해 한쪽 계정 잠금(423)이 다른 쪽에 영향 주지 않게 한다.
   - customer(`API_EMAIL2`): 다른 사용자 데이터 접근 검증
-  - admin(`ADMIN_EMAIL`): 계정 잠금 해제 등 관리자 작업
+  - admin(`ADMIN_EMAIL`): 계정 잠금 해제(백로그 #8), 계정 상태 조회 등 관리자 작업
 
 ## 컨벤션
 - httpx는 sync만 쓴다.
@@ -43,6 +44,4 @@ pytest -m tc      # TC 마커 붙은 테스트만
 - xfail 교훈 사례: Cart addItem 302를 real-bug로 pin했다가 `Accept: application/json` 헤더 누락(test-bug)으로 밝혀졌다(2026-09-28, 백로그 #4).
 
 ## 아직 안 한 것
-- `scripts/script_lint.py`, `tc_marker_check.py`는 UI와 API만 다룬다. 새 테스트 종류가 생기면 확장한다.
-- 마커 ID와 시트 ID는 `scripts/tc_marker_check.py`로 확인한다.
-- schemathesis (negative-case 자동 생성).
+- schemathesis(negative-case 자동 생성). 서브에이전트 스킬로 설계만 정했다.

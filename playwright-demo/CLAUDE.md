@@ -3,7 +3,8 @@
 UI e2e(Playwright) 테스트의 구조와 규칙이다. 프로젝트 공통 QA 규칙은 루트 [CLAUDE.md](../CLAUDE.md)를 따른다.
 
 ## 스펙 기준
-- UI 스펙은 `v5.md`(Sprint 5 User Stories & Acceptance Criteria)다. 기능별로 나눈 사본: `.claude/docs/specs/v5/`(목록은 `00_index.md`) (원본: testsmith-io/practice-software-testing `docs/user-stories/v5.md`, 2026-10-08 받음). 근거는 `.claude/docs/spec analysis/ui/`에 있다.
+- UI 스펙은 `v5.md`(Sprint 5 User Stories & Acceptance Criteria, 2026-10-08 받음)다. 기능별 사본은 `.claude/docs/specs/v5/`, 분석은 `.claude/docs/spec analysis/ui/`에 있다.
+- 화면 흐름(진입 경로, 상태 조건, 실제 UI 표기)은 흐름 지도 `.claude/docs/flows/ui-flows.md`를 본다.
 - QA plan: wiki "UI Test QA Plan"(Confluence 65702)
 - TC ID 접두어 `UI_`, 마커 `@pytest.mark.tc("UI_NN")`, 시트: UI 스프레드시트 https://docs.google.com/spreadsheets/d/1G7ICKjMaS2MvQH2xS0IjcS-VQAAA_N1_YTQ8qtF0k44/edit?usp=sharing 의 `UI-TC` 탭
 - Jira: 레이블 `ui`, 에픽 QA-5(UI 테스트 이슈). 증거는 스크린샷.
@@ -14,8 +15,9 @@ UI e2e(Playwright) 테스트의 구조와 규칙이다. 프로젝트 공통 QA �
 cd playwright-demo
 source .venv/bin/activate
 pytest
-pytest -m smoke     # PR 게이트용 빠른 서브셋
+pytest -m smoke     # 핵심 흐름 5개(Iteration 진입 판정, PR 게이트)
 pytest -m tc        # TC 연결된 테스트만
+pytest -m "not spec_undefined"   # /test-run 전체 실행 기준
 pytest tests/payment_test.py -k checkout
 ```
 - 실패 시 `test-results/`에 trace(zip)/스크린샷.
@@ -28,17 +30,19 @@ pytest tests/payment_test.py -k checkout
 ## Playwright 컨벤션
 - 셀렉터 우선순위: `[data-test="..."]` > `get_by_role` > `get_by_label`/`get_by_text`. XPath·CSS nth 금지.
 - 모든 셀렉터는 Page Object에. 테스트 본문에는 행위와 어설션만.
-- 수리 시 금지: `wait_for_timeout` 추가/증량, 검증 셀렉터를 항상 존재하는 것으로 바꿔치기.
-- `wait_for_timeout` 금지. `expect(...)` 자동 대기 또는 `wait_for_url`/`to_be_visible` 사용.
-- Page Object 속성명은 의미 기반 (`proceed_from_cart`, `billing_postcode`). `button1/button2` 금지.
+- `wait_for_timeout` 금지. `expect(...)` 자동 대기, `wait_for_url`, 응답 대기(`expect_response`)를 쓴다.
+- UI 전용 수리 금지: 검증 대상 셀렉터를 항상 존재하는 요소로 바꿔치기(공통 금지는 루트 가드레일과 `/test-repair`).
+- Page Object 속성명은 의미 기반 (`proceed_from_cart`, `postcode`). `button1/button2` 금지.
 - fixture는 `conftest.py`. cleanup은 `yield` 뒤에.
-- 장바구니는 브라우저 context의 sessionStorage(`cart_id`)에 묶여 테스트마다 새로 시작한다.
 - Playwright MCP는 새 화면의 셀렉터와 동작을 확인하는 탐색에만 쓴다. 최종 산출물은 재실행 가능한 pytest 코드다. MCP가 없으면 임시 probe 스크립트로 확인하고 repo에 남기지 않는다.
 
-## 이 폴더의 기술부채
-- `pages/catalog_page.py` `CartPage.remove_buttons`: `data-test` 없어 `a.btn.btn-danger` 클래스 셀렉터 사용 중.
-- 결제 `checkPayment()`(앱): 첫 Confirm 클릭 시 `of(this.state)`(undefined) 반환 가능. **real-bug 후보 — 재현되면 수리하지 말고 보고.**
-- Billing Address: 로그인 사용자 주소 자동채움 + 우편번호 자동조회가 폼 입력과 race(백로그 #7). Street, City, State는 직접 입력하지 않고 `/postcode-lookup` 응답을 기다려 조회 결과를 쓴다.
+## 데이터와 계정 주의
+- 장바구니는 브라우저 context의 sessionStorage(`cart_id`)에 묶여 테스트마다 새로 시작하므로 따로 정리하지 않는다.
+- 결제를 확정하는 테스트(UI_36, UI_37, smoke의 UI_36)는 실행할 때마다 인보이스를 남긴다. 삭제할 수 없으니 반복 실행하지 않는다.
+- 로그인 실패 TC(UI_02~06)는 연속 재실행하지 않는다(3회 실패 시 계정 잠금). 잠기면 백로그 #8로 해제한다.
+- 데모 DB 리셋 중에는 정상 계정 로그인도 401이 날 수 있다(env, 백로그 #17). 관리자 API로 `failed_login_attempts`가 0인지(잠금 위험 없음) 확인한 뒤 1회 재실행한다(2026-10-10 확인).
 
-## 아직 안 한 것
-- `scripts/script_lint.py`, `tc_marker_check.py`, `gen_test_report.py`는 UI와 API만 다룬다. 새 테스트 종류가 생기면 확장한다.
+## 이 폴더의 기술부채 (상세는 백로그)
+- #5 장바구니 삭제 버튼은 `data-test`가 없어 `a.btn.btn-danger` 클래스 셀렉터를 쓴다.
+- #7 Billing Address 자동채움과 우편번호 조회 race: Street, City, State는 직접 입력하지 않고 `/postcode-lookup` 응답을 기다려 조회 결과를 쓴다.
+- #6 결제 `checkPayment()` undefined 반환 가능성(판단 보류, 2026-10-10 미재현). 재현되면 수리하지 말고 보고한다.
