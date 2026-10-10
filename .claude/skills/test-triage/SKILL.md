@@ -1,22 +1,27 @@
 ---
 name: test-triage
-description: UI(Playwright)·API(httpx) pytest 실패를 real-bug / selector-drift / timing / spec-change / test-bug / env 로 분류한다. 실패를 고치기 전에 항상 먼저 실행. 코드는 수정하지 않고 근거와 함께 분류만 한다.
-argument-hint: "[ui|api] [nodeid 조각 - 특정 실패만]"
+description: UI(Playwright)·API(httpx) pytest 실패를 real-bug / selector-drift / timing / spec-change / test-bug / env 로 분류하고 원인을 분석한다. 전체 실행 뒤나 실패를 고치기 전에 먼저 실행. 코드는 수정하지 않고, 분류 결과를 백로그, 노션 "이슈 검수" 후보, Slack에 기록한다.
+argument-hint: "[test-runs/<일시> | latest | ui|api <nodeid 조각>]"
+model: opus
 ---
 
 # /test-triage
-대상: `$ARGUMENTS`. 비어 있으면 UI·API 양쪽 `test-results/report.json`의 모든 실패를 대상으로 한다.
-분류만 한다. 코드, TC, 마커 수정과 `skip`/`xfail` 추가는 루트 "실패 분류와 가드레일"대로 하지 않는다.
+대상: `$ARGUMENTS`
+- `test-runs/<일시>` 또는 `latest`: 전체 실행 보관본의 모든 실패. 1~9번을 모두 한다.
+- `ui|api <nodeid 조각>`: 작업 중 실패 몇 건만 빠르게 본다. `test-results/`를 읽고 1~6번만 한다(노션, Slack 없음).
+- 비어 있으면 `latest`다.
+
+사라(QA 리더)가 메인 세션에서 직접 한다. 원인 분석이 이 단계의 핵심이라 서브에이전트에 맡기지 않는다. 코드, TC, 마커 수정과 `skip`/`xfail` 추가는 루트 "실패 분류와 가드레일"대로 하지 않는다.
 
 ## 1. 입력 수집
 1. 실패 목록
-   - UI: `playwright-demo/.venv/bin/python scripts/failures.py [nodeid조각]` (longrepr, aria snapshot, dom_snapshot 포함)
-   - API: `api-demo/test-results/report.json`의 실패 항목 (assertion, pydantic `ValidationError`, httpx 예외)
+   - 보관본: `<대상>/ui/report.json`, `<대상>/api/report.json`의 실패 항목. UI 증거는 `<대상>/ui/tests-*/`(trace, 스크린샷)와 `<대상>/ui/dom-snapshots/`
+   - 작업 중: UI `playwright-demo/.venv/bin/python scripts/failures.py [nodeid조각]`, API `api-demo/test-results/report.json`
    - `report.json`이 없거나 오래됐으면 사용자에게 재실행을 요청한다(전체 실행은 승인 지점).
 2. xfail 상태 변화: `XPASS(strict)` 실패와, 테스트 안 `pytest.xfail`로 고정했던 테스트가 통과로 바뀐 것을 따로 모은다(5번 출력의 "백로그 갱신 대상").
 3. TC 기대결과: 종류별 구글 시트(주소는 각 폴더 `CLAUDE.md`)에서 마커 ID 행을 읽는다. 시트에 접근하지 못하면 멈추고 보고한다.
 4. 코드: 실패한 테스트 함수와 의존 코드(UI `pages/*.py`, API `clients/`, `schemas/`, `conftest.py`). API는 `api-demo/api-docs.json`도 본다.
-5. 실패 증거: UI는 `test-results/`의 trace와 스크린샷을 먼저 본다. 재실행보다 증거 확인이 먼저다.
+5. 실패 증거: UI는 trace와 스크린샷을 먼저 본다. 재실행보다 증거 확인이 먼저다.
 
 ## 2. 백로그 대조
 - 실패 메시지와 TC ID로 `.claude/docs/backlog/00_index.md`에서 같은 원인의 항목을 찾는다.
@@ -50,7 +55,7 @@ argument-hint: "[ui|api] [nodeid 조각 - 특정 실패만]"
 원인 태그(선택): `contract`(스펙과 구조 다름), `auth`(401/403/잠금), `data`(데이터 의존), `header`(요청 헤더 문제)
 
 ## 5. 출력
-`<playwright-demo|api-demo>/test-results/triage-report.md`와 콘솔 요약. 묶음 하나당 아래 형식으로 쓴다.
+보관본이면 `<대상>/triage-report.md`, 작업 중이면 `<playwright-demo|api-demo>/test-results/triage-report.md`와 콘솔 요약. 묶음 하나당 아래 형식으로 쓴다.
 
 ```markdown
 ### <묶음 요지 한 줄>
@@ -71,3 +76,30 @@ argument-hint: "[ui|api] [nodeid 조각 - 특정 실패만]"
 - 새로 발견했거나 분류가 바뀐 항목은 `.claude/guides/backlog-format.md` 형식으로 `.claude/docs/backlog/`의 상태별 파일에 쓰고 `python3 scripts/backlog_index.py`로 인덱스를 갱신한다.
 - 순서: 분류 → 스펙과 라이브 비교 → real-bug인지 test-bug인지 판단 → 항목 추가 → 인덱스 갱신
 - 백로그 기록은 사용자 승인 전에 해도 된다. Jira 등록은 하지 않는다.
+
+## 7. Jira 중복 검색 (보관본만)
+- real-bug 묶음마다 `project = QA AND type = 버그 AND (summary ~ "<핵심어>" OR text ~ "<TC ID>")`로 찾는다. 검색만 하고 등록하지 않는다.
+- 같은 현상의 이슈가 있으면 노션 행의 "근거"에 "Jira 중복 후보: <키>"를 적는다.
+
+## 8. 노션 "이슈 검수" 후보 등록 (보관본만)
+- 대상: 리포트 그룹이 리얼버그 또는 안건인 묶음. 테스트버그와 flaky는 올리지 않는다(결과 보고서에만 쓴다).
+- 백로그 상태에 Jira 키가 있는 항목은 올리지 않고 결과 보고에 "기존 이슈 재현(키)"으로 적는다.
+- 쓰기 전에 DB(`collection://beb91aef-0900-4169-95f4-4bbbedc2d1fc`)에서 같은 백로그 번호의 행을 찾는다. 상태가 "반려"가 아닌 행이 있으면 새로 만들지 않고 "테스트 실행일"과 "근거"만 갱신한다.
+- 새 행의 속성
+  - 이슈 제목: `jira-issue-format.md`의 제목 형식(`[UI|API] 어떤 기능에서 어떤 현상`)
+  - 구분, TC ID, 분류(real-bug 또는 안건), 중요도(real-bug만)
+  - 기대결과, 실제결과: 시트 TC와 실제 관찰을 명사형 한두 줄로
+  - 재현 절차: TC 스텝을 번호로
+  - 근거: 실패 위치(파일:줄), 실패 메시지 요지, 스펙 근거(AC 번호나 `api-docs.json` 위치), 확인 날짜
+  - 백로그 `#N`, 테스트 실행일(보관본 날짜), 상태 "검수 대기", 승인 체크 없음
+
+## 9. Slack (보관본만)
+- `<대상>/slack.json`의 실행 메시지 스레드에 분류 결과를 답글로 올린다. 명사형으로 짧게 쓴다.
+  - 첫 줄: `*분류 결과*`
+  - 묶음마다: `• [UI|API] <TC> <분류>(<리포트 그룹>, <중요도>) · 백로그 <#N>`
+  - 끝 줄: `노션 이슈 검수 대기 <N>건. 승인 체크 후 /issue-register`
+- 백로그 링크를 넣으려면 백로그 변경을 커밋·push한 뒤 올린다(커밋은 승인 지점이라 링크 없이 번호만 써도 된다).
+
+## 다음 단계
+- 사용자가 노션에서 행을 검토하고 "승인"을 체크한다(승인 ③). 그 뒤 `/issue-register`(Issue-Reporter)가 Jira에 등록한다.
+- 결과 보고서는 사라가 `/report-write`로 쓴다. 테스트버그·flaky 묶음은 수리 대상 목록으로 보고 끝에 적는다.

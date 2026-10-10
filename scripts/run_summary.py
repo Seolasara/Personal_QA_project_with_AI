@@ -3,7 +3,7 @@
 
 사용:  python3 scripts/run_summary.py --ui <UI report.json> --api <API report.json>
 - 출력(stdout) 첫 블록은 본문 메시지, `---THREAD---` 아래는 스레드 답글(실패 상세)이다. 실패가 없으면 스레드는 비어 있다.
-- 실패 상세의 이유는 실패 메시지에서 규칙으로 뽑은 원인 후보이고, 확정 분류는 `/test-report`(test-triage)가 한다.
+- 실패 상세의 이유는 실패 메시지에서 규칙으로 뽑은 원인 후보이고, 확정 분류는 `/test-triage`가 한다.
 - 근거는 실패 위치(파일:줄)와, TC ID가 백로그 인덱스(`.claude/docs/backlog/00_index.md`)에 있으면 그 번호다.
   번호에는 GitHub의 해당 항목 링크(현재 브랜치 기준)를 건다. 링크는 push된 내용만 열린다.
 - 실패 메시지의 이메일, 토큰 형태 문자열은 가린다.

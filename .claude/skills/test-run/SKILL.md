@@ -37,6 +37,7 @@ argument-hint: "[ui|api|all]"
   - 출력의 `---THREAD---` 위는 본문, 아래는 실패 상세(이유, 근거, 백로그 링크)다.
   - 백로그 링크는 GitHub 현재 브랜치 기준이라, 백로그를 고쳤으면 push한 뒤에 보낸다.
 - 루트 `CLAUDE.md` "산출물과 위치"의 Slack 채널에 본문을 올리고, 실패 상세가 있으면 그 메시지의 스레드 답글로 올린다.
+- 본문 메시지의 채널과 ts를 `test-runs/<일시>/slack.json`에 저장한다(`{"channel": "...", "ts": "..."}`). `/test-triage`와 `/issue-register`가 같은 스레드에 답글을 단다.
 - HTML 리포트 첨부: 보관한 `ui/report.html`, `api/report.html`을 같은 스레드에 올린다. 토큰은 루트 `.env`의 `SLACK_BOT_TOKEN`에서 읽고 출력하지 않는다.
   1. `T=$(grep '^SLACK_BOT_TOKEN=' .env | cut -d= -f2-)`
   2. 파일마다 `curl -s -H "Authorization: Bearer $T" "https://slack.com/api/files.getUploadURLExternal?filename=<ui|api>-report.html&length=<바이트 수>"`로 `upload_url`, `file_id`를 받고 `curl -s -F file=@<경로> "<upload_url>"`로 올린다.
@@ -49,4 +50,4 @@ argument-hint: "[ui|api|all]"
 채팅에는 Slack 본문과 같은 요약을 쓰고 아래를 덧붙인다.
 1. 사전 점검 결과(커밋 안 된 변경 포함)
 2. 보관 경로와 Slack 전송 결과
-3. 다음 단계: 실패나 xpass가 있으면 `/test-report`로 분류를 시작할지 묻는다.
+3. 다음 단계: 실패나 xpass가 있으면 `/test-triage test-runs/<일시>`로 분류를 시작할지 묻는다.
