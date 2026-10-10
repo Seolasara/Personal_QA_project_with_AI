@@ -52,7 +52,7 @@
 - 스펙 분석: `.claude/docs/spec analysis/ui|api/`. 실행 이력은 `analysis-log.md`와 Notion "Document-Analyzer 분석" DB.
 - 이슈 후보: `.claude/docs/backlog/`(인덱스 `00_index.md`, 형식 `.claude/guides/backlog-format.md`)
 - 리얼버그: Jira 프로젝트 `QA`, 이슈 유형 "버그"
-  - 사라가 실패를 Notion "테스트 실행" DB(`collection://de613125-b2b2-40af-842a-9f1265e9376c`)와 "이슈 검수" DB(`collection://beb91aef-0900-4169-95f4-4bbbedc2d1fc`)에 올리고, "검토 결과"가 승인인 real-bug만 Jira에 등록한 뒤 Jira 키를 적는다.
+  - 사라가 실패를 Notion "테스트 실행" DB(`collection://de613125-b2b2-40af-842a-9f1265e9376c`)와 "이슈 검수" DB(`collection://beb91aef-0900-4169-95f4-4bbbedc2d1fc`)에 올리고, "검토 결과"로 사용자가 승인했거나 real-bug로 분류 수정한 행만 Jira에 등록한 뒤 Jira 키를 적는다.
   - 제목, 본문, 등록 전 중복 확인은 `.claude/guides/jira-issue-format.md`(샘플 QA-4), 레이블, 에픽, 증거 형식은 각 폴더 `CLAUDE.md`를 따른다.
 - 안건과 결과 보고서: Confluence
   - 결과 보고서는 "Test Result Report"(11665420) 하위에 "Test Result Report (YYYY-MM-DD)"로 쓰고, 템플릿은 "Test result Report Template"(11632643)이다. BTS 섹션은 JQL 기반 이슈 목록 표로 채운다.

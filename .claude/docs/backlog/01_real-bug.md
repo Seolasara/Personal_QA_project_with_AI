@@ -43,3 +43,13 @@ Jira로 올릴 실제 결함. 등록 뒤에도 수정될 때까지 여기 둔다
      - 스펙: `v5` Checkout Cart AC4는 빈 장바구니에서 "Your shopping cart is empty"를 표시한다. Payment AC9의 "the cart is cleared"는 충족된다(헤더 장바구니 아이콘 사라짐).
      - 라이브: `/checkout` 진입 시 장바구니 영역(`app-cart`)이 비어 있고 문구가 없다.
      - 현재 테스트: 문구 확인 단계만 `pytest.xfail`로 pin. 문구가 #15의 라이브 문구로 나오면 #15로 xfail한다.
+
+### #26 상품 검색의 일치 기준이 스펙에 없고 검색어 길이에 따라 결과가 다름
+- 발생 배경: UI_13 스크립트 작성 중 발견(2026-10-10). "hammer" 검색 결과에 상품명에 hammer가 들어간 "Sledgehammer"가 빠졌다.
+- 추정 원인과 근거: sprint5 `ProductService::searchProducts`가 4자 이상은 FULLTEXT 단어 시작 일치(`+term*`), 3자 이하는 `LIKE %term%`를 쓰는 것으로 보인다(소스는 원인 추정 근거로만 씀). 라이브 확인(2026-10-10): "hammer" 6건(Sledgehammer 없음), "ham" 7건(Sledgehammer 포함), "ammer" 0건.
+- 분류와 상태: real-bug(유형 E 스펙 미정의에서 전환) / 중요도 Low / 사용자 판단(2026-10-10): 스펙에 기준이 없어도 기능 의도상 기대결과와 실제결과가 달라 real-bug로 판단 / Jira 등록 대기 / 발견 2026-10-10, 마지막 확인 2026-10-10 전체 실행(UI_13 실패로 재현)
+- 대상 TC
+  1. [UI_13] 상품 검색 시 검색어 포함 상품 결과 노출 확인
+     - 스펙: `v5` Product Overview AC4는 "only matching products"라고만 쓰고 일치 기준(부분 일치, 단어 시작 일치)과 검색 대상 필드를 정의하지 않는다.
+     - 라이브: 4자 이상 검색어는 단어 시작 일치라 "Sledgehammer"가 "hammer" 결과에서 빠진다.
+     - 현재 테스트: 3-1(누락 없이 노출)에서 실패. real-bug로 바뀌어 strict xfail 고정 대상이 될 수 있다(미적용).
