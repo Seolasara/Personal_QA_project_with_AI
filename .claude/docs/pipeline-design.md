@@ -24,9 +24,10 @@
 2. Iteration 흐름 (최대 3회, 결과 보고서 형식은 `.claude/guides/test-report-format.md`)
    1. `/test-run`: 승인 ② 후 UI, API를 따로 전체 실행하고 보관, Slack 요약, 노션 실행 행을 남깁니다.
    2. `/test-triage`: 사라가 실패를 6분류하고 노션 "이슈 검수"에 real-bug와 안건 후보를 올립니다.
-   3. 승인 ③: 사용자가 노션에서 검토합니다. "검토 끝"이면 아래가 자동으로 이어집니다.
-   4. `/issue-register`: Issue-Reporter가 승인된 real-bug를 Jira에 등록하고, 사라가 xfail을 풀고 `issue` 마커를 붙입니다.
-   5. `/report-write`: 사라가 Iteration 보고서 초안을 쓰고, 승인 ④ 후 게시합니다. 게시 후 lessons 회고를 합니다.
+   3. `/test-repair`: 수리 대상(test-bug, selector-drift, timing)을 Script-Writer가 고칩니다. 사용자 검토와 별개로 진행합니다.
+   4. 승인 ③: 사용자가 노션에서 검토합니다. "검토 끝"이면 아래가 자동으로 이어집니다.
+   5. `/issue-register`: Issue-Reporter가 승인된 real-bug를 Jira에 등록하고, 사라가 xfail을 풀고 `issue` 마커를 붙입니다.
+   6. `/report-write`: 사라가 Iteration 보고서 초안을 쓰고, 승인 ④ 후 게시합니다. 게시 후 lessons 회고를 합니다.
    - Iteration 2, 3은 `issue` 마커 테스트를 반드시 포함해 재검증합니다.
 
 ## 3. 스킬 (`.claude/skills/`)
@@ -36,19 +37,20 @@
 4. `/script-write`: 스크립트 작성과 기계 점검(Script-Writer)
 5. `/test-run`: 전체 실행, 보관, Slack, 노션 기록(서브에이전트 없음)
 6. `/test-triage`: 실패 분류, 백로그 대조, 노션 이슈 검수, 사용자 검토 반영(opus, 사라 직접)
-7. `/issue-register`: 승인된 real-bug의 Jira 등록(Issue-Reporter)
-8. `/report-write`: Iteration·최종 결과 보고서(사라 직접)
+7. `/test-repair`: 수리 대상 실패를 원인에 맞게 수리하고 `repair_guard.py`로 실패 숨김을 점검(Script-Writer, fork)
+8. `/issue-register`: 승인된 real-bug의 Jira 등록(Issue-Reporter)
+9. `/report-write`: Iteration·최종 결과 보고서(사라 직접)
 
 ## 4. 서브에이전트 (`.claude/agents/`)
 1. Document-Analyzer: 스펙, 소스 분석과 변경 영향 분석
 2. TC-Writer(sonnet): TC 초안. 흐름 지도와 대조하고 Playwright로 직접 따라가지 않습니다.
-3. Script-Writer: 스크립트 작성. 따라갈 수 없는 TC는 "TC 수정 필요"로 돌려보냅니다.
+3. Script-Writer: 스크립트 작성과 실패 수리. 따라갈 수 없는 TC는 "TC 수정 필요"로 돌려보냅니다.
 4. Issue-Reporter(sonnet): 노션 Jira 초안을 그대로 Jira에 옮기고 키를 기록합니다.
 
 ## 5. 남은 것
-1. 수리 + LLM judge (목표 2)
-   - 수리: test-triage에서 `test-bug`, `selector-drift`, `timing`으로 분류된 실패를 고치는 단계입니다. 지금은 사라가 직접 고칩니다. 반복되면 `/test-repair` 스킬(수리 에이전트)로 고정합니다.
-   - judge: 수리 결과(diff, 실패 로그, TC)를 받아 "실패를 숨기지 않았는지, 원인에 맞는 수리인지"를 채점합니다. 루트 규칙대로 별도 세션에서 실행합니다.
+1. 수리와 LLM judge (목표 2)
+   - 수리: `/test-repair`로 만들었습니다(2026-10-10). 실제 수리 대상이 나오는 다음 실행에서 시범 운영합니다.
+   - judge: 보류합니다(2026-10-10 사용자 결정). TC를 늘리고 CI로 돌려 보면서 필요성이 확인되면 설계합니다. 만들 때는 수리 채점부터 시작하고, 실패 분류는 real-bug를 test-bug로 내리는 판정을 judge가 혼자 확정하지 못하게 합니다.
 2. Test-Runner: 자동화하지 않은 수동 TC를 Playwright MCP로 실행합니다. 수동 TC가 생길 때까지 보류합니다.
 3. Smoke 대상 지정: `smoke` 마커는 `pytest.ini`에 등록되어 있지만 붙은 테스트가 없습니다. 핵심 흐름 TC에 마커를 붙여야 Smoke 단계가 동작합니다.
 4. 정기 자동 실행(CI, 서비스 레포 변경 감지): 후속 과제입니다.

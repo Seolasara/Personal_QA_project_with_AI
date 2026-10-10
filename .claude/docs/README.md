@@ -26,6 +26,7 @@
    - `.claude/skills/test-triage/SKILL.md`: 사라가 보관본 실패를 분류·분석하고 백로그, 노션 "이슈 검수" 후보, Slack에 기록(`/test-triage`)
    - `.claude/guides/notion-test-record-format.md`: 노션 실행 행과 이슈 행의 본문, 증거 형식
    - `.claude/skills/issue-register/SKILL.md`, `.claude/agents/Issue-Reporter.md`: 승인된 real-bug의 Jira 등록(`/issue-register`)
+   - `.claude/skills/test-repair/SKILL.md`: triage에서 수리 대상(test-bug, selector-drift, timing)으로 분류된 실패를 Script-Writer가 수리(`/test-repair`)
    - `.claude/skills/report-write/SKILL.md`: 사라가 Confluence 결과 보고서 초안 작성, 승인 후 게시(`/report-write`)
    - `.claude/docs/backlog/00_index.md`: 이미 등록된 항목인지 먼저 확인한다.
 5. 백로그에 기록할 때
@@ -42,6 +43,7 @@
    - 공통 원칙: 시트와 네트워크를 직접 읽지 않고 로컬 파일만 처리한다(루트 `CLAUDE.md`). 각 파일 맨 위 설명에 사용법이 있다.
    - `script_lint.py`: 테스트 파일을 코드 규칙으로 점검
    - `tc_marker_check.py`: 테스트 마커와 시트 CSV의 ID 대조
+   - `repair_guard.py`: 수리 diff에서 어설션 감소, skip/xfail, 고정 대기 추가와 기대값 변경을 점검(`/test-repair`)
    - `tc_lint.py`: TC 초안(JSON 또는 CSV)을 `.claude/skills/tc-write/SKILL.md`의 서식 규칙으로 점검
    - `sheet_diff.py`: 시트 쓰기 전후 CSV를 비교해 의도하지 않은 변경을 찾음
    - `backlog_index.py`: 백로그 항목 파일에서 `00_index.md` 목록을 다시 만듦

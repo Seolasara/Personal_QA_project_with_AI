@@ -134,4 +134,5 @@ model: opus
 
 ## 다음 단계
 - 사용자가 노션 "이슈 검수"의 "검토 대기" 보기에서 "검토 결과"를 고른다(승인 ③). 그 뒤 `/issue-register`(Issue-Reporter)가 승인된 real-bug를 Jira에 등록한다. "분류 수정" 행은 사라가 백로그와 분류를 먼저 고친다.
-- 결과 보고서는 사라가 `/report-write`로 쓴다. 테스트버그·flaky 묶음은 수리 대상 목록으로 보고 끝에 적는다.
+- 수리 대상(test-bug, selector-drift, timing) 묶음은 `/test-repair <대상>`으로 Script-Writer가 고친다. 수리는 Jira 등록과 독립이라 사용자 검토를 기다리지 않고 진행해도 된다(커밋만 승인 지점).
+- 결과 보고서는 사라가 `/report-write`로 쓴다. 테스트버그·flaky 묶음은 수리 결과와 함께 보고 끝에 적는다.
