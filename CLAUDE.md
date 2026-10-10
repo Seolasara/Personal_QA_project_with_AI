@@ -38,7 +38,7 @@
 - 이슈 중요도는 High/Medium/Low 3단계이고, 결함이 실제로 일으키는 영향으로 정한다. 기준은 `.claude/guides/issue-severity.md`에 있다.
 
 ## 승인과 안전
-- 사용자 승인 지점: TC 확정, 전체 테스트 실행, Jira 등록(Notion "이슈 검수" DB 체크), wiki 게시, 커밋과 PR
+- 사용자 승인 지점: TC 확정, 전체 테스트 실행, Jira 등록(Notion "이슈 검수" DB의 "검토 결과"), wiki 게시, 커밋과 PR
 - 의미 있는 작업 하나(스킬이나 에이전트 완성, 스크립트 배치 통과, 문서 구조 변경)가 끝나면 커밋 단위와 메시지를 제안하고 승인받아 커밋한다. 세션 마무리 때 커밋 안 된 변경이 있으면 알린다.
 - 결제 확정, 계정 잠금(로그인 3회 실패) 같은 되돌릴 수 없는 동작은 하지 않고 보고한다. 단, TC가 검증 대상으로 정한 데모 사이트 결제 확정은 테스트 코드에서 허용한다(에이전트의 탐색 중 확정은 금지).
 - 테스트가 만든 데이터는 테스트가 끝나면 정리한다. 방법은 각 폴더 `CLAUDE.md`에 있다.
@@ -52,7 +52,7 @@
 - 스펙 분석: `.claude/docs/spec analysis/ui|api/`. 실행 이력은 `analysis-log.md`와 Notion "Document-Analyzer 분석" DB.
 - 이슈 후보: `.claude/docs/backlog/`(인덱스 `00_index.md`, 형식 `.claude/guides/backlog-format.md`)
 - 리얼버그: Jira 프로젝트 `QA`, 이슈 유형 "버그"
-  - Notion "이슈 검수" DB(`collection://beb91aef-0900-4169-95f4-4bbbedc2d1fc`)에 후보를 "검수 대기"로 올리고, 승인 체크된 행만 Jira에 등록한 뒤 Jira 키를 적는다.
+  - 사라가 실패를 Notion "테스트 실행" DB(`collection://de613125-b2b2-40af-842a-9f1265e9376c`)와 "이슈 검수" DB(`collection://beb91aef-0900-4169-95f4-4bbbedc2d1fc`)에 올리고, "검토 결과"가 승인인 real-bug만 Jira에 등록한 뒤 Jira 키를 적는다.
   - 제목, 본문, 등록 전 중복 확인은 `.claude/guides/jira-issue-format.md`(샘플 QA-4), 레이블, 에픽, 증거 형식은 각 폴더 `CLAUDE.md`를 따른다.
 - 안건과 결과 보고서: Confluence
   - 결과 보고서는 "Test Result Report"(11665420) 하위에 "Test Result Report (YYYY-MM-DD)"로 쓰고, 템플릿은 "Test result Report Template"(11632643)이다. BTS 섹션은 JQL 기반 이슈 목록 표로 채운다.
