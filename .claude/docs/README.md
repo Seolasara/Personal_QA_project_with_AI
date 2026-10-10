@@ -25,6 +25,7 @@
    - `.claude/skills/test-triage/SKILL.md`: 사라가 보관본 실패를 분류·분석하고 백로그, 노션 "이슈 검수" 후보, Slack에 기록(`/test-triage`)
    - `.claude/guides/notion-test-record-format.md`: 노션 실행 행과 이슈 행의 본문, 증거 형식
    - `.claude/skills/issue-register/SKILL.md`, `.claude/agents/Issue-Reporter.md`: 승인된 real-bug의 Jira 등록(`/issue-register`)
+   - `.claude/skills/report-write/SKILL.md`: 사라가 Confluence 결과 보고서 초안 작성, 승인 후 게시(`/report-write`)
    - `.claude/docs/backlog/00_index.md`: 이미 등록된 항목인지 먼저 확인한다.
 5. 백로그에 기록할 때
    - `.claude/guides/backlog-format.md`: 항목 형식, 불일치 유형, 파일 배치
@@ -55,6 +56,4 @@
    - `.claude/docs/pipeline-design.md`: 스킬과 에이전트 구성, 승인 지점, 만드는 순서
 
 ## 2. 아직 없는 문서 (만든 뒤 위 목록에 추가)
-- `/report-write` 스킬(사라가 결과 보고서 작성)
 - Test-Runner 에이전트(수동 TC가 생기면)
-- 결과 보고서 작성 지침(Confluence 템플릿 "Test result Report Template" 11632643 기반)
