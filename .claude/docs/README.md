@@ -56,5 +56,8 @@
 10. 파이프라인 전체 설계가 필요할 때
    - `.claude/docs/pipeline-design.md`: 스킬과 에이전트 구성, 승인 지점, 만드는 순서
 
+11. 교훈과 회고
+   - `.claude/docs/lessons.md`: 검수에서 바로잡힌 판단 기록과 Iteration 회고 절차
+
 ## 2. 아직 없는 문서 (만든 뒤 위 목록에 추가)
 - Test-Runner 에이전트(수동 TC가 생기면)
