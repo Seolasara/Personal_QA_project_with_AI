@@ -6,7 +6,10 @@
 - Iteration: 사인오프 통과율을 맞출 때까지 3회까지 돌린다. Iteration마다 결과 보고서를 쓰고, 마지막에 사인오프용 결과 보고서를 쓴다.
   - Iteration 1: 개발 완료 후 1차 QA / Iteration 2: 결함 수정 후 재검증 / Iteration 3: 배포 전 Regression Test
   - 사인오프용은 Iteration 결과를 모아 최종 판정을 쓴다. 노션 "테스트 실행" 행의 Iteration 속성으로 묶는다.
-- 제목: `YYYYMMDD_UI Test Result Report`, `YYYYMMDD_API Test Result Report` (날짜는 실행 날짜)
+- 제목 (날짜는 실행 날짜)
+  - Iteration 보고서: `YYYYMMDD_Iteration<N>_Summary Report` (ex: `20261010_Iteration1_Summary Report`)
+  - 사인오프용 최종 보고서: `YYYYMMDD_Test Result Report`
+- Iteration 2, 3에는 Jira에 등록된 결함의 테스트(`@pytest.mark.issue`)를 반드시 포함해 실행한다. 보고서 Comment에 이슈별 재검증 결과(통과 = 수정 확인, 실패 = 미해결)를 쓴다.
 - 섹션은 아래 4개만 쓴다. 템플릿에 없는 섹션, 대분류별 표, 판정 패널을 더하지 않는다.
 - 숫자는 보관본 report.json 기준이고, 노션 실행 행과 Slack 본문의 숫자와 같아야 한다.
 

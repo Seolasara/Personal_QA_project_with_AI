@@ -21,7 +21,7 @@ argument-hint: "[ui|api]"
 - 커밋 안 된 변경이 있으면 결과 보고에 적는다. 리포트의 커밋 해시와 실제 코드가 다를 수 있다.
 
 ## 3. 실행
-- 대상 폴더에서 해당 venv로 1회 실행한다. 스펙에 정확한 기대결과가 없는 TC(`spec_undefined` 마커)는 뺀다.
+- 대상 폴더에서 해당 venv로 1회 실행한다. 스펙에 정확한 기대결과가 없는 TC(`spec_undefined` 마커)는 뺀다. Jira 등록 결함 테스트(`issue` 마커)는 빼지 않는다(Iteration 2, 3의 재검증 대상).
   - UI: `cd playwright-demo && .venv/bin/pytest -m "not spec_undefined"`
   - API: `cd api-demo && .venv/bin/pytest -m "not spec_undefined"`
 - `pytest.ini`의 addopts(리포트, trace, 스크린샷)를 그대로 쓴다. `-o addopts=""`를 쓰지 않는다.
