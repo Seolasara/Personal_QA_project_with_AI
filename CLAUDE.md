@@ -48,14 +48,14 @@
 - TC: 테스트 종류별 구글 시트. 주소는 각 폴더 `CLAUDE.md`에 있다.
   - 테스트 하나가 TC 하나다. TC ID 접두어는 시트 탭과 같게 쓰고(현재 `UI_`, `API_`), 테스트에 시트 ID를 그대로 연결한다(pytest는 `@pytest.mark.tc("ID")`).
   - 점검용 CSV는 `https://docs.google.com/spreadsheets/d/<파일 ID>/gviz/tq?tqx=out:csv&sheet=<탭>`으로 받는다.
-- 전체 실행 결과: `test-runs/<일시>/ui|api/`(git 제외). 요약은 Slack 채널 `C0C7590K189`에 올린다(`/test-run`).
+- 전체 실행 결과: UI와 API를 따로 실행해 `test-runs/<일시>-<ui|api>/`에 보관한다(git 제외). 요약은 Slack 채널 `C0C7590K189`에 올린다(`/test-run`). 스펙에 정확한 기대결과가 없는 TC는 `spec_undefined` 마커로 전체 실행에서 뺀다.
 - 스펙 분석: `.claude/docs/spec analysis/ui|api/`. 실행 이력은 `analysis-log.md`와 Notion "Document-Analyzer 분석" DB.
 - 이슈 후보: `.claude/docs/backlog/`(인덱스 `00_index.md`, 형식 `.claude/guides/backlog-format.md`)
 - 리얼버그: Jira 프로젝트 `QA`, 이슈 유형 "버그"
   - 사라가 실패를 Notion "테스트 실행" DB(`collection://de613125-b2b2-40af-842a-9f1265e9376c`)와 "이슈 검수" DB(`collection://beb91aef-0900-4169-95f4-4bbbedc2d1fc`)에 올리고, "검토 결과"로 사용자가 승인했거나 real-bug로 분류 수정한 행만 Jira에 등록한 뒤 Jira 키를 적는다.
   - 제목, 본문, 등록 전 중복 확인은 `.claude/guides/jira-issue-format.md`(샘플 QA-4), 레이블, 에픽, 증거 형식은 각 폴더 `CLAUDE.md`를 따른다.
 - 안건과 결과 보고서: Confluence
-  - 결과 보고서는 "Test Result Report"(11665420) 하위에 "Test Result Report (YYYY-MM-DD)"로 쓰고, 템플릿은 "Test result Report Template"(11632643)이다. BTS 섹션은 JQL 기반 이슈 목록 표로 채운다.
+  - 결과 보고서는 UI와 API를 따로 "Test Result Report"(11665420) 하위에 `YYYY_MM_DD_UI Test Result Report`, `YYYY_MM_DD_API Test Result Report`로 쓴다. 형식은 `.claude/guides/test-report-format.md`(템플릿 11632643의 원본)다.
 - 작업 일지: Notion "QA AI Agent 업무 일지"(아래 "세션 마무리")
 
 ## 실패 분류와 가드레일

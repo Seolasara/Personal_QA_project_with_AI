@@ -7,7 +7,7 @@ model: opus
 
 # /test-triage
 대상: `$ARGUMENTS`
-- `test-runs/<일시>` 또는 `latest`: 전체 실행 보관본의 모든 실패. 1~9번을 모두 한다.
+- `test-runs/<일시>-<ui|api>` 또는 `latest ui|api`: 전체 실행 보관본의 모든 실패와 xfail. 1~9번을 모두 한다.
 - `ui|api <nodeid 조각>`: 작업 중 실패 몇 건만 빠르게 본다. `test-results/`를 읽고 1~6번만 한다(노션, Slack 없음).
 - 비어 있으면 `latest`다.
 
@@ -15,7 +15,7 @@ model: opus
 
 ## 1. 입력 수집
 1. 실패 목록
-   - 보관본: `<대상>/ui/report.json`, `<대상>/api/report.json`의 실패 항목. UI 증거는 `<대상>/ui/tests-*/`(trace, 스크린샷)와 `<대상>/ui/dom-snapshots/`
+   - 보관본: `<대상>/report.json`의 실패와 xfail 항목. UI 증거는 `<대상>/tests-*/`(trace, 스크린샷)와 `<대상>/dom-snapshots/`
    - 작업 중: UI `playwright-demo/.venv/bin/python scripts/failures.py [nodeid조각]`, API `api-demo/test-results/report.json`
    - `report.json`이 없거나 오래됐으면 사용자에게 재실행을 요청한다(전체 실행은 승인 지점).
 2. xfail 상태 변화: `XPASS(strict)` 실패와, 테스트 안 `pytest.xfail`로 고정했던 테스트가 통과로 바뀐 것을 따로 모은다(5번 출력의 "백로그 갱신 대상").
