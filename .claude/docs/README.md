@@ -12,6 +12,7 @@
 2. TC를 쓸 때 (TC-Writer가 읽는 문서)
    - `.claude/skills/tc-write/SKILL.md`: TC 작성 포맷과 방법(열 구성, 작성 규칙, 검수 표시와 마커, 작성 후 점검 체크리스트)
    - `.claude/agents/TC-Writer.md`: 작업 순서와 업무 규칙, 시트 쓰기 절차
+   - `.claude/docs/flows/ui-flows.md`: UI 흐름 지도(`/flow-map`). UI TC의 스텝과 사전 조건을 대조한다.
    - 기능 요구사항과 스펙 분석: 위 1번에서 대상 기능 파일만. 기능 파일의 "6. 변경 이력"에 최근 서비스 변경이 있으면 TC 추가·수정 후보로 반영한다.
    - 해당 종류 폴더의 `CLAUDE.md`: 스펙 기준, QA plan 페이지
    - `.claude/docs/backlog/00_index.md`: 대상 기능과 관련된 항목만

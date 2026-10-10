@@ -22,7 +22,7 @@ argument-hint: "[test-runs/<일시>-<ui|api> | latest ui|api]"
 ## 3. 작성 절차
 1. 1번 입력을 모아 수치를 맞춘다. report.json 합계, 노션 실행 행, Slack 본문의 숫자가 같은지 확인한다.
 2. Confluence 쓰기 전에 `getContentFormatGuide`(createConfluencePage)를 한 번 읽고 HTML 본문으로 쓴다. Jira 목록은 `jira` 매크로(`jqlQuery`)로 넣는다.
-3. `createConfluenceContent`(contentType page, `draft: true`, parent `parentContentId: 11665420`)로 초안을 만든다.
+3. `createConfluenceContent`(contentType page, `draft: true`, parent `parentContentId`는 UI 12222506, API 12288047)로 초안을 만든다. 임시 저장본은 다시 조회·수정할 수 없으므로 고칠 때는 새 초안을 만들고 이전 초안은 사용자에게 삭제를 요청한다.
 4. 사용자에게 초안 링크와 요약(판정, 핵심 수치, 남은 이슈)을 보고하고 게시 승인을 묻는다.
 5. 승인되면 게시한다. 게시 후
    - 노션 "테스트 실행" 행의 진행 상태를 "보고서 완료"로 바꾸고 본문 "근거와 자료"에 보고서 링크를 넣는다.

@@ -1,5 +1,5 @@
 # 테스트 결과 보고서 형식
-대상: Confluence "Test Result Report"(11665420) 하위의 결과 보고서. `/report-write`가 쓴다. 이 파일이 원본이고, Confluence "Test result Report Template"(11632643)은 섹션 제목만 맞춘 사본이다. 형식을 바꾸면 템플릿 페이지도 같이 고친다. 문체는 전역 "문서 문체"를 따른다.
+대상: Confluence 결과 보고서. UI는 "UI Test Results"(12222506), API는 "API Test Results"(12288047) 하위에 쓴다. `/report-write`가 쓴다. 이 파일이 원본이고, Confluence "Test result Report Template"(11632643)은 섹션 제목만 맞춘 사본이다. 형식을 바꾸면 템플릿 페이지도 같이 고친다. 문체는 전역 "문서 문체"를 따른다.
 
 ## 1. 원칙
 - UI와 API는 실행도 보고서도 따로 쓴다. 보고서 하나가 실행 하나(`test-runs/<일시>-<ui|api>`)다.
@@ -31,9 +31,9 @@
      - Total: 시트 TC 수
      - Fail: 실패와 xfail(알려진 불일치로 고정한 테스트)을 모두 넣는다. xfail 칸은 두지 않는다.
      - N/A: 스펙에 정확한 기대결과가 없어 실행에서 뺀 TC(`spec_undefined`). 안건으로 따로 다룬다.
-     - Blocked: 실행하지 못한 TC(수동 미실행, 사전 조건 미충족)
-     - Pass Rate: Pass / (Total - N/A - Blocked)
-   - 커버리지: 자동화율(자동화된 TC / 시트 TC)과 실행률((Total - N/A - Blocked) / Total)
+     - Blocked: 판정할 수 있지만 환경이나 데이터 문제로 실행하지 못한 TC(ex: 사이트 장애, 사전 조건 데이터 없음, 수동 TC 미실행). N/A와 달리 실행률을 낮춘다.
+     - Pass Rate: Pass / 실행한 TC (실행한 TC = Total - N/A - Blocked)
+   - 커버리지: 자동화율(자동화된 TC / 시트 TC)과 실행률(실행한 TC / (Total - N/A)). 기준은 QA plan 1.4 Sign-off Criteria
 4. BTS Status
    - Jira 실시간 목록(jira 매크로)만 둔다. 각 목록 위에 JQL을 한 줄로 적고, 그 아래에 다른 표나 설명을 두지 않는다.
      - 이번 실행에서 등록한 이슈: `project = QA AND type = 버그 AND labels = <ui|api> AND created >= "<실행 날짜>" ORDER BY priority DESC`
