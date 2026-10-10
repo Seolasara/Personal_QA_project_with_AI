@@ -17,7 +17,7 @@ argument-hint: "[test-runs/<일시>-<ui|api> | latest ui|api]"
 - 시작 전 확인: 노션 "이슈 검수"에 이 실행의 "분류 수정 대기"나 등록 안 된 승인 real-bug가 남아 있으면 쓰지 않고 그 목록을 보고한다.
 
 ## 2. 보고서 형식
-- `.claude/guides/test-report-format.md`를 따른다(섹션 4개: Test Result Summary 표, Test Scope, Test Result와 커버리지, BTS Status의 Jira 목록). 제목은 `YYYY_MM_DD_UI Test Result Report` 또는 `YYYY_MM_DD_API Test Result Report`.
+- `.claude/guides/test-report-format.md`를 따른다(섹션 4개: Test Result Summary 표, Test Scope, Test Result와 커버리지, BTS Status의 Jira 목록). 제목은 가이드 1번을 따른다.
 
 ## 3. 작성 절차
 1. 1번 입력을 모아 수치를 맞춘다. report.json 합계, 노션 실행 행, Slack 본문의 숫자가 같은지 확인한다.

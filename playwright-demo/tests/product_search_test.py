@@ -254,6 +254,7 @@ def test_product_quantity_zero_or_negative_corrected_to_one(product_detail):
     expect(detail.quantity).to_have_value("1")
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("UI_21")
 def test_product_quantity_cleared_corrected_to_one(product_detail):
     detail = product_detail

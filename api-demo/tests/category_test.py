@@ -191,6 +191,7 @@ def test_search_categories_no_result(api_client):
     assert response.json() == []
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_37")
 def test_search_categories_without_q(api_client):
     response = CategoryClient(api_client).search()
@@ -203,6 +204,7 @@ def test_search_categories_without_q(api_client):
     assert body[0].sub_categories
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_38")
 def test_search_categories_lowercase_keyword(api_client):
     response = CategoryClient(api_client).search("hammer")
@@ -216,6 +218,7 @@ def test_search_categories_lowercase_keyword(api_client):
     assert body[0].sub_categories == []
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_39")
 def test_search_categories_partial_match(api_client):
     response = CategoryClient(api_client).search("tools")

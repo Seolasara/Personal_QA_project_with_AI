@@ -18,6 +18,7 @@ def test_create_empty_cart(api_client, cart_cleanup):
     CartCreatedResponse.model_validate(body)
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_60")
 def test_create_cart_without_body(api_client, cart_cleanup):
     response = CartClient(api_client).create_cart()
@@ -48,6 +49,7 @@ def test_get_created_cart(api_client, cart_id):
     assert body.cart_items == []
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_63")
 def test_get_cart_after_add_item(api_client, cart_id, product_id):
     cart_client = CartClient(api_client)
@@ -69,6 +71,7 @@ def test_get_cart_after_add_item(api_client, cart_id, product_id):
     assert item.product_id == product_id
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_64")
 def test_get_deleted_cart(api_client, cart_id):
     cart_client = CartClient(api_client)
@@ -81,6 +84,7 @@ def test_get_deleted_cart(api_client, cart_id):
     assert body.message == "Requested item not found"
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_65")
 def test_get_cart_after_update_quantity(api_client, cart_id, product_id):
     cart_client = CartClient(api_client)
@@ -106,6 +110,7 @@ def test_add_item(api_client, cart_id, product_id):
     assert body.result == "item added or updated"
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_67")
 def test_add_same_item_twice(api_client, cart_id, product_id):
     cart_client = CartClient(api_client)
@@ -177,6 +182,7 @@ def test_delete_item(api_client, cart_id, product_id):
     assert delete.content == b""
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_74")
 def test_delete_item_not_in_cart(api_client, cart_id, product_id):
     response = CartClient(api_client).remove_item(cart_id, product_id)
@@ -194,6 +200,7 @@ def test_delete_item_nonexistent_cart(api_client, product_id):
         pytest.xfail(f"백로그 #19: 404 메시지가 스펙(\"Resource not found\")과 다름. 실제 \"{body.message}\"")
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_76")
 def test_get_cart_after_delete_item(api_client, cart_id, product_id):
     cart_client = CartClient(api_client)

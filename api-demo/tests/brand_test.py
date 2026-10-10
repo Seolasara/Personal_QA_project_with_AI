@@ -83,6 +83,7 @@ def test_search_brand_no_result(api_client):
     assert response.json() == []
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_22")
 def test_search_brand_without_q(api_client):
     response = BrandClient(api_client).search()
@@ -94,6 +95,7 @@ def test_search_brand_without_q(api_client):
         BrandsResponse.model_validate(item)
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_23")
 def test_search_brand_lowercase_keyword(api_client, forge_brand):
     response = BrandClient(api_client).search("forge")

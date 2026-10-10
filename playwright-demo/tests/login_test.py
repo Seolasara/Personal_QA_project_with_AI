@@ -10,6 +10,7 @@ def test_landing_page(page):
     expect(page).to_have_title("Practice Software Testing - Toolshop - v5.0")
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("UI_02")
 def test_empty_credentials(login_page, blocked_login_requests):
     expect(login_page.form).to_be_visible()
@@ -54,6 +55,7 @@ def test_invalid_password(login_page):
 
 
 # 비밀번호 길이 경계: 1자, 200자 (클라이언트 검증, 로그인 요청은 fixture가 차단)
+@pytest.mark.spec_undefined
 @pytest.mark.tc("UI_06")
 def test_password_length_invalid(login_page, blocked_login_requests):
     expect(login_page.form).to_be_visible()
@@ -101,6 +103,7 @@ def test_login_form_elements(login_page):
 
 
 # 백로그 #24: 스펙 미정의, 시트 기대결과(라이브 확인 동작) 기준
+@pytest.mark.spec_undefined
 @pytest.mark.tc("UI_41")
 def test_sign_in_link_hidden_after_login(login_page):
     expect(login_page.header_sign_in).to_be_visible()

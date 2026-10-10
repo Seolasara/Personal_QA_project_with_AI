@@ -164,6 +164,7 @@ def test_create_invoice_invalid_payment_method(api_client, authed_client, cart_i
     assert response.json() == {"payment_method": ["The selected payment method is invalid."]}
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_108")
 def test_create_invoice_mismatched_city(api_client, authed_client, cart_id, product_id, address_info):
     CartClient(api_client).add_item(cart_id, product_id, 1)
@@ -184,6 +185,7 @@ def test_get_invoice_without_auth(existing_invoice_id):
     assert response.json() == {"message": "Unauthorized"}
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_110")
 def test_get_invoice_with_malformed_token(authed_client, existing_invoice_id):
     response = InvoiceClient(authed_client).get_invoice_with_token(existing_invoice_id, INVALID_TOKEN)
@@ -200,6 +202,7 @@ def test_get_invoice_not_found(authed_client):
     assert response.json() == {"message": "Requested item not found"}
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_112")
 def test_get_other_users_invoice(other_user_client, existing_invoice_id):
     # existing_invoice_id는 API 계정(customer3)이 만든 인보이스, 조회는 두 번째 계정으로 한다
@@ -209,6 +212,7 @@ def test_get_other_users_invoice(other_user_client, existing_invoice_id):
     assert response.json() == {"message": "Requested item not found"}
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_113")
 def test_list_invoices(authed_client, existing_invoice_id):
     response = InvoiceClient(authed_client).list_invoices()
@@ -236,6 +240,7 @@ def test_list_invoices_without_auth(api_client):
     assert response.json() == {"message": "Unauthorized"}
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_116")
 def test_list_invoices_with_logged_out_token(api_client, auth_token):
     api_client.headers["Authorization"] = f"Bearer {auth_token}"

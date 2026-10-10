@@ -55,7 +55,7 @@
   - 사라가 실패를 Notion "테스트 실행" DB(`collection://de613125-b2b2-40af-842a-9f1265e9376c`)와 "이슈 검수" DB(`collection://beb91aef-0900-4169-95f4-4bbbedc2d1fc`)에 올리고, "검토 결과"로 사용자가 승인했거나 real-bug로 분류 수정한 행만 Jira에 등록한 뒤 Jira 키를 적는다.
   - 제목, 본문, 등록 전 중복 확인은 `.claude/guides/jira-issue-format.md`(샘플 QA-4), 레이블, 에픽, 증거 형식은 각 폴더 `CLAUDE.md`를 따른다.
 - 안건과 결과 보고서: Confluence
-  - 결과 보고서는 UI와 API를 따로 "Test Result Report"(11665420) 하위에 `YYYY_MM_DD_UI Test Result Report`, `YYYY_MM_DD_API Test Result Report`로 쓴다. 형식은 `.claude/guides/test-report-format.md`(템플릿 11632643의 원본)다.
+  - 결과 보고서는 UI와 API를 따로 "Test Result Report"(11665420) 하위에 `YYYYMMDD_UI Test Result Report`, `YYYYMMDD_API Test Result Report`로 쓴다. 형식은 `.claude/guides/test-report-format.md`(템플릿 11632643의 원본)다.
 - 작업 일지: Notion "QA AI Agent 업무 일지"(아래 "세션 마무리")
 
 ## 실패 분류와 가드레일

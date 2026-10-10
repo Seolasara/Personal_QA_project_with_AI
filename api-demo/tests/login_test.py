@@ -9,6 +9,7 @@ _LOCAL, _, _DOMAIN = API_EMAIL.partition("@")
 WRONG_PASSWORD = "pass"
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_01")
 def test_invalid_email_without_domain(api_client):
     response = LoginClient(api_client).login_with_payload(
@@ -19,6 +20,7 @@ def test_invalid_email_without_domain(api_client):
     assert LoginErrorResponse.model_validate(response.json()).error == "Unauthorized"
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_02")
 def test_invalid_email_with_incomplete_domain(api_client):
     response = LoginClient(api_client).login_with_payload(
@@ -29,6 +31,7 @@ def test_invalid_email_with_incomplete_domain(api_client):
     assert LoginErrorResponse.model_validate(response.json()).error == "Unauthorized"
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_03")
 def test_invalid_password(api_client):
     response = LoginClient(api_client).login(API_EMAIL, WRONG_PASSWORD)
@@ -37,6 +40,7 @@ def test_invalid_password(api_client):
     assert LoginErrorResponse.model_validate(response.json()).error == "Unauthorized"
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_04")
 def test_login_without_email(api_client):
     response = LoginClient(api_client).login_with_payload({"password": API_PASSWORD})
@@ -45,6 +49,7 @@ def test_login_without_email(api_client):
     assert LoginErrorResponse.model_validate(response.json()).error == "Invalid login request"
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_05")
 def test_login_without_password(api_client):
     response = LoginClient(api_client).login_with_payload({"email": API_EMAIL})
@@ -53,6 +58,7 @@ def test_login_without_password(api_client):
     assert LoginErrorResponse.model_validate(response.json()).error == "Invalid login request"
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_06")
 def test_login_with_empty_body(api_client):
     response = LoginClient(api_client).login_with_payload({})
@@ -61,6 +67,7 @@ def test_login_with_empty_body(api_client):
     assert LoginErrorResponse.model_validate(response.json()).error == "Invalid login request"
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_07")
 def test_login_with_unregistered_email(api_client):
     response = LoginClient(api_client).login(f"nouser@{_DOMAIN}", API_PASSWORD)

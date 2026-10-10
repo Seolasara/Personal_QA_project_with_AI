@@ -23,6 +23,7 @@ def test_logout(loggedin_home):
     expect(usermenu).not_to_be_visible()
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("UI_39")
 def test_logout_shows_header_sign_in(loggedin_home):
     header = LoginPage(loggedin_home)

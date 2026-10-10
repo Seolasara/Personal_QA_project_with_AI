@@ -87,6 +87,7 @@ def test_get_products_sorted_by_price_asc(api_client):
     assert prices == sorted(prices)
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_46")
 def test_get_products_between_price(api_client):
     response = ProductClient(api_client).get_between("price,10,30")
@@ -219,6 +220,7 @@ def test_search_products_no_result(api_client):
     assert products.total == 0
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_57")
 def test_search_products_lowercase(api_client):
     response = ProductClient(api_client).search("hammer")

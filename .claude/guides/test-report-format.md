@@ -3,7 +3,7 @@
 
 ## 1. 원칙
 - UI와 API는 실행도 보고서도 따로 쓴다. 보고서 하나가 실행 하나(`test-runs/<일시>-<ui|api>`)다.
-- 제목: `YYYY_MM_DD_UI Test Result Report`, `YYYY_MM_DD_API Test Result Report` (날짜는 실행 날짜)
+- 제목: `YYYYMMDD_UI Test Result Report`, `YYYYMMDD_API Test Result Report` (날짜는 실행 날짜)
 - 섹션은 아래 4개만 쓴다. 템플릿에 없는 섹션, 대분류별 표, 판정 패널을 더하지 않는다.
 - 숫자는 보관본 report.json 기준이고, 노션 실행 행과 Slack 본문의 숫자와 같아야 한다.
 
@@ -21,11 +21,13 @@
    - 제외한 TC: 스펙에 정확한 기대결과가 없어 전체 실행에서 뺀 TC(`spec_undefined` 마커) 수와 ID
    - 범위 밖 기능
 3. Test Result
-   - 표 한 줄: Total, Pass, Fail, Blocked, Pass Rate
-     - Fail에는 실패와 xfail(알려진 불일치로 고정한 테스트)을 모두 넣는다. xfail 칸은 두지 않는다.
-     - Blocked는 실행하지 못한 TC(수동 미실행, 사전 조건 미충족)
-     - Pass Rate는 Pass / Total
-   - 커버리지: 시트 TC 수 대비 자동화된 TC 수(제외한 TC 포함 여부를 함께 적는다)
+   - 표 한 줄: Total, Pass, Fail, N/A, Blocked, Pass Rate. 단위는 TC다(파라미터로 나뉜 테스트는 모두 통과해야 그 TC가 Pass).
+     - Total: 시트 TC 수
+     - Fail: 실패와 xfail(알려진 불일치로 고정한 테스트)을 모두 넣는다. xfail 칸은 두지 않는다.
+     - N/A: 스펙에 정확한 기대결과가 없어 실행에서 뺀 TC(`spec_undefined`). 안건으로 따로 다룬다.
+     - Blocked: 실행하지 못한 TC(수동 미실행, 사전 조건 미충족)
+     - Pass Rate: Pass / (Total - N/A - Blocked)
+   - 커버리지: 자동화율(자동화된 TC / 시트 TC)과 실행률((Total - N/A - Blocked) / Total)
 4. BTS Status
    - Jira 실시간 목록(jira 매크로)만 둔다. 각 목록 위에 JQL을 한 줄로 적고, 그 아래에 다른 표나 설명을 두지 않는다.
      - 이번 실행에서 등록한 이슈: `project = QA AND type = 버그 AND labels = <ui|api> AND created >= "<실행 날짜>" ORDER BY priority DESC`

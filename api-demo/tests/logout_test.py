@@ -22,6 +22,7 @@ def test_logout_without_token(api_client):
     assert LogoutErrorResponse.model_validate(response.json()).message == "Unauthorized"
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_13")
 def test_logout_with_malformed_token(api_client):
     response = LogoutClient(api_client).logout_with_token(INVALID_TOKEN)
@@ -30,6 +31,7 @@ def test_logout_with_malformed_token(api_client):
     assert LogoutErrorResponse.model_validate(response.json()).message == "Unauthorized"
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_14")
 def test_logout_again_with_logged_out_token(authed_client):
     logout_client = LogoutClient(authed_client)

@@ -166,6 +166,7 @@ def test_cart_remove_last_item_shows_empty(cart):
     expect(cart_page.empty_message).to_be_visible()
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("UI_32")
 def test_cart_remove_all_hides_proceed_to_checkout(cart):
     cart_page = CartPage(cart)

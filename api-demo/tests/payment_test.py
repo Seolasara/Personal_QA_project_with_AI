@@ -44,6 +44,7 @@ def test_transfer_payment(api_client):
         pytest.xfail(f"백로그 #2: 결제 메시지가 스펙(\"{SPEC_SUCCESS_MESSAGE}\")과 다름. 실제 \"{result.message}\"")
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_96")
 def test_payment_method_missing(api_client):
     payment_client = PaymentClient(api_client)
@@ -57,6 +58,7 @@ def test_payment_method_missing(api_client):
         pytest.xfail(f"백로그 #2: 결제 메시지가 스펙(\"{SPEC_SUCCESS_MESSAGE}\")과 다름. 실제 \"{result.message}\"")
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_97")
 def test_payment_method_not_in_enum(api_client):
     payment_client = PaymentClient(api_client)
@@ -70,6 +72,7 @@ def test_payment_method_not_in_enum(api_client):
         pytest.xfail(f"백로그 #2: 결제 메시지가 스펙(\"{SPEC_SUCCESS_MESSAGE}\")과 다름. 실제 \"{result.message}\"")
 
 
+@pytest.mark.spec_undefined
 @pytest.mark.tc("API_98")
 def test_credit_card_number_missing(api_client):
     payment_client = PaymentClient(api_client)
