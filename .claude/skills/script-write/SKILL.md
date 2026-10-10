@@ -31,6 +31,8 @@ TC 원본은 구글 시트이고, 테스트 하나가 TC 하나다. 종류별 �
 - `xfail(strict=True, reason="...백로그 #N 또는 이슈 키...")`로 표시한다. 버그가 고쳐지면 XPASS로 실패 처리되어 바로 드러난다.
 - 스펙 불일치가 테스트 일부일 때는 테스트 전체에 xfail을 붙이지 않는다. 나머지 어설션을 먼저 두고, 불일치 비교만 `pytest.xfail("백로그 #N: ...")`로 처리한다. 테스트 전체가 불일치 하나만 검증하면 `xfail(strict=True)`를 쓴다.
 - xfail을 붙인 테스트는 `--runxfail`로 실제 실패 원인을 확인한다. import 누락 같은 코드 오류도 xfail로 가려진다.
+- Jira에 등록된 결함은 xfail을 풀고 `@pytest.mark.issue("QA-N")`을 붙인다. 고쳐질 때까지 실패로 집계되고, 어떤 이슈 때문에 실패하는지 마커로 알 수 있다.
+- 스펙에 정확한 기대결과가 없는 TC(안건)는 xfail이 아니라 `@pytest.mark.spec_undefined`를 붙여 전체 실행에서 뺀다.
 - 간헐 결함(재현성 "간헐")은 strict xfail로 고정하지 않는다. 백로그에 "회귀 대상"으로 추적한다(`.claude/guides/issue-severity.md`).
 - 교훈: xfail로 고정하기 전에 테스트 클라이언트 설정(헤더 등) 문제가 아닌지부터 의심한다. 사례는 `api-demo/CLAUDE.md`.
 

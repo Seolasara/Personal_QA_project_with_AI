@@ -3,6 +3,9 @@
 
 ## 1. 원칙
 - UI와 API는 실행도 보고서도 따로 쓴다. 보고서 하나가 실행 하나(`test-runs/<일시>-<ui|api>`)다.
+- Iteration: 사인오프 통과율을 맞출 때까지 3회까지 돌린다. Iteration마다 결과 보고서를 쓰고, 마지막에 사인오프용 결과 보고서를 쓴다.
+  - Iteration 1: 개발 완료 후 1차 QA / Iteration 2: 결함 수정 후 재검증 / Iteration 3: 배포 전 Regression Test
+  - 사인오프용은 Iteration 결과를 모아 최종 판정을 쓴다. 노션 "테스트 실행" 행의 Iteration 속성으로 묶는다.
 - 제목: `YYYYMMDD_UI Test Result Report`, `YYYYMMDD_API Test Result Report` (날짜는 실행 날짜)
 - 섹션은 아래 4개만 쓴다. 템플릿에 없는 섹션, 대분류별 표, 판정 패널을 더하지 않는다.
 - 숫자는 보관본 report.json 기준이고, 노션 실행 행과 Slack 본문의 숫자와 같아야 한다.

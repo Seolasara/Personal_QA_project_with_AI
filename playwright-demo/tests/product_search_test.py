@@ -100,6 +100,7 @@ def test_product_sort_options(guest_catalog):
 
 
 @pytest.mark.tc("UI_13")
+@pytest.mark.issue("QA-7")  # 백로그 #26: 4자 이상 검색어 단어 시작 일치. 고쳐질 때까지 실패로 집계
 def test_product_search_shows_matching_only(guest_catalog):
     catalog = guest_catalog
     # 일치 기준: 상품명에 검색어 포함(부분 일치, 대소문자 무시). 사용자 결정(2026-10-10), 백로그 #26
@@ -117,13 +118,7 @@ def test_product_search_shows_matching_only(guest_catalog):
     # 3-2. 상품명에 "hammer"가 포함되지 않은 상품 미노출
     not_matching = [name for name in names if "hammer" not in name.casefold()]
     assert not not_matching, f"hammer가 포함되지 않은 상품 노출: {not_matching}"
-    try:
-        assert not missing, f"hammer가 포함된 상품 누락: {missing}"
-    except AssertionError:
-        # 알려진 결함: 4자 이상 검색어는 단어 시작 일치라 단어 중간에 hammer가 있는 상품만 빠진다
-        if all(not re.search(r"\bhammer", name, re.IGNORECASE) for name in missing):
-            pytest.xfail(f"백로그 #26(QA-7): 단어 중간 일치 상품 누락 {missing}")
-        raise
+    assert not missing, f"hammer가 포함된 상품 누락: {missing}"
 
 
 @pytest.mark.tc("UI_14")

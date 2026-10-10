@@ -85,7 +85,7 @@ model: opus
 1. "테스트 실행" DB(`collection://de613125-b2b2-40af-842a-9f1265e9376c`)에서 이 실행의 행(보관 경로가 `<대상>`)을 찾는다. 없으면 만든다(속성은 `/test-run` 6번과 같다).
    - 본문은 `.claude/guides/notion-test-record-format.md` 2번(요약, 통과 현황, 실패 현황과 이슈·백로그 링크, xfail, 근거와 자료)으로 쓴다.
    - "진행 상태"를 "검토 대기"로 바꾼다.
-2. "이슈 검수" DB(`collection://beb91aef-0900-4169-95f4-4bbbedc2d1fc`)에 실패 묶음마다 행을 올린다. 리포트 그룹과 관계없이 모두 올린다(사용자가 분류를 바로잡을 수 있게).
+2. "이슈 검수" DB(`collection://beb91aef-0900-4169-95f4-4bbbedc2d1fc`)에 real-bug와 안건 후보 묶음만 올린다. 이미 수리한 test-bug, flaky, env는 올리지 않고 결과 보고와 triage-report에만 쓴다(2026-10-10 사용자 결정).
    - 같은 백로그 번호의 행이 있고 상태가 "종료"가 아니면 새로 만들지 않는다. "테스트 실행" 관계에 이번 실행을 더하고 "근거"를 갱신한다.
    - 백로그 상태에 Jira 키가 있는 real-bug는 "기존 이슈 재현(키)"를 근거에 적고 상태를 "등록 완료"로 둔다.
    - 본문은 `.claude/guides/notion-test-record-format.md` 3번(real-bug는 Jira 초안 + 검토 메모, 그 밖은 검토 메모)과 4번(스크린샷)을 따른다.
@@ -126,9 +126,8 @@ model: opus
    - 보류: 그대로 두고 결과 보고서의 미결 항목에 적는다.
    - 백로그를 고쳤으면 커밋·push한다(Jira 본문의 백로그 링크가 열리게).
 2. Jira 등록: 등록 대상이 있으면 `/issue-register`를 실행한다. 보고를 받아 링크, 첨부 등 빠진 곳을 사라가 확인하고 바로잡는다.
-3. xfail 고정: 새로 등록된 real-bug의 테스트를 `script-write` SKILL.md "xfail 규칙"대로 고정한다.
-   - 테스트 전체가 그 불일치만 검증하면 `xfail(strict=True, reason="백로그 #N(Jira 키)")`, 일부면 그 비교만 `pytest.xfail`로 감싸고 알려진 증상일 때만 xfail한다.
-   - 해당 테스트만 1회 실행해 xfail을 확인하고 `script_lint.py`를 돌린다. 백로그 "현재 테스트" 줄을 갱신하고 커밋·push한다.
+3. 이슈 표시: 새로 등록된 real-bug의 테스트에서 xfail을 풀고 `@pytest.mark.issue("QA-N")`을 붙인다(`script-write` SKILL.md "xfail 규칙").
+   - 해당 테스트만 1회 실행해 실패(이슈 증상)를 확인하고 `script_lint.py`를 돌린다. 백로그 "현재 테스트" 줄을 갱신하고 커밋·push한다.
 4. 결과 보고서: 등록 대상이 모두 "등록 완료"(또는 사유가 있는 미등록)이고 "분류 수정 대기"가 없으면 `/report-write`로 이어간다. 남은 것이 있으면 그 목록을 보고하고 멈춘다.
 5. 단계마다 Slack 실행 스레드에 짧게 올리고, 노션 "테스트 실행" 행의 진행 상태를 갱신한다.
 

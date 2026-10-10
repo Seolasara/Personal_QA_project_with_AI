@@ -169,10 +169,7 @@ def test_get_related_products(api_client, product_id):
 
 
 @pytest.mark.tc("API_53")
-@pytest.mark.xfail(
-    strict=True,
-    reason="백로그 #13: 존재하지 않는 상품의 연관 상품 조회가 스펙(404) 대신 500 Server Error",
-)
+@pytest.mark.issue("QA-4")  # 백로그 #13: 스펙(404) 대신 500 Server Error. 고쳐질 때까지 실패로 집계
 def test_get_related_products_unknown_id(api_client):
     response = ProductClient(api_client).get_related("nonexistent-product-id")
     body = response.json()
