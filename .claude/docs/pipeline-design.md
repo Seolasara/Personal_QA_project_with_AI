@@ -1,89 +1,54 @@
 # QA 파이프라인 설계 (스킬과 서브에이전트)
-
-스킬 5개가 순서와 승인 지점을 관리하고, 서브에이전트가 실제 작업을 합니다. 사용자는 승인 지점에서 결과만 보고 승인합니다.
+갱신 2026-10-10. 스킬이 단계 순서와 승인 지점을 관리하고, 서브에이전트는 형식이 정해진 작업만 맡습니다. 사라(메인 세션)가 QA 리더로 실행, 분석, 보고를 직접 합니다.
 
 ## 1. 공통 원칙
-1. 스킬과 서브에이전트의 역할
-   - 스킬: 메인 세션(사라)이 실행합니다. 단계 순서, 서브에이전트 호출, 자동 점검, 승인 요청을 맡습니다.
-   - 서브에이전트: 한 가지 일만 하는 작업자입니다. 도구와 권한을 필요한 만큼만 줍니다.
-   - 서브에이전트는 다른 서브에이전트를 부를 수 없어서, 작업자 사이의 주고받기는 스킬이 중계합니다.
-2. 승인 지점, 판단 기준, 산출물 위치, 분류 체계는 루트 `CLAUDE.md`에 있습니다.
-   - 루트 `CLAUDE.md`는 모든 서브에이전트에도 자동으로 들어가므로, 이 문서와 에이전트 정의에는 다시 쓰지 않습니다.
+1. 역할
+   - 사라(메인 세션): 테스트 실행, 실패 분류와 원인 분석, 결과 보고서, 사용자 보고와 승인 요청
+   - 서브에이전트: 형식이 정해진 일(문서 분석, TC 초안, 스크립트, Jira 등록)만 합니다. 다른 서브에이전트를 부를 수 없어서 주고받기는 스킬과 사라가 중계합니다.
+2. 승인 지점, 판단 기준, 산출물 위치, 분류 체계는 루트 `CLAUDE.md`에 있고, 이 문서에 다시 쓰지 않습니다.
 3. 스킬과 서브에이전트를 고르는 기준
-   - 순서와 절차를 고정할 일은 스킬 단계로 둡니다.
-   - 독립된 판단, 권한 제한, 병렬 실행, 모델 지정이 필요한 일만 서브에이전트로 둡니다.
+   - 순서와 절차를 고정할 일은 스킬로 둡니다.
+   - 독립된 판단, 권한 제한, 모델 지정이 필요한 일만 서브에이전트로 둡니다.
+4. 사용자 판단이 바뀐 곳은 `.claude/docs/lessons.md`에 쌓고, Iteration 회고에서 2회 이상 반복된 유형만 규칙으로 올립니다.
 
-## 2. 스킬
-1. **`/spec-analysis`**: 문서 분석과 변경 영향 분석 (`context: fork`로 Document-Analyzer에서 실행)
-   - 단계
-     - 처음 분석: 스펙, 소스, 사이트를 읽고 `.claude/docs/spec analysis/ui|api/`에 개요 파일과 기능별 파일을 만듭니다. 개요 파일에 서비스 레포 기준 커밋을 기록합니다.
-     - 변경분 분석(`update`): 기준 커밋..HEAD의 감시 경로 diff를 분석해 영향 기능, 영향 범위, 리스크, 사이드이펙트를 기능 파일의 "변경 이력"에 추가하고 기준 커밋을 갱신합니다. 스펙(v5.md)이 바뀌면 `scripts/spec_split.py`로 `.claude/docs/specs/v5/`를 다시 만듭니다.
-     - 분석이 끝나면 변경 여부와 관계없이 로컬 분석 로그와 Notion "Document-Analyzer 분석" DB에 기록합니다(제목에 분석일, 본문에 커밋·PR 날짜).
-   - 출력: 기능 목적, 핵심 흐름, 리스크(우선순위 순), 테스트 범위, 변경 이력
-   - 변경 감지는 수동 실행입니다. 서비스 레포가 외부 소유라 웹훅을 걸 수 없어서, 실행할 때 기준 커밋과 비교합니다. 정기 자동 실행은 후속 과제입니다.
-   - 다음 단계: 사용자가 스펙 정리와 QA 플랜을 작성합니다(사람 단계).
-2. **`/tc-write`**: TC 작성
-   - 입력: 기능 범위(ex: 장바구니 UI)
-   - 단계
-     1. TC-Writer가 초안을 작성합니다(JSON).
-     2. `tc_lint.py`로 기계 점검합니다.
-     3. 결과를 보고합니다: 완성본 요약, 기계 점검 결과, 사용자 판단이 필요한 것(초기 시행 단계에서는 매번 보고)
-     4. 승인 ① 후 시트에 씁니다.
-   - 자동 연결: TC 확정 후 `/script-write` 자동 착수는 TC 작성 루프가 안정화된 뒤 켭니다(현재 꺼짐).
-3. **`/script-write`**: 테스트 스크립트 작성
-   - 입력: 확정된 TC ID 목록
-   - 단계
-     1. 범위를 나눕니다(기능 단위 5개, 단순 반복은 10개, 파일이 겹치지 않으면 병렬).
-     2. Script-Writer를 호출합니다.
-     3. 기계 점검: `.claude/skills/script-write/SKILL.md` 기준(`script_lint.py`, `tc_marker_check.py`, `--runxfail`)
-     4. 새 테스트만 실행해 결과를 보고합니다.
-4. **`/test-run`**: 테스트 실행
-   - 승인 ② 후 실행합니다.
-   - 자동: UI/API pytest 전체 실행. 모델이 필요 없어서 서브에이전트 없이 스킬 단계에서 명령으로 실행합니다.
-   - 수동: 자동화되지 않은 TC만 Test-Runner가 Playwright MCP 브라우저로 실행
-   - 출력: `report.json`(자동), 수동 실행 결과 JSON(TC ID, 통과/실패, 스크린샷 경로)
-5. **`/test-report`**: 결과 분석과 보고
-   - 단계
-     1. `test-triage`로 실패를 6분류합니다.
-     2. Issue-Triager가 분류 결과를 리포트 그룹(리얼버그, 테스트버그, flaky, 안건)으로 묶고, 이슈 후보를 노션 "이슈 검수" DB에 "검수 대기"로 올립니다.
-     3. 승인 ③: 사용자가 DB에서 승인 체크합니다.
-     4. Issue-Triager가 승인된 행만 Jira에 등록하고 Jira 키를 DB에 적습니다.
-     5. Report-Writer가 wiki 보고서 초안을 작성합니다.
-     6. 승인 ④ 후 게시합니다.
-   - 리포트 그룹 매핑은 루트 `CLAUDE.md` "분류 체계"를 따릅니다.
+## 2. 흐름
+1. 변경 이벤트 흐름 (새 기능, 서비스 레포 PR, 스펙 변경)
+   1. `/spec-analysis update`: Document-Analyzer가 변경 영향(기능, 범위, 리스크)을 분석합니다.
+   2. `/flow-map <영향 범위>`: 바뀐 화면의 흐름 지도를 갱신합니다(UI만).
+   3. `/tc-write`: TC-Writer가 분석 파일과 흐름 지도를 대조해 TC를 추가하거나 고칩니다. 승인 ① 후 시트에 씁니다.
+   4. `/script-write`: Script-Writer가 확정된 TC의 스크립트를 씁니다.
+   5. Smoke: `pytest -m smoke`로 핵심 흐름이 통과하는지 보고 Iteration 진입을 판정합니다.
+   6. Iteration 흐름으로 넘어갑니다.
+   - 흐름 지도는 smoke를 대신하지 않습니다. 지도는 화면 기록(TC 설계 입력)이고, smoke는 기대결과 대비 Pass/Fail 판정입니다.
+   - 서비스 레포가 외부 소유라 웹훅이 없어서, 이벤트 감지는 수동 실행입니다.
+2. Iteration 흐름 (최대 3회, 결과 보고서 형식은 `.claude/guides/test-report-format.md`)
+   1. `/test-run`: 승인 ② 후 UI, API를 따로 전체 실행하고 보관, Slack 요약, 노션 실행 행을 남깁니다.
+   2. `/test-triage`: 사라가 실패를 6분류하고 노션 "이슈 검수"에 real-bug와 안건 후보를 올립니다.
+   3. 승인 ③: 사용자가 노션에서 검토합니다. "검토 끝"이면 아래가 자동으로 이어집니다.
+   4. `/issue-register`: Issue-Reporter가 승인된 real-bug를 Jira에 등록하고, 사라가 xfail을 풀고 `issue` 마커를 붙입니다.
+   5. `/report-write`: 사라가 Iteration 보고서 초안을 쓰고, 승인 ④ 후 게시합니다. 게시 후 lessons 회고를 합니다.
+   - Iteration 2, 3은 `issue` 마커 테스트를 반드시 포함해 재검증합니다.
 
-## 3. 서브에이전트
-1. **Document-Analyzer (기존)**
-   - 모델: 기존 설정 유지
-   - 변경: 입력에 Swagger와 wiki "API specification", QA plan을 추가하고, 근거 문서끼리 다른 점을 분석 결과에 적습니다.
-2. **TC-Writer (기존)**
-   - 모델: sonnet
-   - 변경
-     - 우선순위와 영향도는 `tc-write` SKILL.md 공통 규칙 3번(QA plan, 기획 문서, 분석 파일의 리스크 우선순위)을 따릅니다.
-     - 기계 점검 오류를 받으면 지적 항목만 수정합니다.
-3. **Script-Writer (기존)**: 변경 없음
-4. **Test-Runner (신규)**
-   - 모델: sonnet
-   - 도구: 시트 읽기, Playwright MCP(탐색 도구), 파일 쓰기(결과 JSON과 스크린샷)
-   - 하는 일: 자동화되지 않은 TC를 스텝대로 수동 실행하고, 기대결과와 비교해 통과/실패와 스크린샷을 남깁니다.
-   - 되돌릴 수 없는 동작이 필요한 TC는 실행하지 않고 "Blocked"로 보고합니다.
-5. **Issue-Triager (신규)**
-   - 모델: opus (분류 판단)
-   - 도구: 읽기, Notion(이슈 검수 DB 쓰기), Jira(검색, 생성)
-   - 하는 일
-     - 리포트 그룹 분류와 중요도(Critical, Major, Minor, Trivial)를 판단합니다.
-     - 백로그와 Jira에서 중복을 검색합니다. 같은 원인은 이슈 하나로 묶습니다.
-     - 노션 DB에 후보를 올리고, 승인된 행만 Jira에 등록합니다.
-6. **Report-Writer (신규)**
-   - 모델: sonnet
-   - 도구: 읽기, Confluence(페이지 생성)
-   - 하는 일: 루트 `CLAUDE.md` "외부 시스템"의 템플릿과 위치대로 결과 보고서 초안을 만듭니다. Test Result에는 TC 커버리지를 포함합니다.
-   - 게시는 승인 ④ 후에 합니다.
+## 3. 스킬 (`.claude/skills/`)
+1. `/spec-analysis`: 스펙과 소스 분석, 변경분 분석(Document-Analyzer, fork)
+2. `/flow-map`: UI 흐름 지도(`.claude/docs/flows/ui-flows.md`) 작성과 갱신(sonnet). 데모 사이트 결제 확정은 허용합니다.
+3. `/tc-write`: TC 초안, 기계 점검, 보고, 시트 쓰기(TC-Writer, fork)
+4. `/script-write`: 스크립트 작성과 기계 점검(Script-Writer)
+5. `/test-run`: 전체 실행, 보관, Slack, 노션 기록(서브에이전트 없음)
+6. `/test-triage`: 실패 분류, 백로그 대조, 노션 이슈 검수, 사용자 검토 반영(opus, 사라 직접)
+7. `/issue-register`: 승인된 real-bug의 Jira 등록(Issue-Reporter)
+8. `/report-write`: Iteration·최종 결과 보고서(사라 직접)
 
-## 4. 만드는 순서
-1. `/tc-write` (가장 먼저 안정화할 루프)
-2. `/test-run` + Test-Runner
-3. `/test-report` + Issue-Triager, Report-Writer
-4. `/spec-analysis`, `/script-write` (기존 흐름을 스킬로 고정)
+## 4. 서브에이전트 (`.claude/agents/`)
+1. Document-Analyzer: 스펙, 소스 분석과 변경 영향 분석
+2. TC-Writer(sonnet): TC 초안. 흐름 지도와 대조하고 Playwright로 직접 따라가지 않습니다.
+3. Script-Writer: 스크립트 작성. 따라갈 수 없는 TC는 "TC 수정 필요"로 돌려보냅니다.
+4. Issue-Reporter(sonnet): 노션 Jira 초안을 그대로 Jira에 옮기고 키를 기록합니다.
 
-기존 `test-triage` 스킬은 `/test-report` 1단계에서 그대로 씁니다.
+## 5. 남은 것
+1. 수리 + LLM judge (목표 2)
+   - 수리: test-triage에서 `test-bug`, `selector-drift`, `timing`으로 분류된 실패를 고치는 단계입니다. 지금은 사라가 직접 고칩니다. 반복되면 `/test-repair` 스킬(수리 에이전트)로 고정합니다.
+   - judge: 수리 결과(diff, 실패 로그, TC)를 받아 "실패를 숨기지 않았는지, 원인에 맞는 수리인지"를 채점합니다. 루트 규칙대로 별도 세션에서 실행합니다.
+2. Test-Runner: 자동화하지 않은 수동 TC를 Playwright MCP로 실행합니다. 수동 TC가 생길 때까지 보류합니다.
+3. Smoke 대상 지정: `smoke` 마커는 `pytest.ini`에 등록되어 있지만 붙은 테스트가 없습니다. 핵심 흐름 TC에 마커를 붙여야 Smoke 단계가 동작합니다.
+4. 정기 자동 실행(CI, 서비스 레포 변경 감지): 후속 과제입니다.

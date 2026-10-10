@@ -78,7 +78,22 @@
 
 ## 체크아웃 4단계 Payment (/checkout) — 확인 2026-10-10
 - 진입 경로: 3단계 [Proceed to checkout]
-- 상태 조건: 결제 방법을 고르기 전에는 [Check payment] 비활성, 고르면 활성
-- 주요 요소: 제목 "Payment", 결제 방법 드롭다운("Choose your payment method", Bank Transfer, Cash on Delivery, Credit Card, Buy Now Pay Later, Gift Card), [Check payment]
-- 다음 화면: [Check payment] 이후는 미확인
-- 미확인: [Check payment] 클릭 이후(결과 메시지, [Confirm], 인보이스 번호, 장바구니 비움). 탐색 중 결제 확정 금지 규칙으로 누르지 않았다. 결제 방법별 추가 입력 필드(ex: Credit Card)도 미확인.
+- 상태 조건: 결제 방법에 따라 추가 입력 필드와 [Check payment] 활성 여부가 달라진다.
+  - Cash on Delivery: 추가 필드 없음, [Check payment] 활성
+  - Bank Transfer: [Bank Name], [Account Name], [Account Number], 비어 있으면 [Check payment] 비활성
+  - Credit Card: [Credit Card Number], [Expiration Date], [CVV], [Card Holder Name]. 비어 있어도 [Check payment]가 활성이었다(스펙 대조 필요, 후보).
+  - Buy Now Pay Later: [Monthly Installments] 드롭다운("Choose your monthly installments"), 선택 전 [Check payment] 비활성
+  - Gift Card: [Gift Card Number], [Validation Code], 비어 있으면 [Check payment] 비활성
+- 주요 요소: 상단 단계 표시 "CART 1 / SIGN IN 2 / BILLING ADDRESS 3 / PAYMENT 4", 제목 "Payment", 결제 방법 드롭다운("Choose your payment method"), [Check payment]
+- 다음 화면
+  - [Check payment] → 같은 화면에 "Payment was successful" 문구가 나오고, 같은 버튼이 [Confirm]으로 바뀐다.
+  - [Confirm] → 결제 완료 화면
+- 분기: 결제 확정은 [Check payment]와 [Confirm] 두 번 클릭이다.
+- 미확인: 결제 방법별 입력값 검증 문구, Cash on Delivery 외 결제 방법의 확정 결과
+
+## 결제 완료 (/checkout) — 확인 2026-10-10
+- 진입 경로: 4단계 [Confirm]
+- 주요 요소: 문구 "Thanks for your order! Your invoice number is INV-<번호>." (번호는 매번 다르다)
+- 상태 조건: 헤더 장바구니 아이콘이 사라진다. 이후 `/checkout`에 직접 들어가면 빈 장바구니 화면(본문 없음)이다.
+- 다음 화면: 헤더 메뉴로만 이동한다. 완료 화면에 다른 버튼은 없다.
+- 미확인: 사용자 메뉴 [My invoices]에서 새 인보이스 확인
