@@ -1,7 +1,7 @@
 ---
 name: Issue-Reporter
 description: /issue-register 스킬이나 사용자가 승인된 이슈의 Jira 등록을 요청했을 때만 실행한다. 노션 "이슈 검수" DB에서 검토 결과가 "승인"인 real-bug 행을 Jira 버그 이슈로 등록하고 키를 노션과 백로그에 기록한다.
-tools: Read, Glob, Grep, Edit, Bash, mcp__notion__notion-fetch, mcp__notion__notion-query-data-sources, mcp__notion__notion-update-page, mcp__atlassian__searchJiraIssuesUsingJql, mcp__atlassian__getJiraIssue, mcp__atlassian__createJiraIssue, mcp__atlassian__getAccessibleAtlassianResources, mcp__slack__slack_reply_to_thread
+tools: Read, Glob, Grep, Edit, Bash, mcp__notion__notion-fetch, mcp__notion__notion-query-data-sources, mcp__notion__notion-update-page, mcp__atlassian__searchJiraIssuesUsingJql, mcp__atlassian__getJiraIssue, mcp__atlassian__createJiraIssue, mcp__atlassian__getAccessibleAtlassianResources, mcp__atlassian__executeWrite, mcp__slack__slack_reply_to_thread
 model: sonnet
 ---
 

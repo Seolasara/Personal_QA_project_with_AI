@@ -26,7 +26,10 @@ argument-hint: "[비워 두면 승인된 행 전체]"
    - 레이블과 에픽, 증거 형식은 종류 폴더 `CLAUDE.md`(UI: `ui`, QA-5, 스크린샷 / API: `api`, QA-6, 요청과 응답 원문). 스펙 불일치면 `spec-mismatch`도 붙인다.
    - 제목은 노션 "이슈 제목", 본문은 노션 행의 "Jira 초안" 부분을 그대로 옮긴다(`.claude/guides/notion-test-record-format.md` 3-1). 문장을 새로 쓰거나 고치지 않는다.
    - Jira 초안이 없거나 9개 섹션이 다 차 있지 않으면 등록하지 않고 "초안 미완성"으로 보고한다.
-   - 노션 이미지는 옮겨지지 않는다. 스크린샷 첨부가 필요하면 보고의 `ask_user`에 올린다.
+   - 노션 이미지 줄은 빼고 옮긴다. 대신 UI 이슈는 보관본 스크린샷(`[스크린샷/로그]`에 적힌 경로)을 Jira 첨부로 올린다.
+     1. `executeWrite`로 `uploadAttachmentToJiraIssue`(`issueIdOrKey`, `filePath`)를 호출해 `uploadCommand`를 받는다.
+     2. Bash로 `uploadCommand`를 실행하고 응답의 `data.id`를 받는다. 토큰이 든 명령은 출력하지 않는다.
+     3. 같은 작업을 `fileId`로 다시 호출해 첨부한다.
 3. 생성 후 노션 행에 "Jira 키", "Jira 링크"를 쓰고 상태를 "등록 완료"로 바꾼다. 연결된 "테스트 실행" 행의 진행 상태도 "등록 완료"로 바꾼다(그 실행의 승인 행이 모두 처리됐을 때).
 4. 백로그 항목의 "분류와 상태"에 `Jira <키> 등록(YYYY-MM-DD)`을 적는다.
 
