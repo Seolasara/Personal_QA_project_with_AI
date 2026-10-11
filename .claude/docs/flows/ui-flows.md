@@ -25,7 +25,27 @@
   - 상품 카드: 이름, 가격, [Compare], 품절이면 "Out of stock"
   - 페이지 이동: [«], [»], 페이지 번호
 - 다음 화면: 상품 카드 → 상품 상세 / 장바구니 아이콘 → 체크아웃 1단계 / [Sign in] → 로그인
-- 미확인: [Categories] 하위 메뉴(ex: Hand Tools → Hammer) 화면, 검색·필터 결과 화면
+- 정렬 드롭다운 옵션(6개): Name (A - Z), Name (Z - A), Price (High - Low), Price (Low - High), CO₂ Rating (A - E), CO₂ Rating (E - A)
+- Price Range 슬라이더: 범위 표시 0~200, 기본 선택 1~100
+- 상품 카드에 CO₂ 등급 배지(A~E), 친환경 상품은 "ECO" 배지가 붙는다. Eco-friendly 필터를 켜면 ECO 배지 상품만 남는다(2026-10-11 확인).
+- [»]를 누르면 다음 페이지 상품이 같은 URL(`/`)에서 바뀐다.
+- 검색(2026-10-11 확인)
+  - 결과 없음: "Searched for: <검색어>", "0 products found for '<검색어>'", "There are no products found." 문구, 상품 카드 없음
+  - 2자 입력 후 [Search]: 검색이 실행되지 않고 이전 결과가 그대로 남는다(스펙 AC4는 3~40자).
+  - [X]: 검색어가 지워지고 전체 목록으로 돌아간다.
+- [Compare]: 누르면 하단에 비교 바("1 product(s) selected", [Clear All], [Compare Now])가 나타난다.
+- 미확인: 브랜드 필터와 카테고리 필터 조합 결과의 세부, 비교 화면([Compare Now] 이후)
+
+## 카테고리 페이지 (/category/<slug>) — 확인 2026-10-11
+- 진입 경로: 헤더 [Categories] 메뉴 → [Hand Tools], [Power Tools], [Other], [Special Tools]
+- 주요 요소: 제목 "Category: <카테고리명>", 정렬, 하위 카테고리 필터(ex: Hand Tools → Hammer, Hand Saw, Wrench, Screwdriver, Pliers, Chisels, Measures), 브랜드 필터, "Sustainability:" Eco-Friendly 필터, 상품 카드, 페이지 이동. 메인과 달리 검색과 Price Range는 없다.
+- 헤더 [Categories] 메뉴 항목: Hand Tools, Power Tools, Other, Special Tools, Rentals, 그리고 언어(DE, EL, EN, ES, FR, NL, TR)
+- 미확인: 하위 카테고리 체크 결과
+
+## Rentals (/rentals) — 확인 2026-10-11
+- 진입 경로: 헤더 [Categories] → [Rentals]
+- 주요 요소: 제목 "Rentals", 렌탈 상품 3개(Excavator, Bulldozer, Crane)와 설명
+- 미확인: 렌탈 상품 상세로 가는 링크와 상세 화면(카드 링크를 찾지 못함), Rental duration slider
 
 ## 상품 상세 (/product/<id>) — 확인 2026-10-10
 - 진입 경로: 메인 또는 카테고리 목록의 상품 카드, 상세 하단 "Related products"
@@ -34,14 +54,19 @@
   - 품절: 수량 [-]·입력·[+]와 [Add to cart]가 모두 비활성, "Out of stock" 문구
 - 주요 요소: 상품명, 가격, 설명, [Add to cart], [Add to favourites], [Compare], "Specifications" 표, "Related products"
 - 다음 화면: [Add to cart] → 같은 화면 유지, 토스트 "Product added to shopping cart.", 헤더 장바구니 아이콘과 수량 배지 나타남
-- 분기: [Add to favourites]는 로그인 여부에 따라 결과가 다를 수 있다(미확인).
-- 미확인: [Add to favourites], [Compare] 동작
+- 분기: 비로그인에서 [Add to favourites]를 누르면 "Unauthorized, can not add product to your favorite list." 알림이 나온다(2026-10-11 확인). 로그인 상태 결과는 미확인.
+- 수량 입력: "0"을 입력하고 밖을 누르면 "1"로 바뀐다. 숫자 입력란(type=number)이라 문자는 입력되지 않는다(2026-10-11 확인).
+- 같은 상품을 [Add to cart]로 두 번 담으면 헤더 장바구니 배지가 2가 된다(2026-10-11 확인).
+- 미확인: 로그인 상태 [Add to favourites], Related products 카드 이동
 
 ## 로그인 (/auth/login) — 확인 2026-10-10
 - 진입 경로: 헤더 [Sign in], 직접 URL
 - 주요 요소: 제목 "Login", [Sign in with Google], 필드 [Email address], [Password](보기 토글 버튼 있음), [Login], 링크 [Register your account], [Forgot your Password?]
 - 다음 화면: 로그인 성공 → 내 계정(`/account`)
-- 미확인: 로그인 실패 메시지 화면(계정 잠금 방지로 이번 탐색에서 실패 시도 안 함)
+- 빈 값으로 [Login]: 필드 아래 "Email is required", "Password is required"가 나오고 요청은 보내지 않는다(2026-10-11 확인).
+- [Forgot your Password?] → `/auth/forgot-password`: 제목 "Forgot Password", 필드 [Email address], 버튼 [Set New Password]
+- [Register your account] → `/auth/register`: 제목 "Customer registration"(회원가입은 범위 밖)
+- 미확인: 잘못된 계정 정보 로그인 실패 메시지(계정 잠금 방지로 탐색 중 시도하지 않음)
 
 ## 내 계정 (/account)와 사용자 메뉴 — 확인 2026-10-10
 - 진입 경로: 로그인 성공 직후, 사용자 메뉴 [My account]
@@ -57,6 +82,7 @@
   - 비어 있음(직접 URL 진입 또는 마지막 상품 삭제 후): 본문에 장바구니 표·안내 문구·버튼이 없고 헤더 장바구니 아이콘도 사라진다. "Your shopping cart is empty" 같은 문구는 보이지 않았다(백로그 #15).
 - 주요 요소: 마지막 상품 삭제 시 토스트 "Product deleted."
 - 다음 화면: [Proceed to checkout] → 2단계 Sign in / [Continue Shopping] → 메인
+- 수량 입력: "0"이나 "-3"을 입력하고 Tab을 누르면 "Product quantity updated." 토스트와 함께 수량이 "1"로 바뀐다(2026-10-11 확인).
 - 분기: 로그인 여부와 상관없이 1단계 화면은 같다.
 
 ## 체크아웃 2단계 Sign in (/checkout) — 확인 2026-10-10

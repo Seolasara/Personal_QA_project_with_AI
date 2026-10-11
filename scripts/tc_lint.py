@@ -64,8 +64,13 @@ def check(tc, kind):
                 out.append((WARN, f"스텝에 [ ] 없는 버튼 표기: {l[:30]}"))
             if not re.match(r"\d+\. ", l):
                 out.append((WARN, f"스텝 번호 형식 아님: {l[:30]}"))
+        prev_numbered = False
         for l in lines(exp):
-            if not re.match(r"\d+(-\d+)?\. ", l):
+            if re.match(r"\d+(-\d+)?\. ", l):
+                prev_numbered = True
+            elif l.startswith("- ") and prev_numbered:
+                pass  # 번호 항목 아래 열거 불릿(tc-write UI-TC 7번)
+            else:
                 out.append((WARN, f"기대결과 번호 형식 아님: {l[:30]}"))
             if re.search(r"(제거|갱신|변경|초기화)$", l.strip()):
                 out.append((WARN, f"기대결과가 동작으로 끝남 (노출되는 상태로 쓸 것): {l[:30]}"))

@@ -136,3 +136,34 @@ Jira로 올릴 실제 결함. 등록 뒤에도 수정될 때까지 여기 둔다
      - 스펙: `PUT /carts/{cartId}/product/quantity`의 200 응답은 `UpdateResponse` `{"success": true}`다.
      - 라이브: `{"result": "item added or updated"}`
      - 현재 테스트: 시트 기대결과가 라이브 값으로 되어 있어 스펙 기준 규칙과 어긋난다.
+
+### #29 카테고리 페이지에 Price Range 슬라이더가 없음
+- 발생 배경: 2026-10-11 `/flow-map` 보충 탐색과 UI TC 추가(B1) 중 발견.
+- 추정 원인과 근거: 카테고리 페이지 템플릿에 가격 슬라이더가 빠진 것으로 추정한다. 소스는 확인하지 않았다.
+- 분류와 상태: real-bug(유형 A) 후보 / 중요도 Low(메인 화면에서 가격 필터로 우회 가능) / 사용자 검토 전 / 발견 2026-10-11, 마지막 확인 2026-10-11 라이브
+- 대상 TC
+  1. [UI_50] 카테고리 페이지 필터 구성 요소 노출 확인
+     - 스펙: `v5` Browse Products by Category AC2는 카테고리 페이지에 상품 목록과 같은 필터(하위 카테고리, 브랜드, 정렬, 페이지 이동, 가격 슬라이더)가 있다고 정한다.
+     - 라이브: `/category/hand-tools`에 정렬, 하위 카테고리, 브랜드, Eco-Friendly 필터, 페이지 이동은 있고 Price Range가 없다.
+     - 현재 테스트: 아직 없음(스크립트 작성 전)
+
+### #30 체크아웃 Sign in 단계의 로그인 상태 안내 문구가 스펙과 다름
+- 발생 배경: 2026-10-11 UI TC 추가(B5) 중 라이브 확인으로 발견.
+- 추정 원인과 근거: 앱 문구가 스펙 예시와 다르다. 소스는 확인하지 않았다.
+- 분류와 상태: real-bug(유형 A) 후보 / 중요도 Low(문구 차이, 진행에는 영향 없음) / 사용자 검토 전 / 발견 2026-10-11, 마지막 확인 2026-10-11 라이브
+- 대상 TC
+  1. [UI_83] 로그인 상태로 Sign in 단계 진입 시 로그인 폼 미노출과 [Proceed to checkout] 버튼 노출 확인
+     - 스펙: `v5` Checkout Sign In AC5는 "You are already signed in as [First Name] [Last Name]"을 표시한다.
+     - 라이브: "Hello <이름>, you are already logged in. You can proceed to checkout."
+     - 현재 테스트: 아직 없음(스크립트 작성 전)
+
+### #31 Billing Address 자동 채움에 계정의 Country가 채워지지 않음
+- 발생 배경: 2026-10-11 UI TC 추가(B5) 중 라이브와 계정 정보를 대조해 발견.
+- 추정 원인과 근거: 자동 채움이 Street, City만 옮기는 것으로 보인다. 근거는 UI 테스트 계정의 `GET /users/me`에 country 값이 있는데 Billing 화면의 [Country]가 비어 있는 것(2026-10-11). State, Postcode, House number는 계정에 값이 없어 판단 대상이 아니다.
+- 분류와 상태: real-bug(유형 A) 후보 / 중요도 Low(사용자가 직접 선택해 진행 가능) / 사용자 검토 전 / 발견 2026-10-11, 마지막 확인 2026-10-11 라이브
+- 대상 TC
+  1. [UI_84] 로그인 상태로 Billing Address 단계 진입 시 계정 주소 자동 채움 확인
+     - 스펙: `v5` Checkout Billing Address AC4는 주소 필드가 계정 주소 정보로 채워진다고 정한다.
+     - 라이브: [Street], [City]만 채워지고 [Country]는 선택되지 않는다.
+     - 현재 테스트: 아직 없음(스크립트 작성 전)
+
