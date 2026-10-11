@@ -25,6 +25,7 @@
 4. 전체 테스트를 실행하고 실패를 분류할 때
    - `.claude/skills/test-run/SKILL.md`: 사전 점검, 실행, 보관(`test-runs/`), Slack 보고
    - `.claude/skills/test-triage/SKILL.md`: 사라가 보관본 실패를 분류·분석하고 백로그, 노션 "이슈 검수" 후보, Slack에 기록(`/test-triage`)
+   - 루트 `Dockerfile`, `.dockerignore`: 테스트 실행 이미지 `qa-tests`. 사용법은 `/test-run` 3번
    - `.claude/guides/notion-test-record-format.md`: 노션 실행 행과 이슈 행의 본문, 증거 형식
    - `.claude/skills/issue-register/SKILL.md`, `.claude/agents/Issue-Reporter.md`: 승인된 real-bug의 Jira 등록(`/issue-register`)
    - `.claude/skills/test-repair/SKILL.md`: triage에서 수리 대상(test-bug, selector-drift, timing)으로 분류된 실패를 Script-Writer가 수리(`/test-repair`)

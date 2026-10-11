@@ -14,7 +14,9 @@ argument-hint: "[ui|api]"
 
 ## 2. 사전 점검
 하나라도 실패하면 실행하지 않고 보고한다.
-- venv: `playwright-demo/.venv/bin/pytest`, `api-demo/.venv/bin/pytest`가 있다.
+- 실행 환경(둘 중 하나)
+  - 컨테이너(Iteration 3부터 기본): `docker info`가 응답하고 이미지 `qa-tests`가 있다(없거나 `requirements.txt`가 바뀌었으면 루트에서 `docker build -t qa-tests .`).
+  - venv: `playwright-demo/.venv/bin/pytest`, `api-demo/.venv/bin/pytest`가 있다.
 - `.env`: 각 폴더 `.env.example`의 키가 `.env`에 모두 있고 값이 비어 있지 않다. 키 이름만 확인하고 값은 출력하지 않는다.
   - ex: `grep -c '^TOOLSHOP_PASSWORD=.\+' playwright-demo/.env`
 - 사이트: `https://practicesoftwaretesting.com`과 `.env`의 `API_BASE_URL`이 응답한다(`curl -s -o /dev/null -w '%{http_code}'`). 5xx나 응답 없음이면 env로 보고한다.
@@ -24,6 +26,12 @@ argument-hint: "[ui|api]"
 - 대상 폴더에서 해당 venv로 1회 실행한다. 스펙에 정확한 기대결과가 없는 TC(`spec_undefined` 마커)는 뺀다. Jira 등록 결함 테스트(`issue` 마커)는 빼지 않는다(Iteration 2, 3의 재검증 대상).
   - UI: `cd playwright-demo && .venv/bin/pytest -m "not spec_undefined"`
   - API: `cd api-demo && .venv/bin/pytest -m "not spec_undefined"`
+- 컨테이너로 실행(Iteration 3부터 기본, 2026-10-12 사용자 결정): 같은 pytest 명령을 `qa-tests` 이미지에서 실행한다. 폴더를 마운트하므로 테스트를 고쳐도 다시 빌드하지 않고, 결과는 맥의 `test-results/`에 생겨 4번 이후가 그대로 이어진다. `pytest.ini`의 addopts도 그대로 쓴다.
+  - UI: `docker run --rm -v "$PWD/playwright-demo:/qa/playwright-demo" -w /qa/playwright-demo qa-tests pytest -m "<마커 식>"`
+  - API: `docker run --rm -v "$PWD/api-demo:/qa/api-demo" -w /qa/api-demo qa-tests pytest -m "<마커 식>"`
+  - 계정은 마운트한 폴더의 `.env`에서 읽는다. 이미지에는 들어가지 않는다(`.dockerignore`).
+  - UI와 API는 계정과 결과 폴더가 분리돼 있어 동시에 실행해도 된다.
+  - 컨테이너의 파이썬은 3.12다(로컬 3.13). 결과가 로컬과 다르면 이 차이를 먼저 의심한다.
   - Iteration 2(임시): Jira 결함 수정 배포가 없으면 `-m "not spec_undefined and not issue"`로 실행하고 `issue` TC는 Blocked(수정 미배포)로 센다. Iteration 3은 회귀 TC만 실행한다(`.claude/guides/test-report-format.md` 1번).
 - `pytest.ini`의 addopts(리포트, trace, 스크린샷)를 그대로 쓴다. `-o addopts=""`를 쓰지 않는다.
 - 실패한 테스트를 다시 실행해 통과를 만들지 않는다. 코드와 TC는 수정하지 않는다.
