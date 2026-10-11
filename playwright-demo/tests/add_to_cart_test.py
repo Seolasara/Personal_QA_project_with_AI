@@ -3,7 +3,8 @@ import re
 import pytest
 from playwright.sync_api import expect
 
-from pages.catalog_page import CartPage, to_amount
+from pages.catalog_page import CartPage, CatalogPage, ProductDetailPage, to_amount
+from pages.login_page import LoginPage
 from pages.payment_page import PaymentPage
 
 
@@ -187,3 +188,141 @@ def test_cart_remove_all_hides_proceed_to_checkout(cart):
     expect(cart_page.rows).to_have_count(0)
     # 4. [Proceed to checkout] 버튼 미노출 상태로 노출
     expect(checkout.proceed_from_cart).to_be_hidden()
+
+
+@pytest.mark.spec_undefined
+@pytest.mark.tc("UI_64")
+def test_cart_negative_quantity_corrected_to_one(cart):
+    cart_page = CartPage(cart)
+
+    # 1. 장바구니 리스트에 상품 노출
+    expect(cart_page.rows).to_have_count(1)
+    product_name = cart_page.product_titles.first.inner_text().strip()
+
+    cart_page.set_row_quantity(product_name, "-3")
+
+    # 2-1. "Product quantity updated." 토스트 메시지 노출
+    expect(cart_page.quantity_updated_toast).to_be_visible()
+    # 2-2. 수량 "1"로 보정되어 노출
+    expect(cart_page.row_quantity(product_name)).to_have_value("1")
+
+
+@pytest.mark.spec_undefined
+@pytest.mark.tc("UI_65")
+def test_cart_same_product_twice_badge_two(product_detail):
+    detail = product_detail
+    header = CatalogPage(detail.page)
+
+    # 2. [Add to cart] 클릭 → "Product added to shopping cart." 토스트 노출
+    detail.add()
+    expect(detail.added_toast).to_be_visible()
+
+    # 3. [Add to cart] 한 번 더 클릭 → 토스트가 한 번 더 노출
+    detail.add()
+    expect(detail.added_toast).to_have_count(2)
+
+    # 4. 헤더 장바구니 아이콘 배지에 "2" 노출
+    expect(header.cart_badge).to_have_text("2")
+
+
+@pytest.mark.spec_undefined
+@pytest.mark.tc("UI_66")
+def test_cart_header_icon_and_badge_after_add(guest_catalog):
+    catalog = guest_catalog
+
+    # 1. 빈 장바구니 상태의 메인 헤더에 장바구니 아이콘 미노출
+    expect(catalog.nav_cart).to_be_hidden()
+
+    # 2. 메인 > 상품 상세 페이지
+    catalog.filter_by_category("Hammer")
+    catalog.open_first_product()
+    detail = ProductDetailPage(catalog.page)
+
+    # 3. [Add to cart] 클릭 → "Product added to shopping cart." 토스트 노출
+    detail.add()
+    expect(detail.added_toast).to_be_visible()
+
+    # 4. 헤더에 장바구니 아이콘과 배지 "1" 노출
+    expect(catalog.nav_cart).to_be_visible()
+    expect(catalog.cart_badge).to_have_text("1")
+
+
+@pytest.mark.tc("UI_67")
+def test_cart_table_columns(cart):
+    cart_page = CartPage(cart)
+
+    # 1. 장바구니 페이지 정상 이동
+    expect(cart).to_have_url(CartPage.URL)
+    expect(cart_page.rows).to_have_count(1)
+    product_name = cart_page.product_titles.first.inner_text().strip()
+
+    # 2-1. 표에 "Item", "Quantity", "Price", "Total" 컬럼 노출
+    for column in ("Item", "Quantity", "Price", "Total"):
+        expect(cart_page.column_header(column)).to_be_visible()
+
+    # 2-2. 상품 행에 상품명, 수량 입력란, 가격, 행 합계, [X] 버튼 노출
+    assert product_name, "상품명이 비어 있음"
+    expect(cart_page.product_titles.first).to_be_visible()
+    expect(cart_page.row_quantity(product_name)).to_be_editable()
+    expect(cart_page.row_unit_price(product_name)).to_have_text(re.compile(r"^\$\d"))
+    expect(cart_page.row_line_price(product_name)).to_have_text(re.compile(r"^\$\d"))
+    expect(cart_page.row_remove_button(product_name)).to_be_visible()
+
+
+@pytest.mark.spec_undefined
+@pytest.mark.tc("UI_68")
+def test_cart_remove_last_item_shows_deleted_toast(cart):
+    cart_page = CartPage(cart)
+    header = CatalogPage(cart)
+
+    # 1. 장바구니 리스트에 상품 1건 노출
+    expect(cart_page.rows).to_have_count(1)
+    product_name = cart_page.product_titles.first.inner_text().strip()
+
+    cart_page.remove_item(product_name)
+
+    # 2-1. "Product deleted." 토스트 메시지 노출
+    expect(cart_page.deleted_toast).to_be_visible()
+    # 2-2. 헤더 장바구니 아이콘 미노출
+    expect(header.nav_cart).to_be_hidden()
+
+
+@pytest.mark.spec_undefined
+@pytest.mark.tc("UI_69")
+def test_cart_continue_shopping_goes_home(cart):
+    cart_page = CartPage(cart)
+    home = CatalogPage(cart)
+
+    # 1. 장바구니 리스트에 상품 노출
+    expect(cart_page.rows).not_to_have_count(0)
+
+    cart_page.continue_shopping.click()
+
+    # 2. 메인 페이지 정상 이동
+    expect(cart).to_have_url("https://practicesoftwaretesting.com/")
+    expect(home.listed_names.first).to_be_visible()
+
+
+@pytest.mark.spec_undefined
+@pytest.mark.tc("UI_70")
+def test_cart_kept_after_logout(cart):
+    cart_page = CartPage(cart)
+    header = LoginPage(cart)
+    home = CatalogPage(cart)
+
+    # 1. 장바구니 리스트에 상품 1건 노출
+    expect(cart_page.rows).to_have_count(1)
+    product_name = cart_page.product_titles.first.inner_text().strip()
+
+    # 2. 사용자명 메뉴 > [Sign out] → 메인 이동, 헤더에 [Sign in] 노출
+    header.header_user_menu.click()
+    header.header_sign_out.click()
+    expect(cart).to_have_url("https://practicesoftwaretesting.com/")
+    expect(header.header_sign_in).to_be_visible()
+
+    # 3. 헤더 장바구니 아이콘 배지에 "1" 노출
+    expect(home.cart_badge).to_have_text("1")
+
+    # 4. 헤더 장바구니 아이콘 클릭 → 로그아웃 전 담은 상품 노출
+    home.open_cart()
+    expect(cart_page.row(product_name)).to_have_count(1)

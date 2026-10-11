@@ -171,3 +171,28 @@ def cart(product_detail):
     product_detail.add()
     product_detail.open_cart()
     return product_detail.page
+
+
+@pytest.fixture
+def guest_product_detail(guest_catalog) -> ProductDetailPage:
+    """비로그인 상태로 Hammer 카테고리 첫 상품의 상세 페이지까지 진입한 상태.
+
+    로그인이 필요 없는 상세 화면 TC(UI_54~UI_58, UI_60)용. 계정 잠금과 무관하게 동작한다.
+    """
+    guest_catalog.check_category("Hammer")
+    guest_catalog.open_first_product()
+    detail = ProductDetailPage(guest_catalog.page)
+    expect(detail.add_to_cart).to_be_visible()
+    return detail
+
+
+@pytest.fixture
+def guest_cart(guest_product_detail):
+    """비로그인 상태로 상품을 장바구니에 담고 체크아웃(장바구니) 페이지로 이동한 상태의 page (UI_81, UI_82).
+
+    장바구니는 브라우저 context 의 sessionStorage 에 묶여 테스트마다 새로 시작하므로 cleanup 은 두지 않는다.
+    """
+    guest_product_detail.add()
+    expect(guest_product_detail.added_toast).to_be_visible()
+    guest_product_detail.open_cart()
+    return guest_product_detail.page

@@ -118,3 +118,84 @@ class PaymentPage:
 
     def confirm_payment(self) -> None:
         self.confirm.click()
+
+    # --- Billing 필수값 비움, 결제 방법 목록, 단계 표시 (UI_85~UI_91) ----------
+    # Street, City, State 를 비울 때는 우편번호 조회가 일어나지 않는다(2026-10-11 확인).
+    def clear_fields(self, *fields) -> None:
+        for field in fields:
+            field.fill("")
+
+    @property
+    def payment_method_choices(self):
+        """안내 옵션("Choose your payment method")을 뺀 결제 방법 옵션."""
+        return self.payment_method.locator('option:not([value=""])')
+
+    def open_payment_methods(self) -> None:
+        self.payment_method.click()
+
+    @property
+    def monthly_installments(self):
+        # Buy Now Pay Later 선택 시에만 렌더링된다(2026-10-11 확인).
+        return self.page.locator('[data-test="monthly_installments"]')
+
+    # 상단 단계 표시. 앱에 data-test 가 없어 wizard 컴포넌트 클래스를 쓴다.
+    # 라벨은 DOM 텍스트가 "Cart" 이고 CSS 로 대문자 표시되므로 innerText 로 비교한다.
+    @property
+    def step_labels(self):
+        return self.page.locator("aw-wizard-navigation-bar .label")
+
+    @property
+    def step_numbers(self):
+        return self.page.locator("aw-wizard-navigation-bar .step-indicator")
+
+    # --- Sign in 단계 로그인 폼과 안내 문구, Billing 자동 채움 (UI_81~UI_84) ----
+    # 비로그인 상태의 Sign in 단계에는 제목 "Login"과 로그인 폼이 나온다(2026-10-11 확인).
+    @property
+    def signin_heading(self):
+        return self.page.get_by_role("heading", name="Login", level=3, exact=True)
+
+    @property
+    def signin_email(self):
+        return self.page.locator('[data-test="email"]')
+
+    @property
+    def signin_password(self):
+        return self.page.locator('[data-test="password"]')
+
+    @property
+    def signin_login_button(self):
+        # input[type=submit] value="Login"
+        return self.page.locator('[data-test="login-submit"]')
+
+    @property
+    def signin_message(self):
+        # 로그인 상태 안내 문구. 앱에 data-test 가 없어 [Proceed to checkout](proceed-2)이 있는 단계의 문단을 쓴다.
+        return self.page.locator("aw-wizard-step", has=self.proceed_from_signin).locator("p")
+
+    def fill_signin_email(self, email: str) -> None:
+        self.signin_email.fill(email)
+
+    def fill_signin_password(self, password: str) -> None:
+        self.signin_password.fill(password)
+
+    def submit_signin(self) -> None:
+        self.signin_login_button.click()
+
+    API_URL = "https://api.practicesoftwaretesting.com"
+
+    def open_address_step(self) -> None:
+        """Sign in 단계 [Proceed to checkout]을 누르고 Billing Address 제목이 보일 때까지 기다린다."""
+        self.proceed_from_signin.click()
+        expect(self.address_heading).to_be_visible()
+
+    def fetch_account(self) -> dict:
+        """로그인한 브라우저의 토큰(localStorage auth-token)으로 GET /users/me 를 호출해 계정 정보(JSON)를 돌려준다.
+
+        Billing 진입 시 /users/me 재호출 여부가 로그인 경로마다 달라(2026-10-11 확인) 응답 대기 대신 직접 조회한다.
+        """
+        token = self.page.evaluate("() => localStorage.getItem('auth-token')")
+        response = self.page.request.get(
+            f"{self.API_URL}/users/me", headers={"Authorization": f"Bearer {token}"}
+        )
+        assert response.ok, f"GET /users/me 실패: {response.status}"
+        return response.json()

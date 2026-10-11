@@ -23,6 +23,11 @@ class CatalogPage:
     def open(self) -> None:
         self.page.goto(HOME_URL)
 
+    # --- 헤더 장바구니 배지 (UI_65, UI_66, UI_70). 장바구니가 비면 아이콘째 사라진다 (2026-10-11 확인) ---
+    @property
+    def cart_badge(self):
+        return self.nav_cart.locator('[data-test="cart-quantity"]')
+
     def category_checkbox(self, name: str):
         # 카테고리 체크박스는 data-test 가 category-<id> 라 이름 기반이 안정적
         return self.page.get_by_role("checkbox", name=name)
@@ -180,6 +185,128 @@ class CatalogPage:
         self.out_of_stock_cards.first.click()
         return True
 
+    # --- 상품 카드 구성, 페이지 번호 이동, 목록의 품절 카드 (UI_42, UI_43, UI_53) ---
+    # 카드 이미지는 data-test 가 없어 카드 안의 img 태그를 쓴다 (2026-10-11 확인)
+
+    @staticmethod
+    def card_image(card):
+        return card.locator("img")
+
+    @staticmethod
+    def card_name(card):
+        return card.locator('[data-test="product-name"]')
+
+    @staticmethod
+    def card_price(card):
+        return card.locator('[data-test="product-price"]')
+
+    @staticmethod
+    def card_out_of_stock(card):
+        return card.locator('[data-test="out-of-stock"]')
+
+    @staticmethod
+    def image_natural_width(image) -> int:
+        """이미지가 로드되면 원본 너비를 돌려준다. 로드 실패면 0. 카드 이미지는 lazy 로딩이라 먼저 화면으로 스크롤한다."""
+        image.scroll_into_view_if_needed()
+        return image.evaluate(
+            """img => img.complete ? img.naturalWidth : new Promise(resolve => {
+                img.addEventListener('load', () => resolve(img.naturalWidth), {once: true});
+                img.addEventListener('error', () => resolve(0), {once: true});
+            })"""
+        )
+
+    @property
+    def pagination(self):
+        return self.page.locator("ul.pagination")
+
+    def page_number_button(self, number: int):
+        # 페이지 번호 버튼은 data-test 가 없고 aria-label 이 "Page-<번호>" (2026-10-11 확인)
+        return self.page.get_by_role("button", name=f"Page-{number}", exact=True)
+
+    def go_to_page(self, number: int) -> None:
+        self._apply_and_wait(self.page_number_button(number).click)
+
+    def find_first_out_of_stock_card(self):
+        """현재 목록부터 다음 페이지로 넘기며 첫 품절 상품 카드를 찾는다. 마지막 페이지까지 없으면 None."""
+        while not self.out_of_stock_cards.count():
+            if self._is_last_page():
+                return None
+            self._apply_and_wait(self.pagination_next.click)
+        return self.out_of_stock_cards.first
+
+    # --- 첫 상품 이미지 클릭, 검색 초기화·결과 없음, CO₂ 정렬, Eco-friendly, 가격 슬라이더 (UI_17, UI_44~UI_52) ---
+    # 2026-10-11 확인: 2자 검색은 상품 목록 요청을 보내지 않고, [X]와 슬라이더 이동은 요청을 보낸다.
+
+    def open_first_product_image(self) -> None:
+        self.card_image(self.listed_links.first).click()
+
+    @property
+    def search_reset(self):
+        return self.page.locator('[data-test="search-reset"]')
+
+    @property
+    def search_caption(self):
+        return self.page.locator('[data-test="search-caption"]')
+
+    @property
+    def no_results(self):
+        return self.page.locator('[data-test="no-results"]')
+
+    def reset_search(self) -> None:
+        self._apply_and_wait(self.search_reset.click)
+
+    def record_product_list_requests(self) -> list[str]:
+        """지금부터 나가는 상품 목록 요청 URL을 모으는 목록을 돌려준다 (검색 미실행 확인용)."""
+        sent: list[str] = []
+
+        def _record(request) -> None:
+            if request.url.split("?")[0].endswith(("/products", "/products/search")):
+                sent.append(request.url)
+
+        self.page.on("request", _record)
+        return sent
+
+    def click_search(self) -> None:
+        """응답을 기다리지 않고 [Search]만 누른다. 검색이 실행되지 않는 입력(2자)용."""
+        self.search_submit.click()
+
+    def selected_sort_label(self) -> str:
+        return self.sort_select.evaluate("e => e.options[e.selectedIndex].text").strip()
+
+    @property
+    def co2_active_letters(self):
+        # 카드 CO₂ 배지는 A~E 글자를 모두 그리고 해당 등급에만 active 클래스가 붙는다 (data-test 없음)
+        return self.page.locator('[data-test="co2-rating-badge"] .co2-letter.active')
+
+    def listed_co2_ratings(self) -> list[str]:
+        return [letter.strip() for letter in self.co2_active_letters.all_inner_texts()]
+
+    @property
+    def eco_filter(self):
+        return self.page.locator('[data-test="eco-friendly-filter"]')
+
+    @property
+    def eco_badges(self):
+        return self.listed_links.locator('[data-test="eco-badge"]')
+
+    @property
+    def cards_without_eco_badge(self):
+        return self.listed_links.filter(has_not=self.page.locator('[data-test="eco-badge"]'))
+
+    def check_eco_friendly(self) -> None:
+        self._apply_and_wait(self.eco_filter.check)
+
+    def raise_min_price(self, presses: int) -> None:
+        """가격 슬라이더 최소값 핸들을 키보드(PageUp)로 presses 번 올린다. 한 번에 한 응답씩 기다린다."""
+        self.price_min_handle.focus()
+        for _ in range(presses):
+            self._apply_and_wait(lambda: self.price_min_handle.press("PageUp"))
+
+    def move_max_price_to_end(self) -> None:
+        """가격 슬라이더 최대값 핸들을 키보드(End)로 오른쪽 끝까지 옮긴다."""
+        self.price_max_handle.focus()
+        self._apply_and_wait(lambda: self.price_max_handle.press("End"))
+
 
 class ProductDetailPage:
     def __init__(self, page: Page):
@@ -235,6 +362,48 @@ class ProductDetailPage:
         color = self.out_of_stock_label.evaluate("e => getComputedStyle(e).color")
         red, green, blue = (int(part) for part in color[color.index("(") + 1:color.index(")")].split(",")[:3])
         return red, green, blue
+
+    # --- 상세 이미지, Specifications, Related products, 즐겨찾기 (UI_54~UI_60, 2026-10-11 확인) ---
+    @property
+    def product_image(self):
+        # 상세 이미지는 data-test 가 없고 alt 가 상품명이다
+        return self.page.get_by_role("img", name=self.name.inner_text().strip(), exact=True)
+
+    @property
+    def specs_title(self):
+        return self.page.locator('[data-test="specs-title"]')
+
+    @property
+    def specs_table(self):
+        return self.page.locator('[data-test="product-specs"]')
+
+    @property
+    def spec_rows(self):
+        return self.page.locator('[data-test="spec-row"]')
+
+    @property
+    def related_products_heading(self):
+        return self.page.get_by_role("heading", name="Related products", exact=True)
+
+    @property
+    def related_product_titles(self):
+        # 관련 상품 카드 제목은 data-test 가 없는 h5 이고, 상세 화면에서 h5 는 관련 상품 카드에만 있다
+        return self.page.get_by_role("heading", level=5)
+
+    @property
+    def add_to_favorites(self):
+        return self.page.locator('[data-test="add-to-favorites"]')
+
+    @property
+    def toast_message(self):
+        return self.page.get_by_role("alert")
+
+    def add_favorite(self) -> None:
+        self.add_to_favorites.click()
+
+    def type_quantity(self, text: str) -> None:
+        """수량 입력란에 키보드로 한 글자씩 입력한다. 숫자 입력란이라 fill 은 문자를 거부한다."""
+        self.quantity.press_sequentially(text)
 
 
 def to_amount(text: str) -> float:
@@ -296,3 +465,19 @@ class CartPage:
     def remove_first_item(self) -> None:
         if self.remove_buttons.count():
             self.remove_buttons.first.click()
+
+    # --- 표 컬럼, 행 [X], [Continue Shopping], 삭제 토스트 (UI_67, UI_68, UI_69) ---
+    def column_header(self, name: str):
+        # 표 머리글은 data-test 가 없어 역할 기반 (2026-10-11 확인)
+        return self.page.get_by_role("columnheader", name=name, exact=True)
+
+    def row_remove_button(self, title: str):
+        return self.row(title).locator("a.btn.btn-danger")
+
+    @property
+    def continue_shopping(self):
+        return self.page.locator('[data-test="continue-shopping"]')
+
+    @property
+    def deleted_toast(self):
+        return self.page.get_by_label("Product deleted.")

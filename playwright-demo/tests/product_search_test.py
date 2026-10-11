@@ -1,5 +1,3 @@
-import re
-
 import pytest
 from playwright.sync_api import expect
 
@@ -187,25 +185,26 @@ def test_product_search_no_results(guest_catalog):
 
 @pytest.mark.tc("UI_17")
 @pytest.mark.smoke
-def test_product_get(catalog):
-    catalog.filter_by_category("Hammer")
+def test_product_get(guest_catalog):
+    catalog = guest_catalog
+    # 사전 조건: 상품 1건 이상 존재. 클릭할 첫 상품의 이름과 상세 주소를 먼저 기록한다
+    names = catalog.listed_product_names()
+    assert names, "사전 조건 미충족: 메인 상품 리스트가 비어 있음"
+    first_name = names[0]
+    first_url = catalog.listed_product_urls()[0]
 
-    # 리스트 개수가 0이 아님을 확인
-    expect(catalog.product_cards).not_to_have_count(0)
-    # 상품명에 "hammer" 텍스트 포함 확인 (대소문자 구분 없음)
-    expect(catalog.product_grid).to_contain_text(re.compile("hammer", re.IGNORECASE))
-
-    catalog.open_first_product()
+    catalog.open_first_product_image()
     detail = ProductDetailPage(catalog.page)
 
-    # 상품 상세 페이지 url 확인
-    expect(catalog.page).to_have_url(re.compile(r"/product/"))
-    # 상품명 "hammer" 포함 확인
-    expect(detail.name).to_contain_text(re.compile("hammer", re.IGNORECASE))
-    # 상품 설명 / 단가 / 수량 박스 / 장바구니 버튼 표시 확인
+    # 1-1. 선택한 상품의 상세 페이지 정상 노출
+    expect(catalog.page).to_have_url(first_url)
+    expect(detail.name).to_have_text(first_name)
+    # 1-2. 상품 이름, 상품 설명, 수량 선택 버튼, [Add to cart] 버튼 정상 노출
+    expect(detail.name).to_be_visible()
     expect(detail.description).to_be_visible()
-    expect(detail.unit_price).to_be_visible()
+    expect(detail.decrease_quantity).to_be_visible()
     expect(detail.quantity).to_be_visible()
+    expect(detail.increase_quantity).to_be_visible()
     expect(detail.add_to_cart).to_be_visible()
 
 
@@ -292,3 +291,142 @@ def test_out_of_stock_product_add_to_cart_disabled(guest_catalog):
     # 2-2. 비활성 상태의 [Add to cart] 버튼 노출
     expect(detail.add_to_cart).to_be_visible()
     expect(detail.add_to_cart).to_be_disabled()
+
+
+@pytest.mark.spec_undefined
+@pytest.mark.tc("UI_44")
+def test_product_search_two_chars_not_executed(guest_catalog):
+    catalog = guest_catalog
+
+    catalog.fill_search("ham")
+    # 2. 검색 입력란에 "ham" 텍스트 노출
+    expect(catalog.search_query).to_have_value("ham")
+
+    catalog.submit_search()
+    # 3. 상품 그리드에 "ham"과 일치하는 상품만 노출
+    ham_names = catalog.listed_product_names()
+    assert ham_names, "사전 조건 미충족: ham 검색 결과 상품이 노출되지 않음"
+    not_matching = [name for name in ham_names if "ham" not in name.casefold()]
+    assert not not_matching, f"ham과 일치하지 않는 상품 노출: {not_matching}"
+
+    catalog.fill_search("ha")
+    # 4. 검색 입력란에 "ha" 텍스트 노출
+    expect(catalog.search_query).to_have_value("ha")
+
+    sent = catalog.record_product_list_requests()
+    catalog.click_search()
+    # 5. 상품 그리드가 3번 결과와 동일한 상태로 노출 (2자 검색은 요청 없이 이전 결과 유지)
+    expect(catalog.listed_names).to_have_text(ham_names)
+    assert not sent, f"2자 검색어로 상품 목록 요청이 나감: {sent}"
+
+
+@pytest.mark.spec_undefined
+@pytest.mark.tc("UI_45")
+def test_product_search_no_results_message(guest_catalog):
+    catalog = guest_catalog
+
+    catalog.fill_search("zzzzzz")
+    catalog.submit_search()
+    # 3. 검색 결과 영역에 "Searched for: zzzzzz"와 "There are no products found." 문구 노출
+    expect(catalog.search_caption).to_have_text("Searched for: zzzzzz")
+    expect(catalog.no_results).to_have_text("There are no products found.")
+
+
+@pytest.mark.spec_undefined
+@pytest.mark.tc("UI_46")
+def test_product_search_reset_restores_full_list(guest_catalog):
+    catalog = guest_catalog
+    # 검색 전 전체 상품 리스트 (4번 비교 기준)
+    before_names = catalog.listed_product_names()
+    assert before_names, "검색 전 상품 리스트가 비어 있음"
+
+    catalog.fill_search("hammer")
+    # 2. 검색 입력란에 "hammer" 텍스트 노출
+    expect(catalog.search_query).to_have_value("hammer")
+
+    catalog.submit_search()
+    # 3. "hammer"가 포함된 상품 노출
+    names = catalog.listed_product_names()
+    assert names, "사전 조건 미충족: hammer 검색 결과 상품이 노출되지 않음"
+    not_matching = [name for name in names if "hammer" not in name.casefold()]
+    assert not not_matching, f"hammer가 포함되지 않은 상품 노출: {not_matching}"
+
+    catalog.reset_search()
+    # 4-1. 검색 입력란이 빈 상태로 노출
+    expect(catalog.search_query).to_have_value("")
+    # 4-2. 검색 전과 같은 전체 상품 리스트 노출
+    assert catalog.listed_product_names() == before_names, "[X] 후 상품 리스트가 검색 전과 다름"
+
+
+@pytest.mark.spec_undefined
+@pytest.mark.tc("UI_47")
+def test_product_sort_co2_rating(guest_catalog):
+    catalog = guest_catalog
+
+    catalog.sort_by("CO₂ Rating (A - E)")
+    # 1. 정렬 드롭다운에 "CO₂ Rating (A - E)" 노출
+    assert catalog.selected_sort_label() == "CO₂ Rating (A - E)"
+    # 2. 첫 페이지 상품 리스트가 CO₂ 등급 A에서 E 순서로 노출
+    ratings = catalog.listed_co2_ratings()
+    assert len(ratings) >= 2, "정렬을 확인할 상품이 2건 미만"
+    expect(catalog.co2_active_letters).to_have_count(catalog.listed_links.count())
+    assert ratings == sorted(ratings), f"CO₂ 등급 A→E 순서 아님: {ratings}"
+
+    catalog.sort_by("CO₂ Rating (E - A)")
+    # 3. 정렬 드롭다운에 "CO₂ Rating (E - A)" 노출
+    assert catalog.selected_sort_label() == "CO₂ Rating (E - A)"
+    # 4. 첫 페이지 상품 리스트가 CO₂ 등급 E에서 A 순서로 노출
+    ratings = catalog.listed_co2_ratings()
+    assert len(ratings) >= 2, "정렬을 확인할 상품이 2건 미만"
+    expect(catalog.co2_active_letters).to_have_count(catalog.listed_links.count())
+    assert ratings == sorted(ratings, reverse=True), f"CO₂ 등급 E→A 순서 아님: {ratings}"
+
+
+@pytest.mark.spec_undefined
+@pytest.mark.tc("UI_48")
+def test_product_filter_eco_friendly(guest_catalog):
+    catalog = guest_catalog
+
+    catalog.check_eco_friendly()
+    # 1. Eco-friendly 필터가 선택 상태로 노출
+    expect(catalog.eco_filter).to_be_checked()
+    # 2. 노출된 모든 상품 카드에 "ECO" 배지 노출
+    card_count = catalog.listed_links.count()
+    assert card_count, "Eco-friendly 필터 선택 후 상품 리스트가 비어 있음"
+    expect(catalog.cards_without_eco_badge).to_have_count(0)
+    expect(catalog.eco_badges).to_have_text(["ECO"] * card_count)
+
+
+@pytest.mark.tc("UI_51")
+def test_product_price_slider_min(guest_catalog):
+    catalog = guest_catalog
+
+    catalog.raise_min_price(presses=1)
+    # 2. 가격 슬라이더 최소값이 이동한 값으로 노출
+    moved_min = catalog.price_min_handle.get_attribute("aria-valuenow")
+    assert int(moved_min) > 1, f"최소값 핸들이 기본값보다 높아지지 않음: {moved_min}"
+    expect(catalog.price_min_label).to_have_text(moved_min)
+
+    # 3. 상품 리스트의 모든 상품 가격이 설정한 최소값 이상 최대값 이하로 노출
+    low = float(catalog.price_min_label.inner_text())
+    high = float(catalog.price_max_label.inner_text())
+    prices = catalog.listed_product_prices()
+    assert prices, "가격 범위 조정 후 상품 리스트가 비어 있음"
+    out_of_range = [price for price in prices if not low <= price <= high]
+    assert not out_of_range, f"범위 {low}~{high} 밖 가격 노출: {out_of_range}"
+
+
+@pytest.mark.tc("UI_52")
+def test_product_price_slider_max_to_end(guest_catalog):
+    catalog = guest_catalog
+
+    catalog.move_max_price_to_end()
+    # 2. 가격 슬라이더 최대값이 "200"으로 노출
+    expect(catalog.price_max_handle).to_have_attribute("aria-valuenow", "200")
+    expect(catalog.price_max_label).to_have_text("200")
+
+    # 3. 상품 리스트의 모든 상품 가격이 200 이하로 노출
+    prices = catalog.listed_product_prices()
+    assert prices, "가격 범위 조정 후 상품 리스트가 비어 있음"
+    over_max = [price for price in prices if price > 200]
+    assert not over_max, f"200 초과 가격 노출: {over_max}"

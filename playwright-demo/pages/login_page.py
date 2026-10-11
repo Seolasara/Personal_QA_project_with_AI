@@ -8,6 +8,9 @@ class LoginPage:
     ACCOUNT_URL = "https://practicesoftwaretesting.com/account"
     # 로그인 API 요청 감시용 URL 패턴 (api.practicesoftwaretesting.com/users/login)
     LOGIN_API_PATTERN = "**/users/login"
+    HOME_URL = "https://practicesoftwaretesting.com/"
+    FORGOT_PASSWORD_URL = "https://practicesoftwaretesting.com/auth/forgot-password"
+    REGISTER_URL = "https://practicesoftwaretesting.com/auth/register"
 
     def __init__(self, page: Page):
         self.page = page
@@ -28,6 +31,21 @@ class LoginPage:
         self.email_error = page.locator('[data-test="email-error"]')
         self.password_error = page.locator('[data-test="password-error"]')
         self.login_error = page.locator('[data-test="login-error"]')
+
+        # 로그인 페이지 제목, 비밀번호 보기 토글(data-test와 접근 이름이 없어 컴포넌트 안의 버튼으로 잡음)
+        self.heading = page.get_by_role("heading", name="Login")
+        self.password_toggle = page.locator("app-password-input").get_by_role("button")
+        # 로그인 폼 아래 링크와 이동한 화면의 요소 (UI_75, UI_76)
+        self.forgot_password_link = page.locator('[data-test="forgot-password-link"]')
+        self.register_link = page.locator('[data-test="register-link"]')
+        self.forgot_password_heading = page.get_by_role("heading", name="Forgot Password")
+        self.forgot_password_email = page.locator(
+            '[data-test="forgot-password-form"] [data-test="email"]'
+        )
+        self.forgot_password_submit = page.locator('[data-test="forgot-password-submit"]')
+        self.register_heading = page.get_by_role("heading", name="Customer registration")
+        # 로그인 성공 후 내 계정 페이지 제목
+        self.account_heading = page.get_by_role("heading", name="My account")
 
     def submit(self, email: str, password: str) -> None:
         """자격증명 입력 후 제출만 한다. 성공/실패 대기는 호출측 책임."""

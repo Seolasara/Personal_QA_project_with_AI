@@ -1,6 +1,7 @@
 import pytest
 from playwright.sync_api import expect
 
+from config import TOOLSHOP_EMAIL, TOOLSHOP_PASSWORD
 from pages.login_page import LoginPage
 
 
@@ -39,3 +40,36 @@ def test_logout_shows_header_sign_in(loggedin_home):
 
     # 4. 헤더에 [Sign in] 링크 노출
     expect(header.header_sign_in).to_be_visible()
+
+
+@pytest.mark.tc("UI_77")
+def test_relogin_after_logout(loggedin_home):
+    login_page = LoginPage(loggedin_home)
+
+    # 1~2. 헤더 유저 이름 → [Sign out]
+    login_page.header_user_menu.click()
+    login_page.header_sign_out.click()
+
+    # 2. 메인 페이지로 리다이렉팅, 비로그인 상태 UI
+    expect(login_page.page).to_have_url(LoginPage.HOME_URL)
+    expect(login_page.header_user_menu).to_be_hidden()
+    expect(login_page.header_sign_in).to_be_visible()
+
+    # 3. 헤더 [Sign in] → 로그인 페이지
+    login_page.header_sign_in.click()
+    expect(login_page.page).to_have_url(LoginPage.LOGIN_URL)
+    expect(login_page.form).to_be_visible()
+
+    # 4. 같은 계정 입력
+    login_page.email.fill(TOOLSHOP_EMAIL)
+    login_page.password.fill(TOOLSHOP_PASSWORD)
+    expect(login_page.email).to_have_value(TOOLSHOP_EMAIL)
+    expect(login_page.password).to_have_attribute("type", "password")
+    expect(login_page.password).to_have_value(TOOLSHOP_PASSWORD)
+
+    # 5. [Login] → My account 이동, 헤더 사용자명 노출
+    login_page.login_button.click()
+    expect(login_page.page).to_have_url(LoginPage.ACCOUNT_URL)
+    expect(login_page.account_heading).to_be_visible()
+    expect(login_page.header_user_menu).to_be_visible()
+    expect(login_page.header_user_menu).not_to_have_text("")
