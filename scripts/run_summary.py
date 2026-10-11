@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """전체 테스트 실행 결과를 Slack 메시지용 요약 텍스트로 만든다. 네트워크는 쓰지 않고 report.json만 읽는다.
 
-사용:  python3 scripts/run_summary.py --ui <UI report.json> --api <API report.json>
+사용:  python3 scripts/run_summary.py --ui <UI report.json> --api <API report.json> --title "<실행 목적 제목>"
+- --title: 본문 첫 줄 제목. 실행 목적을 쓴다(ex: "Iteration1 UI 전체 테스트 결과", "UI 스크립트 작성 전체 테스트 실행 결과"). 없으면 "테스트 실행 결과".
 - 출력(stdout) 첫 블록은 본문 메시지, `---THREAD---` 아래는 스레드 답글(실패 상세)이다. 실패가 없으면 스레드는 비어 있다.
 - 실패 상세의 이유는 실패 메시지에서 규칙으로 뽑은 원인 후보이고, 확정 분류는 `/test-triage`가 한다.
 - 근거는 실패 위치(파일:줄)와, TC ID가 백로그 인덱스(`.claude/docs/backlog/00_index.md`)에 있으면 그 번호다.
@@ -162,6 +163,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--ui", type=Path)
     ap.add_argument("--api", type=Path)
+    ap.add_argument("--title", default="테스트 실행 결과", help="실행 목적 제목. ex: 'Iteration1 UI 전체 테스트 결과'")
     args = ap.parse_args()
 
     results = [load(k, p) for k, p in (("ui", args.ui), ("api", args.api)) if p]
@@ -175,7 +177,7 @@ def main() -> int:
     verdict = "실패 없음" if not total_fail else f"실패 {total_fail}건, 원인 분류 필요"
 
     body = [
-        f"*테스트 실행 결과* ({when}, `{git('rev-parse', '--abbrev-ref', 'HEAD')}` / `{git('rev-parse', '--short', 'HEAD')}`)",
+        f"*[{args.title}]* ({when}, `{git('rev-parse', '--abbrev-ref', 'HEAD')}` / `{git('rev-parse', '--short', 'HEAD')}`)",
         *[f"• {count_line(r)}" for r in results],
         f"• 판정: {verdict}",
     ]
