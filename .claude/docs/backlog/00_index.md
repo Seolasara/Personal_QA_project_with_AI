@@ -37,7 +37,7 @@
 - #7 배송지 자동채움과 폼 입력 사이 race condition
 - #8 계정 잠금(423) 해제 방법
 - #10 `.env` 값의 따옴표를 벗기지 않음
-- #17 데모 서버 DB가 주기적으로 리셋됨 (API_34, API_73, API_76, UI_12)
+- #17 데모 서버 DB가 주기적으로 리셋됨 (API_34, API_73, API_76, UI_12, UI_30)
 
 ### [판단 보류](04_hold.md)
 - #6 결제 첫 Confirm 클릭에서 `checkPayment()`가 undefined를 반환할 가능성

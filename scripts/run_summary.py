@@ -5,6 +5,7 @@
 - --ui-csv, --api-csv: 시트 CSV(임시 경로). 주면 실패 상세에 "TC: <기능명>" 한 줄을 붙인다.
 - --title: 본문 첫 줄 제목. 실행 목적을 쓴다(ex: "Iteration1 UI 전체 테스트 결과", "UI 스크립트 작성 전체 테스트 실행 결과"). 없으면 "테스트 실행 결과".
 - 출력(stdout) 첫 블록은 본문 메시지, `---THREAD---` 아래는 스레드 답글(실패 상세)이다. 실패가 없으면 스레드는 비어 있다.
+- 실패 상세는 `[새 실패 · 분류 필요]`(백로그·issue 마커 없음)와 `[기존 결함 재현]`(Jira 키·백로그 있음), `[Jira 결함 통과 · 수정 확인 필요]`(issue 마커 테스트가 통과했거나 xfail이 XPASS)로 나눠 TC ID와 기능명을 제목으로 쓴다.
 - 실패 상세의 이유는 실패 메시지에서 규칙으로 뽑은 원인 후보이고, 확정 분류는 `/test-triage`가 한다.
 - 근거는 실패 위치(파일:줄)와, TC ID가 백로그 인덱스(`.claude/docs/backlog/00_index.md`)에 있으면 그 번호다.
   번호에는 GitHub의 해당 항목 링크(현재 브랜치 기준)를 건다. 링크는 push된 내용만 열린다.
@@ -57,10 +58,14 @@ def reason(test: dict) -> str:
     m = re.match(r"assert (\d{3}) == (\d{3})$", first)
     if m and "status_code" in msg:
         return f"상태 코드 불일치(기대 {m.group(2)}, 실제 {m.group(1)})"
-    m = re.search(r"expected to have (?:Value|Text) '([^']*)'.*?Actual value: ([^\n]*)", msg, re.S)
+    m = re.search(r"expected to (?:have|contain) (?:value|text) '([^']*)'.*?Actual value: ([^\n]*)", msg, re.S | re.I)
     if m:
-        return f"값 불일치(기대 {m.group(1)[:30]}, 실제 {m.group(2).strip()[:30]})"
-    for key, label in (("to be visible", "요소 미노출"), ("to be hidden", "요소 노출 지속"),
+        actual = m.group(2).strip()
+        actual = "없음" if actual in ("None", "") else actual[:60]
+        return f"값 불일치: 기대 \"{m.group(1)[:60]}\", 실제 \"{actual}\""
+    loc = re.search(r'waiting for (?:locator|get_by_\w+)\((.{1,60}?)\)\s*$', msg, re.M)
+    target = f" {loc.group(1)}" if loc else ""
+    for key, label in (("to be visible", f"요소 미노출{target}"), ("to be hidden", "요소 노출 지속"),
                        ("to be enabled", "요소 비활성"), ("to be disabled", "요소 활성 지속"),
                        ("to be checked", "체크 상태 불일치")):
         if f"expected {key}" in msg or f"expected to {key[3:]}" in msg or key in first:
@@ -91,6 +96,30 @@ def backlog_by_tc() -> dict[str, list[str]]:
     return found
 
 
+ISSUE_RE = re.compile(r'@pytest\.mark\.issue\(\s*["\']([^"\']+)["\']\s*\)')
+
+
+def issue_for(nodeid: str, demo: Path) -> str | None:
+    """nodeid → 함수 위 issue 마커의 Jira 키(QA-N). 없으면 None."""
+    m = re.match(r"([^:]+)::([A-Za-z0-9_]+)", nodeid)
+    path = demo / m.group(1) if m else None
+    if not path or not path.exists():
+        return None
+    pending: list[str] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        mk = ISSUE_RE.search(line)
+        if mk:
+            pending.append(mk.group(1))
+            continue
+        d = re.match(r"^\s*def\s+(test_\w+)\s*\(", line)
+        if d:
+            if d.group(1) == m.group(2):
+                return pending[0] if pending else None
+            if not line.lstrip().startswith("@"):
+                pending = []
+    return None
+
+
 REPO_URL = "https://github.com/Seolasara/Personal_QA_project_with_AI"
 BACKLOG_DIR = ROOT / ".claude" / "docs" / "backlog"
 
@@ -111,14 +140,15 @@ def backlog_link(number: str, branch: str) -> str:
     return number
 
 
-def evidence(test: dict, tc: str, backlog: dict[str, list[str]], branch: str) -> str:
+def location(test: dict) -> str:
+    """테스트 파일 안의 실패 줄. Playwright 내부 파일 줄은 건너뛴다."""
+    stage = test.get("call") or test.get("setup") or {}
+    for entry in reversed(stage.get("traceback") or []):
+        path = entry.get("path", "")
+        if "tests/" in path or path.endswith("_test.py") or "/pages/" in path or "conftest" in path:
+            return f"`{Path(path).name}:{entry.get('lineno', '')}`"
     crash = crash_of(test)
-    parts = []
-    if crash.get("path"):
-        parts.append(f"`{Path(crash['path']).name}:{crash.get('lineno', '')}`")
-    if tc in backlog:
-        parts.append("백로그 " + ", ".join(backlog_link(n, branch) for n in backlog[tc]))
-    return ", ".join(parts) or "위치 정보 없음"
+    return f"`{Path(crash['path']).name}:{crash.get('lineno', '')}`" if crash.get("path") else "위치 정보 없음"
 
 
 def load(kind: str, path: Path) -> dict:
@@ -143,6 +173,7 @@ def load(kind: str, path: Path) -> dict:
         "created": data.get("created"),
         "fails": [r for r in rows if r[1] in FAIL],
         "xpasses": [r for r in rows if r[1] == "xpassed"],
+        "passes": [r for r in rows if r[1] == "passed"],
     }
 
 
@@ -185,8 +216,6 @@ def main() -> int:
         *[f"• {count_line(r)}" for r in results],
         f"• 판정: {verdict}",
     ]
-    if total_xpass:
-        body.append(f"• xpass {total_xpass}건: 백로그 갱신 대상(버그 수정 신호)")
 
     names: dict[str, str] = {}
     for f in (args.ui_csv, args.api_csv):
@@ -198,25 +227,65 @@ def main() -> int:
 
     backlog = backlog_by_tc()
     branch = git("rev-parse", "--abbrev-ref", "HEAD")
-    thread = []
+    new_fails, known_fails, fixed = [], [], []
     for r in results:
-        for tc, _, name, t in r["fails"]:
-            thread.append(f"• [{r['kind'].upper()}] {tc} `{name}`")
-            if tc in names:
-                thread.append(f"    ◦ TC: {names[tc]}")
-            thread.append(f"    ◦ 이유: {mask(reason(t))}")
-            thread.append(f"    ◦ 근거: {evidence(t, tc, backlog, branch)}")
-        for tc, _, name, _t in r["xpasses"]:
-            thread.append(f"• [{r['kind'].upper()}] {tc} `{name}`")
-            if tc in names:
-                thread.append(f"    ◦ TC: {names[tc]}")
-            thread.append("    ◦ 이유: XPASS(고정한 버그의 수정 신호)")
-            thread.append(f"    ◦ 근거: 백로그 {', '.join(backlog_link(n, branch) for n in backlog.get(tc, ['미등록']))}")
+        demo = DEMOS[r["kind"]]
+        for tc, _, _name, t in r["fails"]:
+            key = issue_for(t["nodeid"], demo)
+            if "XPASS(strict)" in crash_of(t).get("message", ""):
+                fixed.append((r["kind"], tc, t, key))  # xfail 고정 결함이 통과(strict라 실패로 보고됨)
+                continue
+            (known_fails if (key or tc in backlog) else new_fails).append((r["kind"], tc, t, key))
+        for tc, _, _name, t in r["xpasses"]:
+            fixed.append((r["kind"], tc, t, None))
+        for tc, _, _name, t in r["passes"]:
+            key = issue_for(t["nodeid"], demo)
+            if key:
+                fixed.append((r["kind"], tc, t, key))
+    def title(n: int, kind: str, tc: str) -> str:
+        name = f" {names[tc]}" if tc in names else ""
+        return f"*{n}. [{kind.upper()}] {tc}*{name}"
 
+    def refs(tc: str, key: str | None) -> str:
+        out = []
+        if key:
+            out.append(f"Jira {key}")
+        if tc in backlog:
+            out.append("백로그 " + ", ".join(backlog_link(b, branch) for b in backlog[tc]))
+        return " · ".join(out)
+
+    thread, n = [], 0
+    if new_fails:
+        thread.append(f"*[새 실패 · 분류 필요]* {len(new_fails)}건")
+        for kind, tc, t, key in new_fails:
+            n += 1
+            thread.append(title(n, kind, tc))
+            thread.append(f"    ◦ 원인 후보: {mask(reason(t))}")
+            thread.append(f"    ◦ 위치: {location(t)}")
+    if known_fails:
+        if thread:
+            thread.append("")
+        thread.append(f"*[기존 결함 재현]* {len(known_fails)}건")
+        for kind, tc, t, key in known_fails:
+            n += 1
+            thread.append(title(n, kind, tc))
+            thread.append(f"    ◦ {mask(reason(t))} · {refs(tc, key)}")
+    if fixed:
+        if thread:
+            thread.append("")
+        thread.append(f"*[Jira 결함 통과 · 수정 확인 필요]* {len(fixed)}건")
+        for kind, tc, t, key in fixed:
+            n += 1
+            thread.append(title(n, kind, tc))
+            thread.append(f"    ◦ {refs(tc, key) or '백로그 미등록'}")
+            thread.append("    ◦ 다음 할 일: 수정 배포 여부 확인 → Jira 상태 갱신, issue 마커 해제")
+
+    if fixed:
+        body.append(f"• Jira 결함 통과 {len(fixed)}건(수정 확인 필요)")
     print("\n".join(body))
     print("---THREAD---")
     if thread:
-        print("*실패 상세*")
+        print(f"*[실패 상세]* {len(new_fails) + len(known_fails)}건" + (f", Jira 결함 통과 {len(fixed)}건" if fixed else ""))
         print("\n".join(thread))
     return 0
 

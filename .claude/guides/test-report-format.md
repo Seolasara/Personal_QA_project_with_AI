@@ -32,6 +32,7 @@
        3. `Fail N건은 Jira에 이슈로 등록하였으며, 자세한 내용은 아래 대시보드에서 확인 가능합니다.`
        4. 사인오프 기준 한 줄과, 그 아래 항목별 충족 여부(해당 종류 QA plan(UI 65702, API 5996545)의 사인오프 기준)
        5. 다음 Iteration 계획
+       - 특이사항이 있으면 2~3번 자리에 쓴다. Blocked가 있으면 Blocked 사유를, flaky(env)가 있으면 어떤 TC가 왜 실패했고 재실행 결과와 Jira 미등록 사유를 쓴다. 건수 문장에는 Blocked도 넣는다.
 2. Test Scope
    - 2열 표(왼쪽 머리글 셀) 세 행으로 쓴다: 대상 기능(대분류), 제외(스펙에 정확한 기대결과가 없는 TC는 N/A로 제외), 범위 밖. 건수와 TC ID는 쓰지 않는다.
 3. Test Result
@@ -44,6 +45,6 @@
    - 커버리지: 자동화율(자동화된 TC / 시트 TC)과 실행률(실행한 TC / (Total - N/A)). 기준은 QA plan 1.4 Sign-off Criteria
 4. BTS Status
    - Jira 실시간 목록(jira 매크로)만 둔다. JQL은 매크로 안에만 두고 본문에 적지 않는다. 다른 표나 설명을 두지 않는다.
-     - 이번 실행에서 등록한 이슈: `project = QA AND type = 버그 AND labels = <ui|api> AND created >= "<실행 날짜>" ORDER BY priority DESC`
+     - 이번 실행에서 등록한 이슈: `project = QA AND type = 버그 AND labels = <ui|api> AND created >= "<실행 날짜>" ORDER BY priority DESC` 새로 등록한 이슈가 없으면 목록 대신 `이번 실행에서 새로 등록한 이슈는 없습니다.` 한 줄을 쓴다.
      - Total remaining issues: `project = QA AND type = 버그 AND labels = <ui|api> AND statusCategory != Done ORDER BY priority DESC`
      - Known Issues: 개발이나 PM이 서비스 이용에 영향이 거의 없다고 답해 수정하지 않기로 한 이슈만 넣는다. 해당 이슈에 Jira 레이블 `known-issue`를 붙이고, 목록은 `project = QA AND type = 버그 AND labels = <ui|api> AND labels = known-issue ORDER BY priority DESC`로 둔다(해당 이슈가 없으면 빈 목록).
