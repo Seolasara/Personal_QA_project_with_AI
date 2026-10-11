@@ -71,7 +71,7 @@
 
 ## 세션 마무리
 - 작업 일지 DB: Notion "QA AI Agent 업무 일지"(`collection://a4482c3b-9a5a-40f0-979c-6e8196b78770`, "AI Report" 페이지 하위).
-- 세션 이름은 `session-notes.md` 목록(sara/gugu/study/qq 등) 기준이다.
+- 세션 이름은 sara, jd, study, anything이다. 노션 일지 DB의 `세션` 선택지와 같다(선택지에 남은 gugu, qq는 옛 일지용). 이름을 모르면 전역 규칙대로 마무리 때 한 번 묻는다.
 - `Phase`, `상태` 속성은 기존 항목 값을 참고해 채운다.
 
 ## 코드 스타일

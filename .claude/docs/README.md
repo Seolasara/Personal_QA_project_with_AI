@@ -58,7 +58,9 @@
    - 루트 `CLAUDE.md`는 "규칙 문서와 폴더"의 테스트 종류 목록만 갱신한다.
 10. 테스트 표시와 결과 집계 용어가 헷갈릴 때
    - `.claude/docs/glossary.md`: xfail, XPASS, issue 마커, Blocked, N/A의 정의와 결함 하나의 흐름
-11. 파이프라인 전체 설계가 필요할 때
+11. MCP 서버의 등록 위치와 용도가 궁금할 때
+   - `.claude/docs/mcp-servers.md`: 서버별 등록 위치, 에이전트별 사용처, 알려진 제약
+12. 파이프라인 전체 설계가 필요할 때
    - `.claude/docs/pipeline-design.md`: 스킬과 에이전트 구성, 승인 지점, 만드는 순서
 
 11. 교훈과 회고
