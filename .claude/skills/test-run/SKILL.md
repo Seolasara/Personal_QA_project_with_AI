@@ -15,7 +15,7 @@ argument-hint: "[ui|api]"
 ## 2. 사전 점검
 하나라도 실패하면 실행하지 않고 보고한다.
 - 실행 환경(둘 중 하나)
-  - 컨테이너(Iteration 3부터 기본): `docker info`가 응답하고 이미지 `qa-tests`가 있다(없거나 `requirements.txt`가 바뀌었으면 루트에서 `docker build -t qa-tests .`).
+  - 컨테이너(Iteration 3부터 기본): `docker info`가 응답하고 이미지 `qa-tests`가 있다(없거나 `requirements.txt`(UI는 `playwright-demo/`, API는 `api-demo/`)가 바뀌었으면 루트에서 `docker build -t qa-tests .`).
   - venv: `playwright-demo/.venv/bin/pytest`, `api-demo/.venv/bin/pytest`가 있다.
 - `.env`: 각 폴더 `.env.example`의 키가 `.env`에 모두 있고 값이 비어 있지 않다. 키 이름만 확인하고 값은 출력하지 않는다.
   - ex: `grep -c '^TOOLSHOP_PASSWORD=.\+' playwright-demo/.env`

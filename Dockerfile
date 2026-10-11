@@ -11,7 +11,7 @@ FROM mcr.microsoft.com/playwright/python:v1.62.0-noble
 WORKDIR /qa
 
 # 의존성 먼저 설치해 코드만 바뀌면 이 층을 재사용한다
-COPY requirements.txt /tmp/req-ui.txt
+COPY playwright-demo/requirements.txt /tmp/req-ui.txt
 COPY api-demo/requirements.txt /tmp/req-api.txt
 # 이미지에 venv 모듈이 없고 컨테이너 하나가 환경 하나라서 시스템 Python에 바로 설치한다
 RUN pip install --no-cache-dir --break-system-packages -r /tmp/req-ui.txt -r /tmp/req-api.txt
