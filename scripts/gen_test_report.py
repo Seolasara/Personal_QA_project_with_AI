@@ -59,7 +59,7 @@ def main() -> int:
 
     created = data.get("created")
     run_time = (
-        datetime.fromtimestamp(created, tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+        datetime.fromtimestamp(created, tz=timezone.utc).strftime("%Y-%m-%d")
         if created
         else "알 수 없음"
     )

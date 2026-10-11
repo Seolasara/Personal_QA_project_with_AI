@@ -77,16 +77,14 @@ def test_login_with_unregistered_email(api_client):
 
 
 @pytest.mark.tc("API_08")
+@pytest.mark.issue("QA-14")  # 백로그 #20: token_type, expires_in이 스펙 예시와 다름. 고쳐질 때까지 실패로 집계
 def test_login(api_client):
     response = LoginClient(api_client).login(API_EMAIL, API_PASSWORD)
 
     assert response.status_code == 200
     result = LoginResponse.model_validate(response.json())
-    # 스펙 예시값과 다른 부분만 xfail (백로그 #20)
-    if (result.token_type, result.expires_in) != ("Bearer", 120):
-        pytest.xfail(
-            f"백로그 #20: 토큰 값이 스펙 예시(Bearer, 120)와 다름. 실제 {result.token_type}, {result.expires_in}"
-        )
+    # 스펙 예시값 (QA-14)
+    assert (result.token_type, result.expires_in) == ("Bearer", 120)
 
 
 @pytest.mark.tc("API_09")

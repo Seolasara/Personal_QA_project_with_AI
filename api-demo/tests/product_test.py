@@ -180,10 +180,7 @@ def test_get_related_products_unknown_id(api_client):
 
 
 @pytest.mark.tc("API_54")
-@pytest.mark.xfail(
-    strict=True,
-    reason="백로그 #18: 연관 상품 항목에 co2_rating이 없고 category에 slug가 없어 상품(ProductResponse) 구조와 다름",
-)
+@pytest.mark.issue("QA-12")  # 백로그 #18: 연관 상품 항목에 co2_rating, category.slug 없음. 고쳐질 때까지 실패로 집계
 def test_related_product_item_structure(api_client, product_id):
     response = ProductClient(api_client).get_related(product_id)
     body = response.json()

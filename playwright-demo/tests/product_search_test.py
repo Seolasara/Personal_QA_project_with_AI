@@ -260,10 +260,7 @@ def test_product_quantity_cleared_corrected_to_one(product_detail):
 
 
 @pytest.mark.tc("UI_22")
-@pytest.mark.xfail(
-    strict=True,
-    reason="백로그 #16: 수량 상한이 스펙(999999999)과 다름. 실제 상한 99라 100이 99로 보정됨",
-)
+@pytest.mark.issue("QA-11")  # 백로그 #16: 수량 상한 99. 고쳐질 때까지 실패로 집계
 def test_product_quantity_upper_bound(product_detail):
     detail = product_detail
 

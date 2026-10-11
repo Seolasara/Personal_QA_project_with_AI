@@ -82,6 +82,7 @@ def test_cart_quantity_update_totals(cart):
 
 
 @pytest.mark.tc("UI_28")
+@pytest.mark.issue("QA-11")  # 백로그 #16: 수량 상한 99. 고쳐질 때까지 실패로 집계
 def test_cart_quantity_corrected_to_bounds(cart):
     cart_page = CartPage(cart)
 
@@ -96,12 +97,7 @@ def test_cart_quantity_corrected_to_bounds(cart):
 
     # 3. 수량 "1000000000" 입력 후 입력란 밖 클릭 → 수량 "999999999"로 보정되어 노출
     cart_page.set_row_quantity(product_name, "1000000000")
-    try:
-        expect(quantity).to_have_value("999999999")
-    except AssertionError:
-        if quantity.input_value() == "99":
-            pytest.xfail("백로그 #16: 수량 상한이 스펙(999999999)과 다름. 실제 상한 99로 보정됨")
-        raise
+    expect(quantity).to_have_value("999999999")
 
 
 @pytest.mark.tc("UI_29")
@@ -148,10 +144,7 @@ def test_cart_remove_one_recalculates_total(cart_two_items):
 
 
 @pytest.mark.tc("UI_31")
-@pytest.mark.xfail(
-    strict=True,
-    reason="백로그 #15: 빈 장바구니 문구가 스펙(\"Your shopping cart is empty\")과 다름. 실제 \"The cart is empty. Nothing to display.\"",
-)
+@pytest.mark.issue("QA-10")  # 백로그 #15: 빈 장바구니 문구가 스펙과 다름. 고쳐질 때까지 실패로 집계
 def test_cart_remove_last_item_shows_empty(cart):
     cart_page = CartPage(cart)
 

@@ -63,6 +63,7 @@ def test_guest_login_in_signin_step_proceeds_to_billing(guest_cart):
 
 
 @pytest.mark.tc("UI_83")
+@pytest.mark.issue("QA-16")  # 백로그 #30: Sign in 단계 로그인 상태 문구가 스펙과 다름. 고쳐질 때까지 실패로 집계
 def test_loggedin_signin_step_shows_message_and_proceed(cart):
     payment = PaymentPage(cart)
     user_name = LoginPage(cart).header_user_menu.inner_text().strip()
@@ -79,6 +80,7 @@ def test_loggedin_signin_step_shows_message_and_proceed(cart):
 
 
 @pytest.mark.tc("UI_84")
+@pytest.mark.issue("QA-17")  # 백로그 #31: Billing 자동 채움에 Country 없음. 고쳐질 때까지 실패로 집계
 def test_loggedin_billing_prefilled_with_account_address(cart):
     payment = PaymentPage(cart)
     _go_to_signin_step(payment)

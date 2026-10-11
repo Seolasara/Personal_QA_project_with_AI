@@ -74,6 +74,7 @@ def test_category_menu_page_title(guest_catalog):
 
 
 @pytest.mark.tc("UI_50")
+@pytest.mark.issue("QA-15")  # 백로그 #29: 카테고리 페이지 Price Range 없음. 고쳐질 때까지 실패로 집계
 def test_category_page_filters(guest_catalog):
     category = CategoryPage(guest_catalog.page)
     category.open_categories_menu()

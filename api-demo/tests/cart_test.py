@@ -163,13 +163,13 @@ def test_update_quantity_without_product_id(api_client, cart_id):
 
 
 @pytest.mark.tc("API_72")
+@pytest.mark.issue("QA-13")  # 백로그 #19: 404 메시지가 스펙과 다름. 고쳐질 때까지 실패로 집계
 def test_update_quantity_nonexistent_cart(api_client, product_id):
     response = CartClient(api_client).update_quantity("notfound", product_id, 2)
     body = CartMessageResponse.model_validate(response.json())
     assert response.status_code == 404
-    # 스펙 예시값과 다른 부분만 xfail (백로그 #19)
-    if body.message != "Resource not found":
-        pytest.xfail(f"백로그 #19: 404 메시지가 스펙(\"Resource not found\")과 다름. 실제 \"{body.message}\"")
+    # 스펙 404 메시지 (QA-13)
+    assert body.message == "Resource not found"
 
 
 @pytest.mark.tc("API_73")
@@ -191,13 +191,13 @@ def test_delete_item_not_in_cart(api_client, cart_id, product_id):
 
 
 @pytest.mark.tc("API_75")
+@pytest.mark.issue("QA-13")  # 백로그 #19: 404 메시지가 스펙과 다름. 고쳐질 때까지 실패로 집계
 def test_delete_item_nonexistent_cart(api_client, product_id):
     response = CartClient(api_client).remove_item("notfound", product_id)
     body = CartMessageResponse.model_validate(response.json())
     assert response.status_code == 404
-    # 스펙 예시값과 다른 부분만 xfail (백로그 #19)
-    if body.message != "Resource not found":
-        pytest.xfail(f"백로그 #19: 404 메시지가 스펙(\"Resource not found\")과 다름. 실제 \"{body.message}\"")
+    # 스펙 404 메시지 (QA-13)
+    assert body.message == "Resource not found"
 
 
 @pytest.mark.spec_undefined
@@ -258,13 +258,13 @@ def test_delete_cart(api_client, cart_id):
 
 
 @pytest.mark.tc("API_82")
+@pytest.mark.issue("QA-13")  # 백로그 #19: 404 메시지가 스펙과 다름. 고쳐질 때까지 실패로 집계
 def test_delete_nonexistent_cart(api_client):
     response = CartClient(api_client).delete_cart("notfound")
     body = CartMessageResponse.model_validate(response.json())
     assert response.status_code == 404
-    # 스펙 예시값과 다른 부분만 xfail (백로그 #19)
-    if body.message != "Resource not found":
-        pytest.xfail(f"백로그 #19: 404 메시지가 스펙(\"Resource not found\")과 다름. 실제 \"{body.message}\"")
+    # 스펙 404 메시지 (QA-13)
+    assert body.message == "Resource not found"
 
 
 @pytest.mark.tc("API_83")
@@ -287,10 +287,10 @@ def test_get_nonexistent_cart(api_client):
 
 
 @pytest.mark.tc("API_85")
+@pytest.mark.issue("QA-13")  # 백로그 #19: 404 메시지가 스펙과 다름. 고쳐질 때까지 실패로 집계
 def test_add_item_nonexistent_cart(api_client, product_id):
     response = CartClient(api_client).add_item("notfound", product_id, 1)
     body = CartMessageResponse.model_validate(response.json())
     assert response.status_code == 404
-    # 스펙 예시값과 다른 부분만 xfail (백로그 #19)
-    if body.message != "Requested item not found":
-        pytest.xfail(f"백로그 #19: 404 메시지가 스펙(\"Requested item not found\")과 다름. 실제 \"{body.message}\"")
+    # 스펙 404 메시지 (QA-13)
+    assert body.message == "Requested item not found"

@@ -33,6 +33,7 @@ def assert_billing_matches(body, address_info):
 
 
 @pytest.mark.tc("API_99")
+@pytest.mark.issue("QA-9")  # 백로그 #12: 성공 코드가 스펙(200)과 다른 201. 고쳐질 때까지 실패로 집계
 def test_create_invoice(api_client, authed_client, cart_id, product_id, address_info):
     #장바구니 생성 > 상품 추가
     CartClient(api_client).add_item(cart_id, product_id, 1)
@@ -44,13 +45,12 @@ def test_create_invoice(api_client, authed_client, cart_id, product_id, address_
 
     InvoiceCreatedResponse.model_validate(body)
     assert_billing_matches(body, address_info)
-    # 스펙과 다른 성공 코드(201)만 xfail (백로그 #12), 그 밖의 코드는 실패
-    if response.status_code == 201:
-        pytest.xfail("백로그 #12: 인보이스 생성 성공 코드가 스펙(200)과 다름. 실제 201")
+    # 스펙 성공 코드 200 (QA-9)
     assert response.status_code == 200
 
 
 @pytest.mark.tc("API_100")
+@pytest.mark.issue("QA-9")  # 백로그 #12: 성공 코드가 스펙(200)과 다른 201. 고쳐질 때까지 실패로 집계
 def test_create_invoice_credit_card(api_client, authed_client, cart_id, product_id, address_info):
     CartClient(api_client).add_item(cart_id, product_id, 1)
 
@@ -60,9 +60,7 @@ def test_create_invoice_credit_card(api_client, authed_client, cart_id, product_
 
     InvoiceCreatedResponse.model_validate(body)
     assert_billing_matches(body, address_info)
-    # 스펙과 다른 성공 코드(201)만 xfail (백로그 #12), 그 밖의 코드는 실패
-    if response.status_code == 201:
-        pytest.xfail("백로그 #12: 인보이스 생성 성공 코드가 스펙(200)과 다름. 실제 201")
+    # 스펙 성공 코드 200 (QA-9)
     assert response.status_code == 200
 
 

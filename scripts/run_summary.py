@@ -175,7 +175,7 @@ def main() -> int:
         ap.error("--ui 또는 --api 중 하나는 필요하다")
 
     created = max((r["created"] or 0) for r in results)
-    when = datetime.fromtimestamp(created).strftime("%Y-%m-%d %H:%M") if created else "알 수 없음"
+    when = datetime.fromtimestamp(created).strftime("%Y-%m-%d") if created else "알 수 없음"
     total_fail = sum(r["failed"] for r in results)
     total_xpass = sum(r["xpassed"] for r in results)
     verdict = "실패 없음" if not total_fail else f"실패 {total_fail}건, 원인 분류 필요"
