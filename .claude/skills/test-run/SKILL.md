@@ -33,7 +33,8 @@ argument-hint: "[ui|api]"
 - `test-runs/`는 git에 올리지 않는다.
 
 ## 5. Slack 보고
-- 요약 텍스트: `python3 scripts/run_summary.py --<ui|api> <보관본>/report.json --title "<실행 목적 제목>"`
+- 요약 텍스트: `python3 scripts/run_summary.py --<ui|api> <보관본>/report.json --<ui|api>-csv <시트 CSV> --title "<실행 목적 제목>"`
+  - 시트 CSV는 루트 `CLAUDE.md`의 CSV 주소로 임시 경로에 받는다. 실패 상세에 TC 기능명이 한 줄 붙는다.
   - 제목은 실행 목적을 대괄호로 구분해 쓴다. Iteration 실행이면 `Iteration<N> <UI|API> 전체 테스트 결과`, 스크립트 작성 뒤 확인 실행이면 `<UI|API> 스크립트 작성 전체 테스트 실행 결과`. 목적이 다른 실행은 그 목적을 짧게 쓴다.
   - 출력의 `---THREAD---` 위는 본문, 아래는 실패 상세(이유, 근거, 백로그 링크)다.
   - 백로그 링크는 GitHub 현재 브랜치 기준이라, 백로그를 고쳤으면 push한 뒤에 보낸다.

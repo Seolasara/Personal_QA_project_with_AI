@@ -2,6 +2,7 @@
 """전체 테스트 실행 결과를 Slack 메시지용 요약 텍스트로 만든다. 네트워크는 쓰지 않고 report.json만 읽는다.
 
 사용:  python3 scripts/run_summary.py --ui <UI report.json> --api <API report.json> --title "<실행 목적 제목>"
+- --ui-csv, --api-csv: 시트 CSV(임시 경로). 주면 실패 상세에 "TC: <기능명>" 한 줄을 붙인다.
 - --title: 본문 첫 줄 제목. 실행 목적을 쓴다(ex: "Iteration1 UI 전체 테스트 결과", "UI 스크립트 작성 전체 테스트 실행 결과"). 없으면 "테스트 실행 결과".
 - 출력(stdout) 첫 블록은 본문 메시지, `---THREAD---` 아래는 스레드 답글(실패 상세)이다. 실패가 없으면 스레드는 비어 있다.
 - 실패 상세의 이유는 실패 메시지에서 규칙으로 뽑은 원인 후보이고, 확정 분류는 `/test-triage`가 한다.
@@ -12,6 +13,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import re
 import subprocess
@@ -163,6 +165,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--ui", type=Path)
     ap.add_argument("--api", type=Path)
+    ap.add_argument("--ui-csv", type=Path, help="UI 시트 CSV. 있으면 실패 상세에 TC 기능명을 붙인다")
+    ap.add_argument("--api-csv", type=Path, help="API 시트 CSV. 있으면 실패 상세에 TC 시나리오를 붙인다")
     ap.add_argument("--title", default="테스트 실행 결과", help="실행 목적 제목. ex: 'Iteration1 UI 전체 테스트 결과'")
     args = ap.parse_args()
 
@@ -184,16 +188,28 @@ def main() -> int:
     if total_xpass:
         body.append(f"• xpass {total_xpass}건: 백로그 갱신 대상(버그 수정 신호)")
 
+    names: dict[str, str] = {}
+    for f in (args.ui_csv, args.api_csv):
+        if f and f.exists():
+            with f.open(encoding="utf-8") as fh:
+                for row in list(csv.reader(fh))[1:]:
+                    if len(row) > 2 and row[0]:
+                        names[row[0].rstrip("*")] = " ".join(row[2].split())
+
     backlog = backlog_by_tc()
     branch = git("rev-parse", "--abbrev-ref", "HEAD")
     thread = []
     for r in results:
         for tc, _, name, t in r["fails"]:
             thread.append(f"• [{r['kind'].upper()}] {tc} `{name}`")
+            if tc in names:
+                thread.append(f"    ◦ TC: {names[tc]}")
             thread.append(f"    ◦ 이유: {mask(reason(t))}")
             thread.append(f"    ◦ 근거: {evidence(t, tc, backlog, branch)}")
         for tc, _, name, _t in r["xpasses"]:
             thread.append(f"• [{r['kind'].upper()}] {tc} `{name}`")
+            if tc in names:
+                thread.append(f"    ◦ TC: {names[tc]}")
             thread.append("    ◦ 이유: XPASS(고정한 버그의 수정 신호)")
             thread.append(f"    ◦ 근거: 백로그 {', '.join(backlog_link(n, branch) for n in backlog.get(tc, ['미등록']))}")
 
