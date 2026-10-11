@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 import pytest
+from playwright.sync_api import expect
 
 from config import TOOLSHOP_EMAIL, TOOLSHOP_PASSWORD
 from pages.catalog_page import CatalogPage, ProductDetailPage
@@ -83,6 +84,25 @@ def login_page(page):
 
 
 @pytest.fixture
+def blocked_login_requests(login_page):
+    """로그인 페이지 진입 상태에서 로그인 API 요청을 기록하고 차단한다.
+
+    클라이언트 검증 TC(공란, 비밀번호 길이)용. 요청이 서버에 닿지 않아
+    클라이언트 검증이 깨져도 로그인 실패가 쌓여 계정이 잠기지 않는다(3회 잠금).
+    반환값: 시도된 로그인 요청 URL 목록 (비어 있으면 미전송).
+    """
+    attempts = []
+
+    def _block(route):
+        attempts.append(route.request.url)
+        route.abort()
+
+    login_page.page.route(LoginPage.LOGIN_API_PATTERN, _block)
+    yield attempts
+    login_page.page.unroute(LoginPage.LOGIN_API_PATTERN, _block)
+
+
+@pytest.fixture
 def loggedin_home(login_page):
     login_page.login(TOOLSHOP_EMAIL, TOOLSHOP_PASSWORD)
     login_page.page.get_by_title("Practice Software Testing - Toolshop").click()
@@ -92,6 +112,17 @@ def loggedin_home(login_page):
 @pytest.fixture
 def catalog(loggedin_home) -> CatalogPage:
     return CatalogPage(loggedin_home)
+
+
+@pytest.fixture
+def guest_catalog(page) -> CatalogPage:
+    """비로그인 상태로 메인 페이지에 진입해 첫 상품 목록이 그려진 상태.
+
+    로그인이 필요 없는 상품 조회 TC(필터, 정렬, 검색)용. 계정 잠금과 무관하게 동작한다.
+    """
+    guest = CatalogPage(page)
+    guest.open_loaded()
+    return guest
 
 
 @pytest.fixture
@@ -118,8 +149,50 @@ def cart_ready(product_detail):
 
 
 @pytest.fixture
+def cart_two_items(catalog):
+    """서로 다른 상품 2종(Hammer, Pliers 카테고리 첫 상품)을 담고 장바구니 페이지로 이동한 상태의 page.
+
+    장바구니는 브라우저 context의 sessionStorage(cart_id)에 묶여 테스트마다 새로 시작하므로 cleanup은 두지 않는다.
+    """
+    for category in ("Hammer", "Pliers"):
+        catalog.open()
+        catalog.filter_by_category(category)
+        catalog.open_first_product()
+        detail = ProductDetailPage(catalog.page)
+        detail.add()
+        expect(detail.added_toast).to_be_visible()
+    catalog.open_cart()
+    return catalog.page
+
+
+@pytest.fixture
 def cart(product_detail):
     """상품을 장바구니에 담고 체크아웃(장바구니) 페이지로 이동한 상태의 page."""
     product_detail.add()
     product_detail.open_cart()
     return product_detail.page
+
+
+@pytest.fixture
+def guest_product_detail(guest_catalog) -> ProductDetailPage:
+    """비로그인 상태로 Hammer 카테고리 첫 상품의 상세 페이지까지 진입한 상태.
+
+    로그인이 필요 없는 상세 화면 TC(UI_54~UI_58, UI_60)용. 계정 잠금과 무관하게 동작한다.
+    """
+    guest_catalog.check_category("Hammer")
+    guest_catalog.open_first_product()
+    detail = ProductDetailPage(guest_catalog.page)
+    expect(detail.add_to_cart).to_be_visible()
+    return detail
+
+
+@pytest.fixture
+def guest_cart(guest_product_detail):
+    """비로그인 상태로 상품을 장바구니에 담고 체크아웃(장바구니) 페이지로 이동한 상태의 page (UI_81, UI_82).
+
+    장바구니는 브라우저 context 의 sessionStorage 에 묶여 테스트마다 새로 시작하므로 cleanup 은 두지 않는다.
+    """
+    guest_product_detail.add()
+    expect(guest_product_detail.added_toast).to_be_visible()
+    guest_product_detail.open_cart()
+    return guest_product_detail.page

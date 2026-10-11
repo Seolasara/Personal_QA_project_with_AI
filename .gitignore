@@ -25,3 +25,13 @@ trace/
 .DS_Store
 .idea/
 .vscode/
+
+# Claude Code 개인 로컬 설정
+.claude/settings.local.json
+.playwright-mcp/
+
+# 시트 쓰기 전후 백업 CSV
+.claude/docs/tc-backup/
+
+# 전체 실행 결과 보관본 (/test-run)
+test-runs/

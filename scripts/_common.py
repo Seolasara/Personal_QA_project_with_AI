@@ -9,20 +9,20 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DEMO = ROOT / "playwright-demo"
+DEMOS = {"ui": DEMO, "api": ROOT / "api-demo"}  # 테스트 종류 → 폴더
 REPORT = DEMO / "test-results" / "report.json"
 SNAP_DIR = DEMO / "test-results" / "dom-snapshots"
-TESTCASES_DIR = ROOT / "testcases"
 
 TC_MARKER_RE = re.compile(r'@pytest\.mark\.tc\(\s*["\']([^"\']+)["\']\s*\)')
 DEF_RE = re.compile(r"^\s*def\s+(test_\w+)\s*\(")
 
 
-def tc_for(nodeid: str) -> str | None:
-    """nodeid (tests/foo_test.py::test_bar[chromium]) → 함수 위 tc 마커 값."""
+def tc_for(nodeid: str, demo: Path = DEMO) -> str | None:
+    """nodeid (tests/foo_test.py::test_bar[chromium]) → 함수 위 tc 마커 값. demo는 nodeid 기준 폴더."""
     m = re.match(r"([^:]+)::([A-Za-z0-9_]+)", nodeid)
     if not m:
         return None
-    path = DEMO / m.group(1)
+    path = demo / m.group(1)
     func = m.group(2)
     if not path.exists():
         return None
