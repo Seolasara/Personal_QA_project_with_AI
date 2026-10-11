@@ -50,7 +50,7 @@ argument-hint: "[ui|api]"
 
 ## 6. 노션 "테스트 실행" 행
 - "테스트 실행" DB(`collection://de613125-b2b2-40af-842a-9f1265e9376c`)에 행 1개를 만든다.
-  - 속성은 `.claude/guides/notion-test-record-format.md` 2번을 따른다. 실행 제목은 `YYYY-MM-DD HH:MM UI 실행` 또는 `... API 실행`이고, 결과는 해당 종류 칸에 `40/45 통과, 실패 5`(xfail은 실패에 포함) 형식으로 쓴다.
+  - 속성은 `.claude/guides/notion-test-record-format.md` 2번을 따른다. 실행 구분(스크립트 작성 후 전체 시범 실행 또는 Iteration N)과 종류(UI, API)를 채운다. 실행 제목은 `YYYY-MM-DD HH:MM UI <실행 구분>` 형식이고, 결과는 해당 종류 칸에 `40/45 통과, 실패 5`(xfail은 실패에 포함) 형식으로 쓴다.
   - 본문은 요약과 통과 현황까지 쓴다. 실패 현황은 `/test-triage`가 채운다.
   - 진행 상태: 실패나 xpass가 있으면 "분류 대기", 없으면 "등록 완료"(분류할 실패 없음)
 

@@ -5,7 +5,7 @@
 - UI와 API는 실행도 보고서도 따로 쓴다. 보고서 하나가 실행 하나(`test-runs/<일시>-<ui|api>`)다.
 - Iteration: 사인오프 통과율을 맞출 때까지 3회까지 돌린다. Iteration마다 결과 보고서를 쓰고, 마지막에 사인오프용 결과 보고서를 쓴다.
   - Iteration 1: 개발 완료 후 1차 QA / Iteration 2: 결함 수정 후 재검증 / Iteration 3: 배포 전 Regression Test
-  - 사인오프용은 Iteration 결과를 모아 최종 판정을 쓴다. 노션 "테스트 실행" 행의 Iteration 속성으로 묶는다.
+  - 사인오프용은 Iteration 결과를 모아 최종 판정을 쓴다. 노션 "테스트 실행" 행의 "실행 구분" 속성으로 묶는다. "스크립트 작성 후 전체 시범 실행"은 보고서 대상이 아니다.
 - 제목 (날짜는 실행 날짜)
   - Iteration 보고서: `YYYYMMDD_Iteration<N>_Summary Report` (ex: `20261010_Iteration1_Summary Report`)
   - 사인오프용 최종 보고서: `YYYYMMDD_Test Result Report`
