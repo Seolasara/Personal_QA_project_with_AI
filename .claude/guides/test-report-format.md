@@ -8,10 +8,12 @@
   - Iteration 번호는 UI와 API가 따로 센다. 한쪽이 다음 회차로 넘어가도 다른 쪽은 자기 회차를 유지한다.
   - 사인오프용은 Iteration 결과를 모아 최종 판정을 쓴다. 노션 "테스트 실행" 행의 "실행 구분" 속성으로 묶는다. "스크립트 작성 후 전체 시범 실행"은 보고서 대상이 아니다.
 - 제목 (날짜는 실행 날짜)
-  - Iteration 보고서: `YYYYMMDD_Iteration<N>_Summary Report` (ex: `20261010_Iteration1_Summary Report`)
-  - 사인오프용 최종 보고서: `YYYYMMDD_Test Result Report`
+  - Iteration 보고서: `YYYYMMDD_<UI|API>_Iteration<N>_Test Result Report` (ex: `20261011_UI_Iteration1_Test Result Report`)
+  - 사인오프용 최종 보고서: `YYYYMMDD_<UI|API>_Test Result Report`
+  - 같은 스페이스에서 제목이 겹치면 안 되므로 종류를 넣는다.
 - Iteration 2, 3에는 Jira에 등록된 결함의 테스트(`@pytest.mark.issue`)를 반드시 포함해 실행한다. 보고서 Comment에 이슈별 재검증 결과(통과 = 수정 확인, 실패 = 미해결)를 쓴다.
 - 섹션은 아래 4개만 쓴다. 템플릿에 없는 섹션, 대분류별 표, 판정 패널을 더하지 않는다.
+- 제목(h2)마다 앞에 구분선을 넣는다.
 - 숫자는 보관본 report.json 기준이고, 노션 실행 행과 Slack 본문의 숫자와 같아야 한다.
 
 ## 2. 섹션
@@ -22,11 +24,14 @@
      - Environment: 대상 URL, 브라우저 또는 HTTP 클라이언트, 도구 버전, OS
      - Build / Version: 서비스 버전(sprint5)과 테스트 코드 커밋, 브랜치
      - Tester: 사라(AI QA 리더), 검토자
-     - Comment: 사인오프 판정과 기준, 근거. 기준은 해당 종류 QA plan(UI 65702, API 5996545)의 사인오프 기준이고, 근거는 미해결 High 결함 수와 Fail 건수다.
+     - Comment: 순서대로 쓴다.
+       1. `총 N건의 케이스 중 Pass N건, Fail N건, N/A N건입니다.`
+       2. `주요 Fail 유형은 <유형>, <유형>, <유형>입니다.` 한 줄. 괄호로 예시를 덧붙이지 않는다(가독성). ex: `주요 Fail 유형은 스펙과 다른 화면 문구와 누락된 화면 요소, 입력값 처리 차이입니다.`
+       3. `Fail N건은 Jira에 이슈로 등록하였으며, 자세한 내용은 아래 대시보드에서 확인 가능합니다.`
+       4. 사인오프 기준 한 줄과, 그 아래 항목별 충족 여부(해당 종류 QA plan(UI 65702, API 5996545)의 사인오프 기준)
+       5. 다음 Iteration 계획
 2. Test Scope
-   - 대상 기능(대분류)과 TC 수, 실행한 TC 수
-   - 제외한 TC: 스펙에 정확한 기대결과가 없어 전체 실행에서 뺀 TC(`spec_undefined` 마커) 수와 ID
-   - 범위 밖 기능
+   - 2열 표(왼쪽 머리글 셀) 세 행으로 쓴다: 대상 기능(대분류), 제외(스펙에 정확한 기대결과가 없는 TC는 N/A로 제외), 범위 밖. 건수와 TC ID는 쓰지 않는다.
 3. Test Result
    - 표 한 줄: Total, Pass, Fail, N/A, Blocked, Pass Rate. 단위는 TC다(파라미터로 나뉜 테스트는 모두 통과해야 그 TC가 Pass).
      - Total: 시트 TC 수
@@ -36,7 +41,7 @@
      - Pass Rate: Pass / 실행한 TC (실행한 TC = Total - N/A - Blocked)
    - 커버리지: 자동화율(자동화된 TC / 시트 TC)과 실행률(실행한 TC / (Total - N/A)). 기준은 QA plan 1.4 Sign-off Criteria
 4. BTS Status
-   - Jira 실시간 목록(jira 매크로)만 둔다. 각 목록 위에 JQL을 한 줄로 적고, 그 아래에 다른 표나 설명을 두지 않는다.
+   - Jira 실시간 목록(jira 매크로)만 둔다. JQL은 매크로 안에만 두고 본문에 적지 않는다. 다른 표나 설명을 두지 않는다.
      - 이번 실행에서 등록한 이슈: `project = QA AND type = 버그 AND labels = <ui|api> AND created >= "<실행 날짜>" ORDER BY priority DESC`
      - Total remaining issues: `project = QA AND type = 버그 AND labels = <ui|api> AND statusCategory != Done ORDER BY priority DESC`
-     - Known Issues: `project = QA AND type = 버그 AND labels = <ui|api> AND statusCategory != Done AND created < "<실행 날짜>" ORDER BY priority DESC`
+     - Known Issues: 개발이나 PM이 서비스 이용에 영향이 거의 없다고 답해 수정하지 않기로 한 이슈만 넣는다. 해당 이슈에 Jira 레이블 `known-issue`를 붙이고, 목록은 `project = QA AND type = 버그 AND labels = <ui|api> AND labels = known-issue ORDER BY priority DESC`로 둔다(해당 이슈가 없으면 빈 목록).
