@@ -310,12 +310,15 @@ def test_cart_kept_after_logout(cart):
     header = LoginPage(cart)
     home = CatalogPage(cart)
 
-    # 1. 장바구니 리스트에 상품 1건 노출
+    # 사전 조건: 장바구니 내 상품 1건만 존재 (로그아웃 전 담은 상품명 기록)
     expect(cart_page.rows).to_have_count(1)
     product_name = cart_page.product_titles.first.inner_text().strip()
 
-    # 2. 사용자명 메뉴 > [Sign out] → 메인 이동, 헤더에 [Sign in] 노출
+    # 1. 메인 페이지 헤더 유저 이름 클릭
+    cart.goto("https://practicesoftwaretesting.com/")
     header.header_user_menu.click()
+
+    # 2. [Sign out] → 메인 페이지로 리다이렉팅, 헤더에 [Sign in] 노출
     header.header_sign_out.click()
     expect(cart).to_have_url("https://practicesoftwaretesting.com/")
     expect(header.header_sign_in).to_be_visible()
