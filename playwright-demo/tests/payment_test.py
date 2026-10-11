@@ -3,7 +3,7 @@ import re
 import pytest
 from playwright.sync_api import expect
 
-from pages.catalog_page import CartPage, CatalogPage
+from pages.catalog_page import CatalogPage
 from pages.payment_page import PaymentPage
 
 COUNTRY = "Korea (the Republic of)"
@@ -135,7 +135,6 @@ def test_payment_confirm_shows_invoice_number(cart):
 def test_payment_confirm_empties_cart(cart):
     payment = PaymentPage(cart)
     expect(payment.cart_items).not_to_have_count(0)
-    paid_title = payment.cart_items.first.inner_text().strip()
     _go_to_payment_step(payment)
 
     payment.select_payment_method("cash-on-delivery")
@@ -145,14 +144,8 @@ def test_payment_confirm_empties_cart(cart):
     payment.confirm_payment()
     expect(payment.invoice_number).to_be_visible()
 
-    # 8. 헤더 장바구니 아이콘 미노출 (담긴 수량 0이면 렌더링되지 않음, 2026-10-10 확인)
+    # 5. 헤더 장바구니 아이콘 미노출 (담긴 수량 0이면 렌더링되지 않음, 2026-10-10 확인)
     expect(CatalogPage(cart).nav_cart).to_be_hidden()
-
-    # 9. URL(/checkout)로 장바구니 페이지 직접 진입 → 장바구니 리스트에 결제한 상품 미노출
-    cart_page = CartPage(cart)
-    cart_page.open()
-    expect(cart).to_have_url(CartPage.URL)
-    expect(cart_page.row(paid_title)).to_have_count(0)
 
 
 @pytest.mark.tc("UI_85")

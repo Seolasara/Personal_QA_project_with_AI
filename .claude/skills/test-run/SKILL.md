@@ -24,6 +24,7 @@ argument-hint: "[ui|api]"
 - 대상 폴더에서 해당 venv로 1회 실행한다. 스펙에 정확한 기대결과가 없는 TC(`spec_undefined` 마커)는 뺀다. Jira 등록 결함 테스트(`issue` 마커)는 빼지 않는다(Iteration 2, 3의 재검증 대상).
   - UI: `cd playwright-demo && .venv/bin/pytest -m "not spec_undefined"`
   - API: `cd api-demo && .venv/bin/pytest -m "not spec_undefined"`
+  - Iteration 2(임시): Jira 결함 수정 배포가 없으면 `-m "not spec_undefined and not issue"`로 실행하고 `issue` TC는 Blocked(수정 미배포)로 센다. Iteration 3은 회귀 TC만 실행한다(`.claude/guides/test-report-format.md` 1번).
 - `pytest.ini`의 addopts(리포트, trace, 스크린샷)를 그대로 쓴다. `-o addopts=""`를 쓰지 않는다.
 - 실패한 테스트를 다시 실행해 통과를 만들지 않는다. 코드와 TC는 수정하지 않는다.
 
