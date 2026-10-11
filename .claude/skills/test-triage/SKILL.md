@@ -45,7 +45,7 @@ model: opus
 - 같은 조건에서 앱 동작이 달라지면 간헐 결함(real-bug)이다. 등급과 추적은 `.claude/guides/issue-severity.md`의 간헐 결함 규칙을 따른다.
 - 테스트 코드가 명백히 틀렸으면 test-bug가 우선이다.
 - API 응답이 스펙과 다르면 real-bug 또는 spec-change다. real-bug로 정하기 전에 헤더 같은 클라이언트 설정부터 의심한다.
-- 스펙이 동작을 정의하지 않았거나 불일치 유형 B, C면 분류는 real-bug(low)로 두고 리포트 그룹을 "안건"으로 적는다.
+- 스펙이 동작이나 기대결과를 정의하지 않았으면(스펙 미정의) 분류는 real-bug(low)로 두고 리포트 그룹을 "안건"으로 적는다. 스펙이 값을 정했는데 라이브가 다르면(스펙 불일치) real-bug다(`.claude/guides/backlog-format.md` 3번).
 
 재실행
 - 원인을 가리는 데 필요하면 1회만 한다.

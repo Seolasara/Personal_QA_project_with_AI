@@ -5,7 +5,7 @@
 
 ## 1. 처리 흐름과 작성 형식
 - 새 항목은 `test-triage`로 분류 → 스펙과 라이브 비교 → real-bug인지 test-bug인지 판단한 뒤 기록한다.
-- 작성 형식, 불일치 유형(A~E), 파일 배치 규칙은 `.claude/guides/backlog-format.md`를 따른다.
+- 작성 형식, 스펙 비교 분류(스펙 불일치, 스펙 미정의, 시트 오기), 파일 배치 규칙은 `.claude/guides/backlog-format.md`를 따른다.
 - 파일: `01_real-bug.md`(Jira 대상), `02_agenda.md`(안건), `03_tech-debt-env.md`(기술부채, env, 운영 메모), `04_hold.md`(판단 보류), `05_done.md`(해결, 폐기)
 
 ## 2. 목록
