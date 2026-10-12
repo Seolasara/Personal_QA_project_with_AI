@@ -13,6 +13,7 @@
   - 같은 스페이스에서 제목이 겹치면 안 되므로 종류를 넣는다.
 - Iteration 2, 3에는 Jira에 등록된 결함의 테스트(`@pytest.mark.issue`)를 반드시 포함해 실행한다. 보고서 Comment에 이슈별 재검증 결과(통과 = 수정 확인, 실패 = 미해결)를 쓴다.
   - 임시 운영(2026-10-11 사용자 결정): 데모 서비스는 결함이 고쳐지지 않으므로, Jira 등록 결함의 수정 배포가 없으면 그 TC는 실행하지 않고 Blocked(수정 미배포)로 센다. 실행은 `pytest -m "not spec_undefined and not issue"`이고, 나머지가 잘 도는지(새 실패, test-bug, flaky)만 본다.
+- Known issue(2026-10-12 결정): 수정하지 않기로 승인한 결함은 Jira 레이블 `known-issue`를 붙이고 그 TC는 실행하지 않는다. 표에는 Blocked로 쓰고 Comment에 "known issue 승인 N건, 실행률 분모에서 제외"를 적는다. 실행률은 분모에서 뺀 값으로 계산한다.
 - Iteration 3(Regression)은 회귀 TC만 실행한다. 회귀 TC는 smoke 마커, 중요도 High, Jira 결함이 걸린 TC와 같은 기능의 TC, Iteration 1·2 실패 이력과 간헐 후보의 합집합이다.
 - 섹션은 아래 4개만 쓴다. 템플릿에 없는 섹션, 대분류별 표, 판정 패널을 더하지 않는다.
 - 제목(h2)마다 앞에 구분선을 넣는다.

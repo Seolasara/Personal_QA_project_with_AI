@@ -25,10 +25,11 @@
    - ex: 사이트 장애, 사전 조건 데이터 없음, 수동 TC 미실행
    - 임시 운영(2026-10-11 결정): 수정 배포가 없는 Jira 결함의 issue 마커 TC는 실행하지 않고 Blocked로 센다. 데모 서비스는 결함이 고쳐지지 않아 같은 결과가 반복되기 때문이다.
 3. N/A: `spec_undefined` 마커 TC. 판정할 기준이 없어 실행률 계산에서도 뺀다.
-4. Blocked와 N/A의 차이: Blocked는 "판정할 수 있는데 이번에 돌리지 않은 것"이라 실행률을 낮추고, N/A는 "판정 기준이 없는 것"이라 낮추지 않는다.
+4. Known issue(2026-10-12 사용자 결정): 수정하지 않기로 승인한 Jira 결함. Jira 레이블 `known-issue`를 붙이고, 그 결함의 issue 마커 TC는 실행하지 않는다. 보고서 표에는 Blocked 칸에 쓰고 사유를 "known issue 승인"으로 적으며, 사인오프 실행률 분모에서는 뺀다(QA plan 1.4). 결과 보고서의 Known Issues 목록은 이 레이블로 만든다.
+5. Blocked와 N/A의 차이: Blocked는 "판정할 수 있는데 이번에 돌리지 않은 것"이라 실행률을 낮추고, N/A는 "판정 기준이 없는 것"이라 낮추지 않는다.
 
 ## 4. 결함 하나의 흐름
 1. 전체 실행에서 실패 → `/test-triage`로 real-bug 분류 → 백로그 등록(필요하면 xfail로 고정)
 2. 노션 이슈 검수에서 승인 → Jira 등록 → xfail을 풀고 issue 마커를 붙인다(실패로 집계)
-3. 수정 배포 전 Iteration: issue 마커 TC는 Blocked(임시 운영)
-4. 수정 배포 뒤 실행해 통과 → 수정 확인 → Jira 상태 갱신, issue 마커 해제
+3. 수정 배포 전 Iteration: issue 마커 TC는 Blocked(임시 운영). 수정하지 않기로 승인하면 known issue로 두고 계속 실행하지 않는다.
+4. 수정 배포 뒤 실행해 통과 → 수정 확인 → Jira 상태 갱신, issue 마커와 `known-issue` 레이블 해제
