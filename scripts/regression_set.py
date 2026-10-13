@@ -69,7 +69,7 @@ def history(kind: str) -> dict[str, list[str]]:
         if not rp.exists():
             continue
         for t in json.loads(rp.read_text(encoding="utf-8")).get("tests", []):
-            if t.get("outcome") in ("failed", "error", "xfailed", "xpassed"):
+            if t.get("outcome") in ("failed", "error", "xfailed", "xpassed", "rerun"):
                 tc = tc_for(t["nodeid"], DEMOS[kind])
                 if tc:
                     out.setdefault(tc, []).append(d.name)

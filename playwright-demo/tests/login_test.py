@@ -13,6 +13,7 @@ def test_landing_page(page):
 
 
 @pytest.mark.spec_undefined
+@pytest.mark.flaky(reruns=0)  # 재시도 제외: 계정 잠금 위험
 @pytest.mark.tc("UI_02")
 def test_empty_credentials(login_page, blocked_login_requests):
     expect(login_page.form).to_be_visible()
@@ -31,6 +32,7 @@ def test_empty_credentials(login_page, blocked_login_requests):
 
 
 # 도메인 없는 잘못된 이메일 형식
+@pytest.mark.flaky(reruns=0)  # 재시도 제외: 계정 잠금 위험
 @pytest.mark.tc("UI_03")
 def test_invalid_email_format(login_page):
     login_page.submit("customer2", TOOLSHOP_PASSWORD)
@@ -40,6 +42,7 @@ def test_invalid_email_format(login_page):
 
 
 # 도메인 포함 잘못된 이메일 형식
+@pytest.mark.flaky(reruns=0)  # 재시도 제외: 계정 잠금 위험
 @pytest.mark.tc("UI_04")
 def test_invalid_email(login_page):
     login_page.submit("customer23@practicesoftwaretesting.com", TOOLSHOP_PASSWORD)
@@ -48,6 +51,7 @@ def test_invalid_email(login_page):
     expect(login_page.page.get_by_text("Invalid email or password")).to_be_visible()
 
 
+@pytest.mark.flaky(reruns=0)  # 재시도 제외: 계정 잠금 위험
 @pytest.mark.tc("UI_05")
 def test_invalid_password(login_page):
     login_page.submit(TOOLSHOP_EMAIL, "welcome02")
@@ -58,6 +62,7 @@ def test_invalid_password(login_page):
 
 # 비밀번호 길이 경계: 1자, 200자 (클라이언트 검증, 로그인 요청은 fixture가 차단)
 @pytest.mark.spec_undefined
+@pytest.mark.flaky(reruns=0)  # 재시도 제외: 계정 잠금 위험
 @pytest.mark.tc("UI_06")
 def test_password_length_invalid(login_page, blocked_login_requests):
     expect(login_page.form).to_be_visible()

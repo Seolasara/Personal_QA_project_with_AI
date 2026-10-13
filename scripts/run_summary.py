@@ -172,7 +172,8 @@ def load(kind: str, path: Path) -> dict:
     return {
         "kind": kind,
         "total": summary.get("total", len(tests)),
-        "passed": summary.get("passed", 0),
+        "passed": summary.get("passed", 0) + summary.get("rerun", 0),
+        "rerun": summary.get("rerun", 0),
         "failed": summary.get("failed", 0) + summary.get("error", 0),
         "xfailed": summary.get("xfailed", 0),
         "xpassed": summary.get("xpassed", 0),
@@ -181,7 +182,8 @@ def load(kind: str, path: Path) -> dict:
         "created": data.get("created"),
         "fails": [r for r in rows if r[1] in FAIL],
         "xpasses": [r for r in rows if r[1] == "xpassed"],
-        "passes": [r for r in rows if r[1] == "passed"],
+        "passes": [r for r in rows if r[1] in ("passed", "rerun")],
+        "reruns": [r for r in rows if r[1] == "rerun"],
     }
 
 
@@ -194,7 +196,7 @@ def git(*args: str) -> str:
 
 def count_line(r: dict) -> str:
     parts = [f"{r['passed']}/{r['total']} 통과"]
-    for key, label in (("failed", "실패"), ("xfailed", "xfail"), ("xpassed", "xpass"), ("skipped", "skip")):
+    for key, label in (("failed", "실패"), ("rerun", "재시도 후 통과(flaky)"), ("xfailed", "xfail"), ("xpassed", "xpass"), ("skipped", "skip")):
         if r[key]:
             parts.append(f"{label} {r[key]}")
     return f"*{r['kind'].upper()}*: " + ", ".join(parts) + f" ({r['duration'] / 60:.1f}분)"
