@@ -1,0 +1,149 @@
+# API 테스트 수동 실행. GitHub Actions 화면의 [Run workflow] 버튼으로만 실행한다(2026-10-13).
+# - 라이브 데모 사이트를 호출하므로 동시 실행은 1건으로 제한한다.
+# - 계정 값은 저장소 Secrets에서 환경변수로 주입한다(api-demo/config.py가 읽는다). 값은 로그에 쓰지 않는다.
+# - 결과는 artifact(report.html, report.json)와 Slack 요약으로 남긴다. Confluence는 건드리지 않는다(루트 가드레일).
+name: API regression
+
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: "실행 범위 (regression: 회귀 TC, full: spec_undefined와 known issue를 뺀 전체)"
+        type: choice
+        options: [regression, full]
+        default: regression
+
+concurrency:
+  group: live-site-tests
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  API_BASE: https://api.practicesoftwaretesting.com
+  UI_SHEET_CSV: https://docs.google.com/spreadsheets/d/1G7ICKjMaS2MvQH2xS0IjcS-VQAAA_N1_YTQ8qtF0k44/gviz/tq?tqx=out:csv&sheet=UI-TC
+  API_SHEET_CSV: https://docs.google.com/spreadsheets/d/1ozTySggSsHVertVhwUatZUIFI6ZMOLS5PVC5-m8T_-4/gviz/tq?tqx=out:csv&sheet=API-TC
+  SLACK_CHANNEL: C0C7590K189
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      # 사이트가 느리면 테스트 대신 "환경 문제로 보류"를 남긴다. 기준: /brands 응답 3회 중 2회 이상 5초 미만
+      - name: 사이트 상태 사전 점검
+        id: health
+        run: |
+          ok=0
+          for i in 1 2 3; do
+            t=$(curl -s -o /dev/null -m 30 -w '%{time_total}' "$API_BASE/brands" || echo 99)
+            echo "API /brands 응답 ${t}s"
+            awk "BEGIN{exit !($t<5)}" && ok=$((ok+1))
+            sleep 2
+          done
+          if [ "$ok" -ge 2 ]; then echo "ok=true" >> "$GITHUB_OUTPUT"; else echo "ok=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: 실행 이미지 빌드
+        if: steps.health.outputs.ok == 'true'
+        run: docker build -t qa-tests .
+
+      - name: 시트 CSV 받기와 회귀 TC 목록
+        if: steps.health.outputs.ok == 'true'
+        run: |
+          mkdir -p ci
+          curl -sfL "$UI_SHEET_CSV" -o ci/ui.csv
+          curl -sfL "$API_SHEET_CSV" -o ci/api.csv
+          # test-runs/ 보관본이 없으므로 CI의 회귀 목록에는 "실패 이력" 기준이 빠진다
+          python3 scripts/regression_set.py --ui-csv ci/ui.csv --api-csv ci/api.csv --nodeids api > ci/nodeids.txt
+          echo "회귀 TC $(wc -l < ci/nodeids.txt)건"
+
+      - name: 테스트 실행
+        id: run
+        if: steps.health.outputs.ok == 'true'
+        env:
+          API_EMAIL: ${{ secrets.API_EMAIL }}
+          API_PASSWORD: ${{ secrets.API_PASSWORD }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          API_EMAIL2: ${{ secrets.API_EMAIL2 }}
+          API_PASSWORD2: ${{ secrets.API_PASSWORD2 }}
+          SCOPE: ${{ inputs.scope }}
+        run: |
+          if [ "$SCOPE" = "full" ]; then
+            set -- -m "not spec_undefined and not issue and not quarantine"
+          else
+            set -- -m "not quarantine" $(cat ci/nodeids.txt)
+          fi
+          rc=0
+          docker run --rm -e API_EMAIL -e API_PASSWORD -e ADMIN_EMAIL -e ADMIN_PASSWORD -e API_EMAIL2 -e API_PASSWORD2 \
+            -v "$PWD/api-demo:/qa/api-demo" -w /qa/api-demo qa-tests \
+            pytest "$@" -q -p no:cacheprovider || rc=$?
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+
+      # 격리(quarantine) 테스트는 결과가 빌드를 막지 않는다. 대상이 없으면(pytest 종료 코드 5) 건너뛴 것으로 본다
+      - name: 격리 테스트 실행 (빌드에 영향 없음)
+        if: steps.health.outputs.ok == 'true'
+        continue-on-error: true
+        env:
+          API_EMAIL: ${{ secrets.API_EMAIL }}
+          API_PASSWORD: ${{ secrets.API_PASSWORD }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          API_EMAIL2: ${{ secrets.API_EMAIL2 }}
+          API_PASSWORD2: ${{ secrets.API_PASSWORD2 }}
+        run: |
+          rc=0
+          docker run --rm -e API_EMAIL -e API_PASSWORD -e ADMIN_EMAIL -e ADMIN_PASSWORD -e API_EMAIL2 -e API_PASSWORD2 \
+            -v "$PWD/api-demo:/qa/api-demo" -w /qa/api-demo qa-tests \
+            pytest -m quarantine -q -p no:cacheprovider \
+            --json-report-file=test-results/quarantine.json --html=test-results/quarantine.html || rc=$?
+          if [ "$rc" -eq 5 ]; then echo "격리 테스트 없음"; exit 0; fi
+          exit "$rc"
+
+      - name: 결과 업로드
+        if: always() && steps.health.outputs.ok == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-${{ inputs.scope }}-${{ github.run_number }}
+          path: api-demo/test-results/
+          retention-days: 30
+
+      - name: Slack 요약
+        if: always()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          HEALTH_OK: ${{ steps.health.outputs.ok }}
+          SCOPE: ${{ inputs.scope }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ "$HEALTH_OK" = "true" ] && [ -f api-demo/test-results/report.json ]; then
+            python3 scripts/run_summary.py --api api-demo/test-results/report.json --api-csv ci/api.csv \
+              --title "CI API ${SCOPE} 테스트 결과" > ci/summary.txt
+          else
+            mkdir -p ci
+            printf '*[CI API %s 테스트 보류]*\n• 판정: 사이트 응답 지연으로 실행하지 않음(환경 문제)\n---THREAD---\n' "$SCOPE" > ci/summary.txt
+          fi
+          python3 - <<'EOF'
+          import json, os, urllib.request
+          body, _, thread = open("ci/summary.txt", encoding="utf-8").read().partition("---THREAD---")
+          body = body.strip() + f"\n• 실행 기록: {os.environ['RUN_URL']}"
+          def post(payload):
+              req = urllib.request.Request("https://slack.com/api/chat.postMessage", json.dumps(payload).encode(),
+                  {"Authorization": "Bearer " + os.environ["SLACK_BOT_TOKEN"], "Content-Type": "application/json; charset=utf-8"})
+              r = json.load(urllib.request.urlopen(req))
+              if not r.get("ok"):
+                  raise SystemExit(f"Slack 오류: {r.get('error')}")
+              return r
+          ts = post({"channel": os.environ["SLACK_CHANNEL"], "text": body})["ts"]
+          if thread.strip():
+              post({"channel": os.environ["SLACK_CHANNEL"], "text": thread.strip(), "thread_ts": ts})
+          EOF
+
+      - name: 실패 판정
+        if: always()
+        run: |
+          if [ "${{ steps.health.outputs.ok }}" != "true" ]; then echo "사이트 응답 지연으로 보류"; exit 0; fi
+          exit "${{ steps.run.outputs.rc || 1 }}"
