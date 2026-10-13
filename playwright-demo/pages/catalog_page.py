@@ -4,9 +4,29 @@
 - ProductDetailPage: 상품 상세 페이지
 - CartPage: 체크아웃 1단계(장바구니) 목록
 """
+from urllib.parse import urlparse
+
 from playwright.sync_api import Page, Response, expect
 
 HOME_URL = "https://practicesoftwaretesting.com"
+
+
+def is_cart_fetch(response: Response) -> bool:
+    """장바구니 조회 응답(GET /carts/{id})인지 본다."""
+    parts = urlparse(response.url).path.strip("/").split("/")
+    return response.request.method == "GET" and len(parts) == 2 and parts[0] == "carts"
+
+
+def open_cart_and_wait_fetch(page: Page, nav_cart) -> None:
+    """헤더 [cart]를 누르고 장바구니 조회 응답(GET /carts/{id})까지 기다린다.
+
+    /checkout 은 지연 로드 모듈이라 모듈을 받은 뒤에야 장바구니를 조회해 행을 그린다. 사이트가 느리면
+    클릭 뒤 5초 안에 조회가 시작되지 않아 행 대기가 먼저 끝난다(2026-10-13 trace 확인).
+    담긴 상품이 있으면 비로그인, 상세·메인에서 이동, 로그아웃·재로그인 뒤 모두 조회가 나간다(2026-10-13 확인).
+    빈 장바구니는 헤더 [cart]가 없어 이 함수를 쓰지 않는다.
+    """
+    with page.expect_response(is_cart_fetch):
+        nav_cart.click()
 
 
 class CatalogPage:
@@ -40,6 +60,10 @@ class CatalogPage:
 
     def open_cart(self) -> None:
         self.nav_cart.click()
+
+    def open_cart_loaded(self) -> None:
+        """헤더 [cart]를 누르고 장바구니 조회 응답까지 기다린다. 빈 장바구니에는 쓰지 않는다."""
+        open_cart_and_wait_fetch(self.page, self.nav_cart)
 
     # --- 상품 조회 필터·정렬·검색 (UI_10, UI_11, UI_12, UI_15) ---
     # 아래 메서드는 상품 목록 API 응답을 기다린 뒤, 그리드의 상품명이 그 응답과 같아질 때까지
@@ -339,6 +363,10 @@ class ProductDetailPage:
 
     def open_cart(self) -> None:
         self.nav_cart.click()
+
+    def open_cart_loaded(self) -> None:
+        """헤더 [cart]를 누르고 장바구니 조회 응답까지 기다린다 (UI_25). 빈 장바구니에는 쓰지 않는다."""
+        open_cart_and_wait_fetch(self.page, self.nav_cart)
 
     # --- 상세의 카테고리, 브랜드 배지 (UI_10). data-test 가 없어 aria-label 사용 ---
     @property
