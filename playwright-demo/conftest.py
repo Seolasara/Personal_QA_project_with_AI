@@ -161,7 +161,7 @@ def cart_two_items(catalog):
         detail = ProductDetailPage(catalog.page)
         detail.add()
         expect(detail.added_toast).to_be_visible()
-    catalog.open_cart()
+    catalog.open_cart_loaded()
     return catalog.page
 
 
@@ -169,7 +169,7 @@ def cart_two_items(catalog):
 def cart(product_detail):
     """상품을 장바구니에 담고 체크아웃(장바구니) 페이지로 이동한 상태의 page."""
     product_detail.add()
-    product_detail.open_cart()
+    product_detail.open_cart_loaded()
     return product_detail.page
 
 
@@ -194,5 +194,5 @@ def guest_cart(guest_product_detail):
     """
     guest_product_detail.add()
     expect(guest_product_detail.added_toast).to_be_visible()
-    guest_product_detail.open_cart()
+    guest_product_detail.open_cart_loaded()
     return guest_product_detail.page

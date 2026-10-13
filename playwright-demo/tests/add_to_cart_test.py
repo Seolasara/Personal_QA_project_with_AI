@@ -32,7 +32,7 @@ def test_cart_quantity_from_detail(cart_ready):
 
     detail.add()
     expect(detail.added_toast).to_be_visible()
-    detail.open_cart()
+    detail.open_cart_loaded()
 
     # 4. 장바구니 리스트 내 해당 상품 수량 "3" 노출
     cart_page = CartPage(detail.page)
@@ -48,7 +48,7 @@ def test_cart_check(cart_ready):
     expect(detail.quantity).to_have_value("1")
 
     detail.add()
-    detail.open_cart()
+    detail.open_cart_loaded()
 
     cart_page = CartPage(detail.page)
     # 장바구니 페이지 이동 확인
@@ -320,5 +320,5 @@ def test_cart_kept_after_logout(cart):
     expect(home.cart_badge).to_have_text("1")
 
     # 4. 헤더 장바구니 아이콘 클릭 → 로그아웃 전 담은 상품 노출
-    home.open_cart()
+    home.open_cart_loaded()
     expect(cart_page.row(product_name)).to_have_count(1)
