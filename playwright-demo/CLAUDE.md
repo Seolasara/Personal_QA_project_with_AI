@@ -27,6 +27,12 @@ pytest tests/payment_test.py -k checkout
 - 컨테이너 실행: 루트 `Dockerfile`의 이미지 `qa-tests`. 명령은 `.claude/skills/test-run/SKILL.md` 3번(Iteration 3부터 기본).
 - 테스트 계정: 코드에 하드코딩하지 않는다. `config.py`가 `.env`(gitignore 대상)에서 읽는다.
   최초 1회 `cp .env.example .env` 후 값 채우기. CI는 `.env` 대신 같은 이름의 환경변수를 시크릿으로 주입.
+- CI: `.github/workflows/ui-regression.yml`은 비활성 상태다. GitHub 러너에서 Cloudflare 봇 검증 페이지가 떠서 실행할 수 없다(2026-10-14). UI는 로컬 컨테이너로 실행한다.
+  - trace(`trace.zip`)에는 로그인 입력(계정 이메일, 비밀번호)이 남는다. 공개 저장소 아티팩트나 외부 채널에 올리지 않는다.
+- 재시도와 격리
+  - `pytest.ini`의 `--reruns=2 --only-rerun`이 `Page.goto`, `Page.wait_for_url`, 응답 대기 시간 초과만 다시 실행한다. 어설션 실패는 재시도하지 않는다.
+  - 계정 잠금(로그인 실패 UI_02~06)이나 인보이스(결제 확정 UI_36, UI_37)가 생기는 테스트는 `@pytest.mark.flaky(reruns=0)`로 재시도에서 뺀다. 같은 위험이 있는 테스트를 새로 쓰면 같이 붙인다.
+  - `quarantine` 마커: 원인을 고치기 전까지 격리한 flaky 테스트. CI에서 빌드를 막지 않는 별도 단계로 돈다.
 
 ## Playwright 컨벤션
 - 셀렉터 우선순위: `[data-test="..."]` > `get_by_role` > `get_by_label`/`get_by_text`. XPath·CSS nth 금지.
@@ -39,6 +45,7 @@ pytest tests/payment_test.py -k checkout
 
 ## 데이터와 계정 주의
 - 장바구니는 브라우저 context의 sessionStorage(`cart_id`)에 묶여 테스트마다 새로 시작하므로 따로 정리하지 않는다.
+- 장바구니로 이동한 뒤 행을 확인하는 흐름은 `open_cart_loaded()`로 장바구니 조회 응답(`GET /carts/{id}`)까지 기다린다. 장바구니 화면이 지연 로드된 뒤 조회해서, 사이트가 느리면 행 확인이 먼저 끝난다(2026-10-13). 빈 장바구니로 가는 흐름에는 쓰지 않는다(조회 요청이 없다).
 - 결제를 확정하는 테스트(UI_36, UI_37, smoke의 UI_36)는 실행할 때마다 인보이스를 남긴다. 삭제할 수 없으니 반복 실행하지 않는다.
 - 로그인 실패 TC(UI_02~06)는 연속 재실행하지 않는다(3회 실패 시 계정 잠금). 잠기면 백로그 #8로 해제한다.
 - 데모 DB 리셋 중에는 정상 계정 로그인도 401이 날 수 있다(env, 백로그 #17). 관리자 API로 `failed_login_attempts`가 0인지(잠금 위험 없음) 확인한 뒤 1회 재실행한다(2026-10-10 확인).

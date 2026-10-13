@@ -1,5 +1,5 @@
 # QA 파이프라인 설계 (스킬과 서브에이전트)
-갱신 2026-10-10. 스킬이 단계 순서와 승인 지점을 관리하고, 서브에이전트는 형식이 정해진 작업만 맡습니다. 사라(메인 세션)가 QA 리더로 실행, 분석, 보고를 직접 합니다.
+갱신 2026-10-14. 스킬이 단계 순서와 승인 지점을 관리하고, 서브에이전트는 형식이 정해진 작업만 맡습니다. 사라(메인 세션)가 QA 리더로 실행, 분석, 보고를 직접 합니다.
 
 ## 1. 공통 원칙
 1. 역할
@@ -29,6 +29,14 @@
    5. `/issue-register`: Issue-Reporter가 승인된 real-bug를 Jira에 등록하고, 사라가 xfail을 풀고 `issue` 마커를 붙입니다.
    6. `/report-write`: 사라가 Iteration 보고서 초안을 쓰고, 승인 ④ 후 게시합니다. 게시 후 lessons 회고를 합니다.
    - Iteration 2, 3은 `issue` 마커 테스트를 반드시 포함해 재검증합니다.
+3. CI 흐름 (GitHub Actions, 2026-10-13)
+   - API: `.github/workflows/api-regression.yml`을 [Run workflow]로 수동 실행합니다. 사이트 사전 점검 → `qa-tests` 이미지 빌드 → 회귀 TC(`scripts/regression_set.py`) 또는 전체 실행 → 아티팩트(30일)와 Slack 요약 순서입니다. 계정은 저장소 Secrets로만 주입합니다.
+   - UI: GitHub 러너에서는 Cloudflare 봇 검증 페이지가 떠서 실행할 수 없습니다(2026-10-14 확인). 워크플로우는 비활성화했고 UI는 로컬 컨테이너로 실행합니다.
+   - CI 헤드리스에서는 Confluence를 건드리지 않습니다(루트 가드레일).
+4. flaky 대책 (2026-10-13)
+   1. 조건 대기 수리: 원인이 테스트 타이밍이면 `/test-repair`로 응답이나 화면 상태를 기다리게 고칩니다(ex: 장바구니 이동 뒤 `open_cart_loaded()`).
+   2. 환경 시간 초과 재시도: 각 폴더 `pytest.ini`의 `pytest-rerunfailures` 설정이 환경 시간 초과만 최대 2회 다시 실행합니다. 재시도 후 통과는 `rerun`(flaky)으로 따로 셉니다. 남은 error는 `/test-run`의 수동 재실행 규칙을 따릅니다.
+   3. 격리(quarantine): 원인을 고치기 전까지 `quarantine` 마커를 붙인 테스트는 CI에서 빌드를 막지 않는 별도 단계로 돌립니다. 지금 붙은 테스트는 없습니다.
 
 ## 3. 스킬 (`.claude/skills/`)
 1. `/spec-analysis`: 스펙과 소스 분석, 변경분 분석(Document-Analyzer, fork)
@@ -49,8 +57,8 @@
 
 ## 5. 남은 것
 1. 수리와 LLM judge (목표 2)
-   - 수리: `/test-repair`로 만들었습니다(2026-10-10). 실제 수리 대상이 나오는 다음 실행에서 시범 운영합니다.
+   - 수리: `/test-repair`로 만들었고(2026-10-10), UI_25 등 장바구니 타이밍 flaky 수리에 처음 썼습니다(2026-10-13).
    - judge: 보류합니다(2026-10-10 사용자 결정). TC를 늘리고 CI로 돌려 보면서 필요성이 확인되면 설계합니다. 만들 때는 수리 채점부터 시작하고, 실패 분류는 real-bug를 test-bug로 내리는 판정을 judge가 혼자 확정하지 못하게 합니다.
 2. Test-Runner: 자동화하지 않은 수동 TC를 Playwright MCP로 실행합니다. 수동 TC가 생길 때까지 보류합니다.
-3. Smoke 대상 지정: `smoke` 마커는 `pytest.ini`에 등록되어 있지만 붙은 테스트가 없습니다. 핵심 흐름 TC에 마커를 붙여야 Smoke 단계가 동작합니다.
-4. 정기 자동 실행(CI, 서비스 레포 변경 감지): 후속 과제입니다.
+3. CI 자동 트리거: 지금은 수동 실행만 있습니다. PR smoke, 야간 API 회귀 순서로 붙입니다. 서비스 레포 변경 감지도 후속 과제입니다.
+4. 로컬 Toolshop(docker-compose): CI에서 앱과 DB를 직접 띄우면 사이트 지연, DB 리셋, Cloudflare 차단이 함께 해소됩니다. UI CI는 이 작업 뒤에 다시 켭니다.
