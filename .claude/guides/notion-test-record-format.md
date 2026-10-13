@@ -23,7 +23,7 @@
 
 ### 3-1. Jira 초안 (사라 분류가 real-bug이거나, 판단에 따라 real-bug가 될 수 있는 안건만)
 - `# Jira 초안` 제목 아래에 `.claude/guides/jira-issue-format.md` 3번의 9개 섹션을 같은 순서로 쓴다. 섹션 제목과 문체는 그 가이드와 샘플 QA-4를 따른다.
-  1. `## [요약]` 2. `## [테스트 환경]` 3. `## [사전조건]` 4. `## [재현순서]` 5. `## [기대결과]` 6. `## [실제결과]` 7. `## [스크린샷/로그]` 8. `## [중요도]` 9. `## [참고]`
+  1. `## [Summary]` 2. `## [Test Environment]` 3. `## [Pre-conditions]` 4. `## [Steps]` 5. `## [Expected Result]` 6. `## [Actual Result]` 7. `## [Screenshots/Logs]` 8. `## [Severity]` 9. `## [Reference]`
 - 이슈 제목 속성이 Jira 제목이다.
 - `/issue-register`는 이 부분을 고치지 않고 옮긴다. 등록한 뒤에는 Jira 본문이 원본이다. 등록 후 수정은 Jira에서 하고 노션 초안은 고치지 않는다. 노션 이미지는 본문으로 옮겨지지 않아서 [스크린샷/로그]에 보관본 경로를 적고, `/issue-register`가 그 파일을 Jira 첨부로 올린다.
 

@@ -26,6 +26,7 @@ pytest -m tc      # TC 마커 붙은 테스트만
 pytest -m "not spec_undefined"   # /test-run 전체 실행 기준
 ```
 - 의존성은 `requirements.txt`, venv는 `api-demo/.venv` (playwright-demo와 별도).
+- 컨테이너 실행: 루트 `Dockerfile`의 이미지 `qa-tests`. 명령은 `.claude/skills/test-run/SKILL.md` 3번(Iteration 3부터 기본).
 - 결과 리포트: `python3 ../scripts/gen_test_report.py --type api` → `test-results/test-report.md`.
 - 계정은 코드에 쓰지 않고 `config.py`가 `.env`에서 읽는다. 최초 1회 `cp .env.example .env`.
 - 계정별 용도

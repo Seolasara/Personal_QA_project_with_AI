@@ -1,0 +1,12 @@
+# 계정과 로컬 산출물은 이미지에 넣지 않는다
+**/.env
+**/.env.*
+!**/.env.example
+**/.venv
+**/__pycache__
+**/test-results
+test-runs
+.git
+.claude
+.playwright-mcp
+.pytest_cache

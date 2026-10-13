@@ -7,12 +7,13 @@
   - Iteration 1: 개발 완료 후 1차 QA / Iteration 2: 결함 수정 후 재검증 / Iteration 3: 배포 전 Regression Test
   - Iteration 번호는 UI와 API가 따로 센다. 한쪽이 다음 회차로 넘어가도 다른 쪽은 자기 회차를 유지한다.
   - 사인오프용은 Iteration 결과를 모아 최종 판정을 쓴다. 노션 "테스트 실행" 행의 "실행 구분" 속성으로 묶는다. "스크립트 작성 후 전체 시범 실행"은 보고서 대상이 아니다.
-- 제목 (날짜는 실행 날짜)
+- 제목 (날짜는 QA plan 일정의 해당 단계 날짜. 실제 실행일은 Test Period에 쓴다)
   - Iteration 보고서: `YYYYMMDD_<UI|API>_Iteration<N>_Test Result Report` (ex: `20261011_UI_Iteration1_Test Result Report`)
-  - 사인오프용 최종 보고서: `YYYYMMDD_<UI|API>_Test Result Report`
+  - 사인오프용 최종 보고서: `YYYYMMDD_<UI|API>_Test Result Report: <PASS|FAIL>` (ex: `20261002_API_Test Result Report: PASS`)
   - 같은 스페이스에서 제목이 겹치면 안 되므로 종류를 넣는다.
 - Iteration 2, 3에는 Jira에 등록된 결함의 테스트(`@pytest.mark.issue`)를 반드시 포함해 실행한다. 보고서 Comment에 이슈별 재검증 결과(통과 = 수정 확인, 실패 = 미해결)를 쓴다.
   - 임시 운영(2026-10-11 사용자 결정): 데모 서비스는 결함이 고쳐지지 않으므로, Jira 등록 결함의 수정 배포가 없으면 그 TC는 실행하지 않고 Blocked(수정 미배포)로 센다. 실행은 `pytest -m "not spec_undefined and not issue"`이고, 나머지가 잘 도는지(새 실패, test-bug, flaky)만 본다.
+- Known issue(2026-10-12 결정): 수정하지 않기로 승인한 결함은 Jira 레이블 `known-issue`를 붙이고 그 TC는 실행하지 않는다. 표에는 Blocked로 쓰고 Comment에 "known issue 승인 N건, 실행률 분모에서 제외"를 적는다. 실행률은 분모에서 뺀 값으로 계산한다.
 - Iteration 3(Regression)은 회귀 TC만 실행한다. 회귀 TC는 smoke 마커, 중요도 High, Jira 결함이 걸린 TC와 같은 기능의 TC, Iteration 1·2 실패 이력과 간헐 후보의 합집합이다.
 - 섹션은 아래 4개만 쓴다. 템플릿에 없는 섹션, 대분류별 표, 판정 패널을 더하지 않는다.
 - 제목(h2)마다 앞에 구분선을 넣는다.
@@ -27,13 +28,14 @@
      - Build / Version: 서비스 버전(sprint5)과 테스트 코드 커밋, 브랜치
      - Tester: 사라(AI QA 리더), 검토자
      - Comment: 순서대로 쓴다.
-       1. `총 N건의 케이스 중 Pass N건, Fail N건, N/A N건입니다.`
+       1. `총 N건의 케이스 중 Pass N건, Fail N건, Blocked N건입니다.` N/A 건수는 Test Result 표에만 쓴다(2026-10-12 사용자 수정본). Blocked가 0이면 뺀다.
        2. `주요 Fail 유형은 <유형>, <유형>, <유형>입니다.` 한 줄. 괄호로 예시를 덧붙이지 않는다(가독성). ex: `주요 Fail 유형은 스펙과 다른 화면 문구와 누락된 화면 요소, 입력값 처리 차이입니다.`
        3. `Fail N건은 Jira에 이슈로 등록하였으며, 자세한 내용은 아래 대시보드에서 확인 가능합니다.`
-       4. 사인오프 기준 한 줄과, 그 아래 항목별 충족 여부(해당 종류 QA plan(UI 65702, API 5996545)의 사인오프 기준)
+       4. 사인오프 기준 항목별 값(해당 종류 QA plan(UI 65702, API 5996545)의 사인오프 기준). 항목은 `실행률`, `Priority High TC 통과율`, `Priority Medium/Low TC 통과율`(API) 또는 `통과율`(UI), `미해결 High 결함`이고, High/Medium/Low 글자에 색 강조(High `#ffd5d2`, Medium `#f8e6a0`, Low `#b3d4ff`)를 넣는다. 미달이 있으면 `, 기준 미달`을 붙인다.
        5. 다음 Iteration 계획
        - 특이사항이 있으면 2~3번 자리에 쓴다. Blocked가 있으면 Blocked 사유를, flaky(env)가 있으면 어떤 TC가 왜 실패했고 재실행 결과와 Jira 미등록 사유를 쓴다. 건수 문장에는 Blocked도 넣는다.
 2. Test Scope
+   - 대상 기능 칸 아래 불릿으로 TC 대상을 쓴다(ex: `전체 TC 대상`, `회귀 TC 대상 (Smoke, High priority, 이슈 영향 범위, 실패 이력 케이스)`). 제외 칸은 `N/A: ...`, `Blocked: ...` 불릿으로 쓴다.
    - 2열 표(왼쪽 머리글 셀) 세 행으로 쓴다: 대상 기능(대분류), 제외(스펙에 정확한 기대결과가 없는 TC는 N/A로 제외), 범위 밖. 건수와 TC ID는 쓰지 않는다.
 3. Test Result
    - 표 한 줄: Total, Pass, Fail, N/A, Blocked, Pass Rate. 단위는 TC다(파라미터로 나뉜 테스트는 모두 통과해야 그 TC가 Pass).
@@ -44,7 +46,16 @@
      - Pass Rate: Pass / 실행한 TC (실행한 TC = Total - N/A - Blocked)
    - 커버리지: 자동화율(자동화된 TC / 시트 TC)과 실행률(실행한 TC / (Total - N/A)). 기준은 QA plan 1.4 Sign-off Criteria
 4. BTS Status
+   - 새로 등록한 이슈가 없으면 `0건` 불릿 하나를 쓴다.
    - Jira 실시간 목록(jira 매크로)만 둔다. JQL은 매크로 안에만 두고 본문에 적지 않는다. 다른 표나 설명을 두지 않는다.
      - 이번 실행에서 등록한 이슈: `project = QA AND type = 버그 AND labels = <ui|api> AND created >= "<실행 날짜>" ORDER BY priority DESC` 새로 등록한 이슈가 없으면 목록 대신 `이번 실행에서 새로 등록한 이슈는 없습니다.` 한 줄을 쓴다.
      - Total remaining issues: `project = QA AND type = 버그 AND labels = <ui|api> AND statusCategory != Done ORDER BY priority DESC`
      - Known Issues: 개발이나 PM이 서비스 이용에 영향이 거의 없다고 답해 수정하지 않기로 한 이슈만 넣는다. 해당 이슈에 Jira 레이블 `known-issue`를 붙이고, 목록은 `project = QA AND type = 버그 AND labels = <ui|api> AND labels = known-issue ORDER BY priority DESC`로 둔다(해당 이슈가 없으면 빈 목록).
+
+## 3. 사인오프용 최종 보고서 (2026-10-13, 사용자 수정본 기준)
+- Summary 표 맨 위 행을 `Test Result | PASS`(또는 FAIL)로 두고, Test Period는 `Iteration 1 ~ 3` 기간을 쓴다.
+- Comment: 건수 문장 → Iteration별 경과 한 줄씩 → Blocked(known issue 사인오프 예외)와 N/A(안건 관리) 설명 → 사인오프 기준 항목별 값 → `위 Sign-off 기준을 모두 충족합니다.`
+- Test Scope의 대상 기능은 기능 목록만 쓴다.
+- Test Result 표는 TC별 최종 결과(마지막으로 실행한 결과)로 센다. 아래에 `Iteration별 결과` 불릿으로 Iteration마다 Pass/Fail/Blocked를 쓰고, Iteration 3은 회귀 TC 대상 설명을 하위 불릿으로 단다.
+- BTS Status는 `전체 Iteration에서 등록한 이슈 N건(...)` 한 줄이다.
+

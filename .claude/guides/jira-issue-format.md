@@ -12,7 +12,7 @@
 - 기대와 실제를 제목에서 알 수 있게 쓴다.
 
 ## 3. 본문
-섹션 제목은 `## [요약]`처럼 쓴다. 문체는 "~함" 혹은 명사형으로 끝내며, 아래 순서를 지킨다.
+섹션 제목은 대괄호 안에 영어로 `## [Summary]`처럼 쓴다. 순서대로 `[Summary]`, `[Test Environment]`, `[Pre-conditions]`, `[Steps]`, `[Expected Result]`, `[Actual Result]`, `[Screenshots/Logs]`, `[Severity]`, `[Reference]`다. 문체는 "~함" 혹은 명사형으로 끝내며, 아래 순서를 지킨다.
 1. Summary: 무엇이 어떻게 다른지 1~2불릿.
 2. Test Environment: 재현이 가능하도록 테스트 했던 환경을 작성. ex. OS, 브라우저, 테스트 툴, 프레임워크, 버전 등, 대상 URL, 테스트 대상, 테스트 계정
   - 테스트 실행일은 날짜만 쓴다(시각 제외). ex: `테스트 실행일: 2026-10-11 (Iteration 1 UI 전체 실행)`

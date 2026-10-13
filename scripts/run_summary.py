@@ -5,7 +5,7 @@
 - --ui-csv, --api-csv: 시트 CSV(임시 경로). 주면 실패 상세에 "TC: <기능명>" 한 줄을 붙인다.
 - --title: 본문 첫 줄 제목. 실행 목적을 쓴다(ex: "Iteration1 UI 전체 테스트 결과", "UI 스크립트 작성 전체 테스트 실행 결과"). 없으면 "테스트 실행 결과".
 - 출력(stdout) 첫 블록은 본문 메시지, `---THREAD---` 아래는 스레드 답글(실패 상세)이다. 실패가 없으면 스레드는 비어 있다.
-- 실패 상세는 `[새 실패 · 분류 필요]`(백로그·issue 마커 없음)와 `[기존 결함 재현]`(Jira 키·백로그 있음), `[Jira 결함 통과 · 수정 확인 필요]`(issue 마커 테스트가 통과했거나 xfail이 XPASS)로 나눠 TC ID와 기능명을 제목으로 쓴다.
+- 실패 상세(`[Failure Details]`)는 `[New Failures · Triage Needed]`(백로그·issue 마커 없음), `[Known Defects]`(Jira 키나 결함 백로그 있음), `[Known Environment Issues]`(환경 문제 백로그 `03_tech-debt-env.md`만 있음), `[Jira Defects Passed · Verify Fix]`(issue 마커 테스트가 통과했거나 xfail이 XPASS)로 나눠 TC ID와 기능명을 제목으로 쓴다.
 - 실패 상세의 이유는 실패 메시지에서 규칙으로 뽑은 원인 후보이고, 확정 분류는 `/test-triage`가 한다.
 - 근거는 실패 위치(파일:줄)와, TC ID가 백로그 인덱스(`.claude/docs/backlog/00_index.md`)에 있으면 그 번호다.
   번호에는 GitHub의 해당 항목 링크(현재 브랜치 기준)를 건다. 링크는 push된 내용만 열린다.
@@ -129,6 +129,14 @@ def gh_anchor(heading: str) -> str:
     return re.sub(r"[^\w\- ]", "", heading.strip().lower()).replace(" ", "-")
 
 
+def env_backlogs() -> set[str]:
+    """환경 문제(env, 기술부채) 파일에 있는 백로그 번호."""
+    f = BACKLOG_DIR / "03_tech-debt-env.md"
+    if not f.exists():
+        return set()
+    return set(re.findall(r"^### (#\d+) ", f.read_text(encoding="utf-8"), re.M))
+
+
 def backlog_link(number: str, branch: str) -> str:
     """'#13' → Slack 링크 `<url|#13>`. 항목 파일을 못 찾으면 번호만 쓴다."""
     for f in sorted(BACKLOG_DIR.glob("0[1-5]_*.md")):
@@ -227,7 +235,8 @@ def main() -> int:
 
     backlog = backlog_by_tc()
     branch = git("rev-parse", "--abbrev-ref", "HEAD")
-    new_fails, known_fails, fixed = [], [], []
+    env_nos = env_backlogs()
+    new_fails, known_fails, env_fails, fixed = [], [], [], []
     for r in results:
         demo = DEMOS[r["kind"]]
         for tc, _, _name, t in r["fails"]:
@@ -235,7 +244,15 @@ def main() -> int:
             if "XPASS(strict)" in crash_of(t).get("message", ""):
                 fixed.append((r["kind"], tc, t, key))  # xfail 고정 결함이 통과(strict라 실패로 보고됨)
                 continue
-            (known_fails if (key or tc in backlog) else new_fails).append((r["kind"], tc, t, key))
+            item = (r["kind"], tc, t, key)
+            if key:
+                known_fails.append(item)
+            elif tc in backlog and all(b in env_nos for b in backlog[tc]):
+                env_fails.append(item)
+            elif tc in backlog:
+                known_fails.append(item)
+            else:
+                new_fails.append(item)
         for tc, _, _name, t in r["xpasses"]:
             fixed.append((r["kind"], tc, t, None))
         for tc, _, _name, t in r["passes"]:
@@ -256,7 +273,7 @@ def main() -> int:
 
     thread, n = [], 0
     if new_fails:
-        thread.append(f"*[새 실패 · 분류 필요]* {len(new_fails)}건")
+        thread.append(f"*[New Failures · Triage Needed]* {len(new_fails)}건")
         for kind, tc, t, key in new_fails:
             n += 1
             thread.append(title(n, kind, tc))
@@ -265,15 +282,23 @@ def main() -> int:
     if known_fails:
         if thread:
             thread.append("")
-        thread.append(f"*[기존 결함 재현]* {len(known_fails)}건")
+        thread.append(f"*[Known Defects]* {len(known_fails)}건")
         for kind, tc, t, key in known_fails:
+            n += 1
+            thread.append(title(n, kind, tc))
+            thread.append(f"    ◦ {mask(reason(t))} · {refs(tc, key)}")
+    if env_fails:
+        if thread:
+            thread.append("")
+        thread.append(f"*[Known Environment Issues]* {len(env_fails)}건")
+        for kind, tc, t, key in env_fails:
             n += 1
             thread.append(title(n, kind, tc))
             thread.append(f"    ◦ {mask(reason(t))} · {refs(tc, key)}")
     if fixed:
         if thread:
             thread.append("")
-        thread.append(f"*[Jira 결함 통과 · 수정 확인 필요]* {len(fixed)}건")
+        thread.append(f"*[Jira Defects Passed · Verify Fix]* {len(fixed)}건")
         for kind, tc, t, key in fixed:
             n += 1
             thread.append(title(n, kind, tc))
@@ -285,7 +310,7 @@ def main() -> int:
     print("\n".join(body))
     print("---THREAD---")
     if thread:
-        print(f"*[실패 상세]* {len(new_fails) + len(known_fails)}건" + (f", Jira 결함 통과 {len(fixed)}건" if fixed else ""))
+        print(f"*[Failure Details]* {len(new_fails) + len(known_fails) + len(env_fails)}건" + (f", Jira 결함 통과 {len(fixed)}건" if fixed else ""))
         print("\n".join(thread))
     return 0
 

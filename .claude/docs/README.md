@@ -25,6 +25,7 @@
 4. 전체 테스트를 실행하고 실패를 분류할 때
    - `.claude/skills/test-run/SKILL.md`: 사전 점검, 실행, 보관(`test-runs/`), Slack 보고
    - `.claude/skills/test-triage/SKILL.md`: 사라가 보관본 실패를 분류·분석하고 백로그, 노션 "이슈 검수" 후보, Slack에 기록(`/test-triage`)
+   - 루트 `Dockerfile`, `.dockerignore`: 테스트 실행 이미지 `qa-tests`. 사용법은 `/test-run` 3번
    - `.claude/guides/notion-test-record-format.md`: 노션 실행 행과 이슈 행의 본문, 증거 형식
    - `.claude/skills/issue-register/SKILL.md`, `.claude/agents/Issue-Reporter.md`: 승인된 real-bug의 Jira 등록(`/issue-register`)
    - `.claude/skills/test-repair/SKILL.md`: triage에서 수리 대상(test-bug, selector-drift, timing)으로 분류된 실패를 Script-Writer가 수리(`/test-repair`)
@@ -58,7 +59,9 @@
    - 루트 `CLAUDE.md`는 "규칙 문서와 폴더"의 테스트 종류 목록만 갱신한다.
 10. 테스트 표시와 결과 집계 용어가 헷갈릴 때
    - `.claude/docs/glossary.md`: xfail, XPASS, issue 마커, Blocked, N/A의 정의와 결함 하나의 흐름
-11. 파이프라인 전체 설계가 필요할 때
+11. MCP 서버의 등록 위치와 용도가 궁금할 때
+   - `.claude/docs/mcp-servers.md`: 서버별 등록 위치, 에이전트별 사용처, 알려진 제약
+12. 파이프라인 전체 설계가 필요할 때
    - `.claude/docs/pipeline-design.md`: 스킬과 에이전트 구성, 승인 지점, 만드는 순서
 
 11. 교훈과 회고
