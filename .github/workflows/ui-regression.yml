@@ -1,0 +1,183 @@
+# UI 테스트 수동 실행. GitHub Actions 화면의 [Run workflow] 버튼으로만 실행한다(2026-10-13).
+# - 라이브 데모 사이트를 호출하므로 API 워크플로우와 같은 그룹으로 동시 실행을 1건으로 제한한다.
+# - 계정 값은 저장소 Secrets에서 환경변수로 주입한다(playwright-demo/config.py가 읽는다). 값은 로그에 쓰지 않는다.
+# - 결제 확정 TC(UI_36, UI_37)는 실행할 때마다 지울 수 없는 인보이스를 남기므로 regression-with-payment에서만 실행한다.
+# - 결과는 artifact(report.html, report.json, 실패 trace)와 Slack 요약으로 남긴다. Confluence는 건드리지 않는다(루트 가드레일).
+name: UI regression
+
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: "실행 범위 (regression: 회귀 TC, 결제 확정 제외 / regression-with-payment: 회귀 TC + 결제 확정 UI_36, UI_37, 실행마다 인보이스가 남음 / full: spec_undefined와 known issue를 뺀 전체, 결제 확정 제외)"
+        type: choice
+        options: [regression, regression-with-payment, full]
+        default: regression
+
+concurrency:
+  group: live-site-tests
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  SITE_URL: https://practicesoftwaretesting.com
+  UI_SHEET_CSV: https://docs.google.com/spreadsheets/d/1G7ICKjMaS2MvQH2xS0IjcS-VQAAA_N1_YTQ8qtF0k44/gviz/tq?tqx=out:csv&sheet=UI-TC
+  API_SHEET_CSV: https://docs.google.com/spreadsheets/d/1ozTySggSsHVertVhwUatZUIFI6ZMOLS5PVC5-m8T_-4/gviz/tq?tqx=out:csv&sheet=API-TC
+  SLACK_CHANNEL: C0C7590K189
+  # 결제 확정 TC. regression-with-payment가 아니면 실행에서 뺀다
+  PAYMENT_CONFIRM_TESTS: >-
+    tests/payment_test.py::test_payment_confirm_shows_invoice_number
+    tests/payment_test.py::test_payment_confirm_empties_cart
+
+jobs:
+  ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      # UI는 홈 화면 로딩이 느리면 시간 초과가 연달아 난다(2026-10-12 Iteration 3). 기준: 홈 응답 3회 중 2회 이상 6초 미만
+      - name: 사이트 상태 사전 점검
+        id: health
+        run: |
+          ok=0
+          for i in 1 2 3; do
+            t=$(curl -s -o /dev/null -m 30 -w '%{time_total}' "$SITE_URL/" || echo 99)
+            echo "홈 응답 ${t}s"
+            awk "BEGIN{exit !($t<6)}" && ok=$((ok+1))
+            sleep 2
+          done
+          if [ "$ok" -ge 2 ]; then echo "ok=true" >> "$GITHUB_OUTPUT"; else echo "ok=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: 실행 이미지 빌드
+        if: steps.health.outputs.ok == 'true'
+        run: docker build -t qa-tests .
+
+      - name: 시트 CSV 받기와 실행 목록
+        if: steps.health.outputs.ok == 'true'
+        env:
+          SCOPE: ${{ inputs.scope }}
+        run: |
+          mkdir -p ci
+          curl -sfL "$UI_SHEET_CSV" -o ci/ui.csv
+          curl -sfL "$API_SHEET_CSV" -o ci/api.csv
+          # test-runs/ 보관본이 없으므로 CI의 회귀 목록에는 "실패 이력" 기준이 빠진다
+          python3 scripts/regression_set.py --ui-csv ci/ui.csv --api-csv ci/api.csv --nodeids ui > ci/nodeids.txt
+          : > ci/deselect.txt
+          if [ "$SCOPE" != "regression-with-payment" ]; then
+            for t in $PAYMENT_CONFIRM_TESTS; do
+              echo "--deselect=$t[chromium]" >> ci/deselect.txt
+              grep -vxF "$t" ci/nodeids.txt > ci/tmp.txt || true; mv ci/tmp.txt ci/nodeids.txt
+            done
+          fi
+          echo "범위 ${SCOPE}, 회귀 TC $(wc -l < ci/nodeids.txt)건"
+
+      - name: 테스트 실행
+        id: run
+        if: steps.health.outputs.ok == 'true'
+        env:
+          TOOLSHOP_EMAIL: ${{ secrets.TOOLSHOP_EMAIL }}
+          TOOLSHOP_PASSWORD: ${{ secrets.TOOLSHOP_PASSWORD }}
+          SCOPE: ${{ inputs.scope }}
+        run: |
+          if [ "$SCOPE" = "full" ]; then
+            set -- -m "not spec_undefined and not issue and not quarantine" $(cat ci/deselect.txt)
+          else
+            set -- -m "not quarantine" $(cat ci/nodeids.txt)
+          fi
+          rc=0
+          docker run --rm -e TOOLSHOP_EMAIL -e TOOLSHOP_PASSWORD \
+            -v "$PWD/playwright-demo:/qa/playwright-demo" -w /qa/playwright-demo qa-tests \
+            pytest "$@" -q -p no:cacheprovider || rc=$?
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+
+      # 격리(quarantine) 테스트는 결과가 빌드를 막지 않는다. 대상이 없으면(pytest 종료 코드 5) 건너뛴 것으로 본다.
+      # --output을 따로 두어 위 실행의 trace와 스크린샷을 지우지 않는다
+      - name: 격리 테스트 실행 (빌드에 영향 없음)
+        if: steps.health.outputs.ok == 'true'
+        continue-on-error: true
+        env:
+          TOOLSHOP_EMAIL: ${{ secrets.TOOLSHOP_EMAIL }}
+          TOOLSHOP_PASSWORD: ${{ secrets.TOOLSHOP_PASSWORD }}
+        run: |
+          rc=0
+          docker run --rm -e TOOLSHOP_EMAIL -e TOOLSHOP_PASSWORD \
+            -v "$PWD/playwright-demo:/qa/playwright-demo" -w /qa/playwright-demo qa-tests \
+            pytest -m quarantine -q -p no:cacheprovider $(cat ci/deselect.txt) --output=test-results/quarantine \
+            --json-report-file=test-results/quarantine.json --html=test-results/quarantine.html || rc=$?
+          if [ "$rc" -eq 5 ]; then echo "격리 테스트 없음"; exit 0; fi
+          exit "$rc"
+
+      - name: 결과 업로드
+        if: always() && steps.health.outputs.ok == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-${{ inputs.scope }}-${{ github.run_number }}
+          # trace에는 로그인 입력(계정 이메일, 비밀번호)이 남아 공개 저장소 아티팩트로 올리지 않는다(2026-10-14). trace가 필요하면 로컬에서 재실행한다
+          path: |
+            playwright-demo/test-results/
+            !playwright-demo/test-results/**/trace.zip
+          retention-days: 30
+
+      - name: Slack 요약
+        if: always()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          HEALTH_OK: ${{ steps.health.outputs.ok }}
+          SCOPE: ${{ inputs.scope }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          mkdir -p ci
+          LABEL="$SCOPE"
+          if [ "$HEALTH_OK" = "true" ] && [ -f playwright-demo/test-results/report.json ]; then
+            python3 scripts/run_summary.py --ui playwright-demo/test-results/report.json --ui-csv ci/ui.csv \
+              --title "CI UI ${LABEL} 테스트 결과" > ci/summary.txt
+          elif [ "$HEALTH_OK" != "true" ]; then
+            printf '*[CI UI %s 테스트 보류]*\n• 판정: 사이트 응답 지연으로 실행하지 않음(환경 문제)\n---THREAD---\n' "$LABEL" > ci/summary.txt
+          else
+            # 사전 점검은 통과했는데 결과 파일이 없음: 이미지 빌드, 시트 CSV 등 테스트 전 단계 실패
+            printf '*[CI UI %s 실행 오류]*\n• 판정: 테스트 전 단계(이미지 빌드, 시트 CSV 등)에서 실패. 실행 기록에서 실패 단계를 확인\n---THREAD---\n' "$LABEL" > ci/summary.txt
+          fi
+          python3 - <<'EOF'
+          import json, os, urllib.request
+          body, _, thread = open("ci/summary.txt", encoding="utf-8").read().partition("---THREAD---")
+          body = body.strip() + f"\n• 실행 기록: {os.environ['RUN_URL']}"
+          def post(payload):
+              req = urllib.request.Request("https://slack.com/api/chat.postMessage", json.dumps(payload).encode(),
+                  {"Authorization": "Bearer " + os.environ["SLACK_BOT_TOKEN"].strip(), "Content-Type": "application/json; charset=utf-8"})
+              r = json.load(urllib.request.urlopen(req))
+              if not r.get("ok"):
+                  raise SystemExit(f"Slack 오류: {r.get('error')}")
+              return r
+          ts = post({"channel": os.environ["SLACK_CHANNEL"], "text": body})["ts"]
+          if thread.strip():
+              post({"channel": os.environ["SLACK_CHANNEL"], "text": thread.strip(), "thread_ts": ts})
+          # report.html을 스레드에 첨부한다. trace와 스크린샷은 크기가 커서 artifact로만 둔다
+          # 첨부가 실패해도 요약 메시지는 이미 갔으므로 실행을 실패로 만들지 않고, 스레드에 첨부 실패만 남긴다
+          html = "playwright-demo/test-results/report.html"
+          try:
+            if os.path.exists(html):
+              tok = os.environ["SLACK_BOT_TOKEN"].strip()
+              data = open(html, "rb").read()
+              q = urllib.request.Request(f"https://slack.com/api/files.getUploadURLExternal?filename=ui-report.html&length={len(data)}",
+                  headers={"Authorization": "Bearer " + tok})
+              u = json.load(urllib.request.urlopen(q))
+              urllib.request.urlopen(urllib.request.Request(u["upload_url"], data, {"Content-Type": "application/octet-stream"}))
+              req = urllib.request.Request("https://slack.com/api/files.completeUploadExternal",
+                  json.dumps({"files": [{"id": u["file_id"], "title": "UI report"}], "channel_id": os.environ["SLACK_CHANNEL"], "thread_ts": ts}).encode(),
+                  {"Authorization": "Bearer " + tok, "Content-Type": "application/json; charset=utf-8"})
+              r = json.load(urllib.request.urlopen(req))
+              if not r.get("ok"):
+                  raise RuntimeError(r.get("error"))
+          except Exception as e:
+              print(f"리포트 첨부 실패: {e}")
+              post({"channel": os.environ["SLACK_CHANNEL"], "text": "리포트 첨부 실패. 실행 기록의 Artifacts에서 받아 주세요.", "thread_ts": ts})
+          EOF
+
+      - name: 실패 판정
+        if: always()
+        run: |
+          if [ "${{ steps.health.outputs.ok }}" != "true" ]; then echo "사이트 응답 지연으로 보류"; exit 0; fi
+          exit "${{ steps.run.outputs.rc || 1 }}"
