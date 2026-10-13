@@ -119,12 +119,15 @@ jobs:
           SCOPE: ${{ inputs.scope }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          mkdir -p ci
           if [ "$HEALTH_OK" = "true" ] && [ -f api-demo/test-results/report.json ]; then
             python3 scripts/run_summary.py --api api-demo/test-results/report.json --api-csv ci/api.csv \
               --title "CI API ${SCOPE} 테스트 결과" > ci/summary.txt
-          else
-            mkdir -p ci
+          elif [ "$HEALTH_OK" != "true" ]; then
             printf '*[CI API %s 테스트 보류]*\n• 판정: 사이트 응답 지연으로 실행하지 않음(환경 문제)\n---THREAD---\n' "$SCOPE" > ci/summary.txt
+          else
+            # 사전 점검은 통과했는데 결과 파일이 없음: 이미지 빌드, 시트 CSV 등 테스트 전 단계 실패
+            printf '*[CI API %s 실행 오류]*\n• 판정: 테스트 전 단계(이미지 빌드, 시트 CSV 등)에서 실패. 실행 기록에서 실패 단계를 확인\n---THREAD---\n' "$SCOPE" > ci/summary.txt
           fi
           python3 - <<'EOF'
           import json, os, urllib.request
@@ -132,7 +135,7 @@ jobs:
           body = body.strip() + f"\n• 실행 기록: {os.environ['RUN_URL']}"
           def post(payload):
               req = urllib.request.Request("https://slack.com/api/chat.postMessage", json.dumps(payload).encode(),
-                  {"Authorization": "Bearer " + os.environ["SLACK_BOT_TOKEN"], "Content-Type": "application/json; charset=utf-8"})
+                  {"Authorization": "Bearer " + os.environ["SLACK_BOT_TOKEN"].strip(), "Content-Type": "application/json; charset=utf-8"})
               r = json.load(urllib.request.urlopen(req))
               if not r.get("ok"):
                   raise SystemExit(f"Slack 오류: {r.get('error')}")
