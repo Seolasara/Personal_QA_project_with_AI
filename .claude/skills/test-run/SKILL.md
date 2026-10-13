@@ -32,8 +32,9 @@ argument-hint: "[ui|api]"
   - 계정은 마운트한 폴더의 `.env`에서 읽는다. 이미지에는 들어가지 않는다(`.dockerignore`).
   - UI와 API는 계정과 결과 폴더가 분리돼 있어 동시에 실행해도 된다.
   - 컨테이너의 파이썬은 3.12다(로컬 3.13). 결과가 로컬과 다르면 이 차이를 먼저 의심한다.
-  - 사이트 불안정 재실행(2026-10-13 사용자 결정): 사이트 지연으로 생긴 error(시간 초과 등, Fail이 아닌 것)는 결과에서 버리고 해당 건만 순차 재실행한다. 재실행은 3회까지이며, 사이트가 안정된 뒤의 결과로 확정한다. 시도별 원본은 보관 폴더 `attempts/`에 둔다.
-  - 자동 재시도(2026-10-13): 각 폴더 `pytest.ini`의 `--reruns=2 --only-rerun`이 환경 시간 초과(UI: `Page.goto`, `Page.wait_for_url`, 응답 대기 시간 초과 / API: `ConnectTimeout`, `ConnectError`)만 최대 2회 다시 실행한다. 재시도 후 통과는 `report.json`에 `rerun`으로 남고 Slack과 보고서에 "재시도 후 통과(flaky)"로 따로 센다. 계정 잠금, 인보이스가 생기는 테스트는 `@pytest.mark.flaky(reruns=0)`로 뺀다. 자동 재시도 뒤에도 남은 환경 error만 위 수동 재실행을 한다.
+  - 환경 error 처리(2026-10-13 사용자 결정): 사이트 지연으로 생긴 시간 초과(Fail이 아닌 error)는 두 단계로 처리한다.
+    1. 자동 재시도: 각 폴더 `pytest.ini`의 `--reruns=2 --only-rerun`이 환경 시간 초과(UI: `Page.goto`, `Page.wait_for_url`, 응답 대기 시간 초과 / API: `ConnectTimeout`, `ConnectError`)만 최대 2회 다시 실행한다. 재시도 후 통과는 `report.json`에 `rerun`으로 남고 Slack과 보고서에 "재시도 후 통과(flaky)"로 따로 센다. 계정 잠금, 인보이스가 생기는 테스트는 `@pytest.mark.flaky(reruns=0)`로 뺀다.
+    2. 수동 재실행: 자동 재시도 뒤에도 남은 error만 결과에서 버리고, 사이트가 안정된 뒤 해당 건만 순차 재실행한다(최대 3회). 안정된 뒤의 결과로 확정하고, 시도별 원본은 보관 폴더 `attempts/`에 둔다.
   - Iteration 2(임시): Jira 결함 수정 배포가 없으면 `-m "not spec_undefined and not issue"`로 실행하고 `issue` TC는 Blocked(수정 미배포)로 센다. Iteration 3은 회귀 TC만 실행한다(`.claude/guides/test-report-format.md` 1번).
 - `pytest.ini`의 addopts(리포트, trace, 스크린샷)를 그대로 쓴다. `-o addopts=""`를 쓰지 않는다.
 - 실패한 테스트를 다시 실행해 통과를 만들지 않는다. 코드와 TC는 수정하지 않는다.
