@@ -28,6 +28,11 @@ pytest -m "not spec_undefined"   # /test-run 전체 실행 기준
 - 의존성은 `requirements.txt`, venv는 `api-demo/.venv` (playwright-demo와 별도).
 - 컨테이너 실행: 루트 `Dockerfile`의 이미지 `qa-tests`. 명령은 `.claude/skills/test-run/SKILL.md` 3번(Iteration 3부터 기본).
 - 결과 리포트: `python3 ../scripts/gen_test_report.py --type api` → `test-results/test-report.md`.
+- CI: `.github/workflows/api-regression.yml`(GitHub Actions → API regression → [Run workflow]). 범위는 `regression`(회귀 TC)과 `full`. 계정은 저장소 Secrets(`API_EMAIL`, `API_PASSWORD`, `API_EMAIL2`, `API_PASSWORD2`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`)로 주입하고, 결과는 아티팩트(30일)와 Slack 요약으로 남는다.
+- 재시도와 격리
+  - `pytest.ini`의 `--reruns=2 --only-rerun`이 `ConnectTimeout`, `ConnectError`(요청이 서버에 닿지 않은 경우)만 다시 실행한다. `ReadTimeout`은 쓰기 요청이 처리됐을 수 있어 재시도하지 않는다.
+  - 재시도하면 데이터가 중복될 수 있는 테스트를 새로 쓰면 `@pytest.mark.flaky(reruns=0)`를 붙인다.
+  - `quarantine` 마커: 원인을 고치기 전까지 격리한 flaky 테스트. CI에서 빌드를 막지 않는 별도 단계로 돈다.
 - 계정은 코드에 쓰지 않고 `config.py`가 `.env`에서 읽는다. 최초 1회 `cp .env.example .env`.
 - 계정별 용도
   - customer3(`API_EMAIL`): API 테스트 기본 계정. UI 계정(customer2)과 분리해 한쪽 계정 잠금(423)이 다른 쪽에 영향 주지 않게 한다.
