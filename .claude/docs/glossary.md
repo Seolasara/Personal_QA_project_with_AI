@@ -16,7 +16,10 @@
 3. issue 마커(`@pytest.mark.issue("QA-N")`)
    - Jira에 등록된 결함의 테스트 표시다. 고쳐질 때까지 일반 실패로 집계한다.
    - 이 테스트가 통과하면 수정 신호다. Slack 실패 상세의 `[Jira 결함 통과 · 수정 확인 필요]`에 나온다.
-4. `spec_undefined` 마커
+4. rerun(재시도 후 통과)
+   - 환경 시간 초과(사이트 지연, 연결 실패)로 실패한 테스트를 `pytest-rerunfailures`가 다시 실행해 통과한 경우다. `report.json`의 outcome이 `rerun`이다.
+   - Pass로 세지만 Slack과 보고서에 flaky로 따로 표시한다. 어설션 실패는 재시도하지 않는다. 설정은 각 폴더 `pytest.ini`.
+5. `spec_undefined` 마커
    - 스펙에 정확한 기대결과가 없는 TC다. 전체 실행에서 빼고 안건으로 다룬다.
 
 ## 3. 결과 보고서의 칸

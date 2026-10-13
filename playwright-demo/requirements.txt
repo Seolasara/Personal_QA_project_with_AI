@@ -5,6 +5,7 @@ pytest-playwright==0.9.0
 pytest-base-url==2.1.0
 pytest-json-report==1.5.0
 pytest-html==4.2.0     # test-results/report.html
+pytest-rerunfailures==16.6.1  # 환경 시간 초과만 재시도(pytest.ini --only-rerun)
 
 # 설치 (venv 는 playwright-demo/.venv 하나만 사용, api-demo/.venv 와 별도):
 #   cd playwright-demo

@@ -16,7 +16,7 @@ argument-hint: "[test-runs/<일시>-<ui|api> | ui|api <TC ID>:<분류> ...]"
 ## 1. 원칙
 - 분류가 test-bug, selector-drift, timing인 실패만 고친다. 분류가 없거나 real-bug, spec-change, env, 안건이면 고치지 않고 보고한다(분류는 `/test-triage`가 먼저).
 - 기대값의 기준은 TC 시트의 기대결과다. 라이브 동작에 맞춰 어설션을 바꾸지 않는다.
-- 금지: 어설션 삭제·약화, `skip`, 새 `xfail`, 고정 대기(`wait_for_timeout`, `sleep`), 재시도로 통과 만들기, timeout만 늘리는 수리
+- 금지: 어설션 삭제·약화, `skip`, 새 `xfail`, 고정 대기(`wait_for_timeout`, `sleep`), 재시도로 통과 만들기(예외: `pytest.ini`의 환경 시간 초과 한정 재시도, 2026-10-13 사용자 결정. 테스트 코드에 재시도를 넣는 것은 계속 금지), timeout만 늘리는 수리
 - 고칠 수 있는 것은 테스트 폴더의 코드(테스트, Page Object, client, schema, fixture)뿐이다. TC 시트, 백로그, 스펙 분석은 고치지 않는다.
 
 ## 2. 분류별 수리 방법

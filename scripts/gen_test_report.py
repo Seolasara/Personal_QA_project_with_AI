@@ -28,6 +28,7 @@ OUTCOME_LABEL = {
     "skipped": "⏭️ skip",
     "xfailed": "🟡 xfail",
     "xpassed": "🟡 xpass",
+    "rerun": "🔁 재시도 후 pass",
 }
 
 
@@ -67,7 +68,7 @@ def main() -> int:
     commit = git("rev-parse", "--short", "HEAD") or "?"
 
     total = summary.get("total", len(tests))
-    passed = summary.get("passed", 0)
+    passed = summary.get("passed", 0) + summary.get("rerun", 0)  # rerun = 환경 시간 초과 재시도 후 통과
     failed = summary.get("failed", 0) + summary.get("error", 0)
     skipped = summary.get("skipped", 0)
     xfailed = summary.get("xfailed", 0)

@@ -113,6 +113,7 @@ def test_payment_checkout(cart):
     expect(payment.success_message).to_have_text("Payment was successful")
 
 
+@pytest.mark.flaky(reruns=0)  # 재시도 제외: 인보이스 중복 생성
 @pytest.mark.tc("UI_36")
 @pytest.mark.smoke
 def test_payment_confirm_shows_invoice_number(cart):
@@ -131,6 +132,7 @@ def test_payment_confirm_shows_invoice_number(cart):
     expect(payment.invoice_number).to_have_text(re.compile(r"\S"))
 
 
+@pytest.mark.flaky(reruns=0)  # 재시도 제외: 인보이스 중복 생성
 @pytest.mark.tc("UI_37")
 def test_payment_confirm_empties_cart(cart):
     payment = PaymentPage(cart)
