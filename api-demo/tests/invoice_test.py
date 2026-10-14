@@ -34,6 +34,7 @@ def assert_billing_matches(body, address_info):
 
 @pytest.mark.tc("API_99")
 @pytest.mark.issue("QA-9")  # 백로그 #12: 성공 코드가 스펙(200)과 다른 201. 고쳐질 때까지 실패로 집계
+@pytest.mark.creates_invoice
 def test_create_invoice(api_client, authed_client, cart_id, product_id, address_info):
     #장바구니 생성 > 상품 추가
     CartClient(api_client).add_item(cart_id, product_id, 1)
@@ -51,6 +52,7 @@ def test_create_invoice(api_client, authed_client, cart_id, product_id, address_
 
 @pytest.mark.tc("API_100")
 @pytest.mark.issue("QA-9")  # 백로그 #12: 성공 코드가 스펙(200)과 다른 201. 고쳐질 때까지 실패로 집계
+@pytest.mark.creates_invoice
 def test_create_invoice_credit_card(api_client, authed_client, cart_id, product_id, address_info):
     CartClient(api_client).add_item(cart_id, product_id, 1)
 
@@ -65,6 +67,7 @@ def test_create_invoice_credit_card(api_client, authed_client, cart_id, product_
 
 
 @pytest.mark.tc("API_101")
+@pytest.mark.creates_invoice
 def test_get_invoice(api_client, authed_client, cart_id, product_id, address_info):
     #장바구니 생성 > 상품 추가
     CartClient(api_client).add_item(cart_id, product_id, 1)
@@ -85,6 +88,7 @@ def test_get_invoice(api_client, authed_client, cart_id, product_id, address_inf
 
 
 @pytest.mark.tc("API_102")
+@pytest.mark.creates_invoice
 def test_get_invoice_matches_created(api_client, authed_client, cart_id, product_id, address_info):
     CartClient(api_client).add_item(cart_id, product_id, 1)
 
@@ -104,6 +108,7 @@ def test_get_invoice_matches_created(api_client, authed_client, cart_id, product
 
 
 @pytest.mark.tc("API_103")
+@pytest.mark.creates_invoice
 def test_invoice_lines_match_cart(api_client, authed_client, cart_id, product_id, address_info):
     CartClient(api_client).add_item(cart_id, product_id, 1)
 
@@ -176,6 +181,7 @@ def test_create_invoice_mismatched_city(api_client, authed_client, cart_id, prod
 
 
 @pytest.mark.tc("API_109")
+@pytest.mark.creates_invoice
 def test_get_invoice_without_auth(existing_invoice_id):
     response = InvoiceClient(get_client()).get_invoice(existing_invoice_id)
 
@@ -185,6 +191,7 @@ def test_get_invoice_without_auth(existing_invoice_id):
 
 @pytest.mark.spec_undefined
 @pytest.mark.tc("API_110")
+@pytest.mark.creates_invoice
 def test_get_invoice_with_malformed_token(authed_client, existing_invoice_id):
     response = InvoiceClient(authed_client).get_invoice_with_token(existing_invoice_id, INVALID_TOKEN)
 
@@ -202,6 +209,7 @@ def test_get_invoice_not_found(authed_client):
 
 @pytest.mark.spec_undefined
 @pytest.mark.tc("API_112")
+@pytest.mark.creates_invoice
 def test_get_other_users_invoice(other_user_client, existing_invoice_id):
     # existing_invoice_id는 API 계정(customer3)이 만든 인보이스, 조회는 두 번째 계정으로 한다
     response = InvoiceClient(other_user_client).get_invoice(existing_invoice_id)
@@ -212,6 +220,7 @@ def test_get_other_users_invoice(other_user_client, existing_invoice_id):
 
 @pytest.mark.spec_undefined
 @pytest.mark.tc("API_113")
+@pytest.mark.creates_invoice
 def test_list_invoices(authed_client, existing_invoice_id):
     response = InvoiceClient(authed_client).list_invoices()
     body = response.json()
@@ -222,6 +231,7 @@ def test_list_invoices(authed_client, existing_invoice_id):
 
 
 @pytest.mark.tc("API_114")
+@pytest.mark.creates_invoice
 def test_list_invoices_page_field_types(authed_client, existing_invoice_id):
     response = InvoiceClient(authed_client).list_invoices()
     body = response.json()
