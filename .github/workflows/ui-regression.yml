@@ -33,10 +33,10 @@ env:
 
 jobs:
   ui:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04   # ubuntu-latest가 2026-10-19부터 Ubuntu 26으로 바뀌어, 올릴 시점을 직접 정하려고 고정
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # UI는 홈 화면 로딩이 느리면 시간 초과가 연달아 난다(2026-10-12 Iteration 3). 기준: 홈 응답 3회 중 2회 이상 6초 미만
       - name: 사이트 상태 사전 점검
@@ -112,7 +112,7 @@ jobs:
 
       - name: 결과 업로드
         if: always() && steps.health.outputs.ok == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ui-${{ inputs.scope }}-${{ github.run_number }}
           # trace에는 로그인 입력(계정 이메일, 비밀번호)이 남아 공개 저장소 아티팩트로 올리지 않는다(2026-10-14). trace가 필요하면 로컬에서 재실행한다

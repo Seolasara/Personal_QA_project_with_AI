@@ -1,10 +1,13 @@
-# API 테스트 수동 실행. GitHub Actions 화면의 [Run workflow] 버튼으로만 실행한다(2026-10-13).
+# API 테스트 실행. [Run workflow] 버튼으로 수동 실행하고, 매일 03:00(KST)에 회귀 범위로 자동 실행한다(2026-10-14).
+# - 예약 실행은 기본 브랜치(main)의 이 파일로만 돌고, 저장소 활동이 60일 없으면 GitHub가 끈다.
 # - 라이브 데모 사이트를 호출하므로 동시 실행은 1건으로 제한한다.
 # - 계정 값은 저장소 Secrets에서 환경변수로 주입한다(api-demo/config.py가 읽는다). 값은 로그에 쓰지 않는다.
 # - 결과는 artifact(report.html, report.json)와 Slack 요약으로 남긴다. Confluence는 건드리지 않는다(루트 가드레일).
 name: API regression
 
 on:
+  schedule:
+    - cron: "0 18 * * *"   # 매일 03:00 KST (UTC 18:00). GitHub 사정으로 수 분~수십 분 늦을 수 있다
   workflow_dispatch:
     inputs:
       scope:
@@ -28,10 +31,10 @@ env:
 
 jobs:
   api:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04   # ubuntu-latest가 2026-10-19부터 Ubuntu 26으로 바뀌어, 올릴 시점을 직접 정하려고 고정
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # 사이트가 느리면 테스트 대신 "환경 문제로 보류"를 남긴다. 기준: /brands 응답 3회 중 2회 이상 5초 미만
       - name: 사이트 상태 사전 점검
@@ -70,13 +73,16 @@ jobs:
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           API_EMAIL2: ${{ secrets.API_EMAIL2 }}
           API_PASSWORD2: ${{ secrets.API_PASSWORD2 }}
-          SCOPE: ${{ inputs.scope }}
+          SCOPE: ${{ inputs.scope || 'regression' }}
+          TRIGGER: ${{ github.event_name }}
         run: |
           if [ "$SCOPE" = "full" ]; then
             set -- -m "not spec_undefined and not issue and not quarantine"
           else
             set -- -m "not quarantine" $(cat ci/nodeids.txt)
           fi
+          # 야간 자동 실행은 지울 수 없는 인보이스를 쌓지 않도록 인보이스 생성 테스트를 뺀다(2026-10-14 사용자 결정)
+          if [ "$TRIGGER" = "schedule" ]; then set -- "$@" -m "not quarantine and not creates_invoice"; fi
           rc=0
           docker run --rm -e API_EMAIL -e API_PASSWORD -e ADMIN_EMAIL -e ADMIN_PASSWORD -e API_EMAIL2 -e API_PASSWORD2 \
             -v "$PWD/api-demo:/qa/api-demo" -w /qa/api-demo qa-tests \
@@ -105,9 +111,9 @@ jobs:
 
       - name: 결과 업로드
         if: always() && steps.health.outputs.ok == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: api-${{ inputs.scope }}-${{ github.run_number }}
+          name: api-${{ inputs.scope || 'regression' }}-${{ github.run_number }}
           path: api-demo/test-results/
           retention-days: 30
 
@@ -116,10 +122,12 @@ jobs:
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           HEALTH_OK: ${{ steps.health.outputs.ok }}
-          SCOPE: ${{ inputs.scope }}
+          SCOPE: ${{ inputs.scope || 'regression' }}
+          TRIGGER: ${{ github.event_name }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           mkdir -p ci
+          if [ "$TRIGGER" = "schedule" ]; then SCOPE="${SCOPE}, 야간 자동"; fi
           if [ "$HEALTH_OK" = "true" ] && [ -f api-demo/test-results/report.json ]; then
             python3 scripts/run_summary.py --api api-demo/test-results/report.json --api-csv ci/api.csv \
               --title "CI API ${SCOPE} 테스트 결과" > ci/summary.txt
@@ -143,6 +151,25 @@ jobs:
           ts = post({"channel": os.environ["SLACK_CHANNEL"], "text": body})["ts"]
           if thread.strip():
               post({"channel": os.environ["SLACK_CHANNEL"], "text": thread.strip(), "thread_ts": ts})
+          # report.html을 스레드에 첨부한다. 첨부가 실패해도 요약은 이미 갔으므로 실행을 실패로 만들지 않는다
+          html = "api-demo/test-results/report.html"
+          try:
+            if os.path.exists(html):
+              tok = os.environ["SLACK_BOT_TOKEN"].strip()
+              data = open(html, "rb").read()
+              q = urllib.request.Request(f"https://slack.com/api/files.getUploadURLExternal?filename=api-report.html&length={len(data)}",
+                  headers={"Authorization": "Bearer " + tok})
+              u = json.load(urllib.request.urlopen(q))
+              urllib.request.urlopen(urllib.request.Request(u["upload_url"], data, {"Content-Type": "application/octet-stream"}))
+              req = urllib.request.Request("https://slack.com/api/files.completeUploadExternal",
+                  json.dumps({"files": [{"id": u["file_id"], "title": "API report"}], "channel_id": os.environ["SLACK_CHANNEL"], "thread_ts": ts}).encode(),
+                  {"Authorization": "Bearer " + tok, "Content-Type": "application/json; charset=utf-8"})
+              r = json.load(urllib.request.urlopen(req))
+              if not r.get("ok"):
+                  raise RuntimeError(r.get("error"))
+          except Exception as e:
+              print(f"리포트 첨부 실패: {e}")
+              post({"channel": os.environ["SLACK_CHANNEL"], "text": "리포트 첨부 실패. 실행 기록의 Artifacts에서 받아 주세요.", "thread_ts": ts})
           EOF
 
       - name: 실패 판정
