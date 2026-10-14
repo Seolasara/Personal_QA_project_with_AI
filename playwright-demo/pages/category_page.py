@@ -3,7 +3,7 @@
 - CategoryPage: 카테고리 페이지(/category/<slug>). 상품 목록 요소는 메인과 같아 CatalogPage 를 상속한다.
 - RentalsPage: 렌탈 페이지(/rentals)
 """
-from playwright.sync_api import Page
+from playwright.sync_api import Page, expect
 
 from pages.catalog_page import CatalogPage
 
@@ -53,6 +53,9 @@ class CategoryPage(CatalogPage):
         self._apply_and_wait(lambda: self.nav_category_item(name).click())
 
     def category_filter_names(self) -> list[str]:
+        """카테고리 필터 라벨 이름. 필터는 상품 목록과 별도 응답(categories/tree)으로 그려져
+        상품 목록 대기 뒤에도 비어 있을 수 있어, 첫 라벨이 보일 때까지 기다린 뒤 읽는다(2026-10-14 trace 확인)."""
+        expect(self.category_filter_labels.first).to_be_visible()
         return [label.strip() for label in self.category_filter_labels.all_inner_texts()]
 
 
