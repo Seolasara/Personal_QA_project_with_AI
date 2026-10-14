@@ -142,10 +142,12 @@ def cart_ready(product_detail):
     yield product_detail
 
     page = product_detail.page
-    page.locator('[data-test="nav-cart"]').click()
-    remove_buttons = page.locator("a.btn.btn-danger")
-    if remove_buttons.count():
-        remove_buttons.first.click()
+    # 담은 상품이 없으면 헤더 장바구니 아이콘이 없어 정리할 것도 없다(클릭하면 30초 대기 뒤 teardown error)
+    if not page.locator('[data-test="nav-cart"]').count():
+        return
+    # 장바구니 조회 응답까지 기다린 뒤 삭제한다. 응답 전에 count()로 보면 0건으로 보고 정리를 건너뛴다(2026-10-13)
+    product_detail.open_cart_loaded()
+    page.locator("a.btn.btn-danger").first.click()
 
 
 @pytest.fixture
