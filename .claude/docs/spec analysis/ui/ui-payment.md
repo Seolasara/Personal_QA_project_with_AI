@@ -45,6 +45,10 @@
   - 근거: `payment.component.ts` 정규식 `{16}`, `{4}`
   - 판단: 스펙은 'alphanumeric'만 있어 길이 검증 TC의 기대결과는 '확인 필요'로 씁니다.
 
+- **R12** 강좌 홍보 배너(`course-promo`) 추가
+  - production 빌드에서만 보이므로 로컬과 라이브 화면이 다르고, 두 화면에서 `data-test`가 중복됩니다.
+  - 근거: `payment.component.html` (2026-10-14 변경 분석, 라이브 노출은 후보)
+
 ## 4. 테스트 범위 (포함)
 - 결제: Sign in 단계, Billing Address 필수값/비활성, 결제 수단별 필드 노출, Cash on Delivery 해피패스, Confirm 성공 메시지, 필드 검증 에러
 
@@ -73,3 +77,23 @@
 - 후보 F-10: Confirm 첫 클릭 무반응 재현 여부 (R1, real-bug 후보 확인용 관찰 TC)
 - (제외) 후보 F-11: 비로그인 상태 결제 진입 시 Sign in/게스트 폼 — 게스트 체크아웃은 소스에만 있는 기능이라 제외합니다.
 - 참고: F-4~F-8의 필드 이름, 형식, 검증 문구는 소스에서 가져온 값입니다. 스펙에 규정이 없으면 TC 기대결과는 '확인 필요'로 씁니다.
+
+## 6. 변경 이력
+
+### 2026-10-14 변경 요약 (기준 커밋 c752a70 → ae7caec)
+- 변경 내용
+  - `sprint5/UI/src/app/checkout/payment/payment.component.html`, `.ts`: 결제 완료(`paid`) 화면의 `order-confirmation` 아래에 강좌 홍보 배너(`data-test="course-promo"`, 링크 `course-promo-link`)를 추가했습니다. `environment.production`이 true일 때만 렌더링합니다.
+  - `sprint5/UI/src/assets/i18n/en.json`: `pages.course-promo.message`, `pages.course-promo.cta` 추가
+  - 스펙(`docs/user-stories/`, `docs/features.md`) 변경은 없습니다.
+- 영향 기능과 영향 범위: 결제 완료 화면(Confirm 성공 후). 배너는 라이브(production)에서만 보이므로 로컬 개발 환경과 라이브 화면이 달라질 수 있습니다(후보, 라이브 확인 필요).
+- 리스크: R12 신규(낮음)
+- 사이드이펙트
+  - 같은 배너가 홈 화면에도 추가되어 `data-test="course-promo"`가 두 화면에서 중복됩니다([ui-product-browse.md](ui-product-browse.md)).
+  - 결제 완료 화면에 외부 링크(`target="_blank"`)가 생깁니다. 링크 클릭 TC는 외부 사이트 의존이라 범위에 넣지 않는 편이 안전합니다(후보).
+  - 기존 `payment-success-message`, 인보이스 번호, 장바구니 비움 동작에는 코드상 변경이 없습니다.
+- 확인 필요
+  - 결제 완료 화면에서 배너가 성공 메시지, 인보이스 번호 노출을 가리거나 밀어내는지: 결제 확정을 허용하는 테스트 코드 실행 때 화면 캡처로 확인
+  - 소스의 `environment.production` 값이 라이브 빌드에서 true인지: 라이브 홈 화면에서 배너 노출 여부로 확인
+- TC-Writer 후속
+  - F-9(Confirm 후 성공 메시지, 인보이스 번호 표시)의 기대결과는 바꾸지 않아도 됩니다. 배너 텍스트나 링크는 스펙에 없어 기대결과로 검증하지 않습니다.
+  - 새 TC는 필요 없습니다(스펙에 없는 UI). 셀렉터를 `data-test="course-promo"` 하나로 잡는 스크립트가 있으면 두 화면 중복에 주의하도록 알립니다.

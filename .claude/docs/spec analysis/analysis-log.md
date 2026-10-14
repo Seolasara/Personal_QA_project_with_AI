@@ -1,6 +1,16 @@
 # 분석 로그
 `/spec-analysis`를 실행할 때마다 한 항목을 추가한다(최신이 위). 첫 줄 요약으로 어느 부분에서 어떤 변경이 있었는지 본다. 형식은 `.claude/skills/spec-analysis/SKILL.md` "5. 분석 로그".
 
+## 2026-10-14 [api] update — 변경 없음 (감시 경로 변경 없음, sprint5-with-bugs만 변경)
+- 기준 커밋: c752a70 유지, 확인한 HEAD ae7caec (커밋 10개, 감시 경로 변경 파일 0개)
+- 갱신한 파일: 없음
+- 상세 위치: 해당 없음. 직전 확인(5a6ccc2) 이후 추가된 `sprint5-with-bugs/API` 변경(eea7088, 2026-10-10)과 UI 변경(UI 분석에서 처리)만 있음
+
+## 2026-10-14 [ui] update — 강좌 홍보 배너(course-promo)가 홈과 결제 완료 화면에 추가됨 (영향 낮음)
+- 기준 커밋: c752a70 → ae7caec (커밋 10개, 감시 경로 변경 파일 10개)
+- 갱신한 파일: `ui/00_ui-overview.md`(R12 추가, 기준 커밋·분석일), `ui/ui-payment.md`, `ui/ui-product-browse.md`
+- 상세 위치: 두 기능 파일의 "6. 변경 이력" 2026-10-14 항목
+
 ## 2026-10-09 [api] update — 변경 없음 (감시 경로 변경 없음, sprint5-with-bugs만 변경)
 - 기준 커밋: c752a70 유지, 확인한 HEAD 5a6ccc2 (커밋 4개, 감시 경로 변경 파일 0개)
 - 갱신한 파일: 없음

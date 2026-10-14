@@ -13,7 +13,7 @@
 - 로그인: 메인 → 상품 상세 [Add to cart] → 헤더 장바구니 아이콘 → 장바구니 [Proceed to checkout] → Sign in 단계 [Proceed to checkout] → Billing Address [Proceed to checkout] → Payment [Check payment]
 - 헤더 장바구니 아이콘은 장바구니에 상품이 있을 때만 보인다. 빈 장바구니로 체크아웃에 들어가려면 URL(`/checkout`)로 직접 가야 한다.
 
-## 메인 (/) — 확인 2026-10-10
+## 메인 (/) — 확인 2026-10-10, 배너 2026-10-14
 - 진입 경로: 헤더 [Home], 로그아웃 직후
 - 상태 조건
   - 비로그인: 헤더에 [Sign in]
@@ -25,6 +25,12 @@
   - 상품 카드: 이름, 가격, [Compare], 품절이면 "Out of stock"
   - 페이지 이동: [«], [»], 페이지 번호
 - 다음 화면: 상품 카드 → 상품 상세 / 장바구니 아이콘 → 체크아웃 1단계 / [Sign in] → 로그인
+- 강좌 홍보 배너(2026-10-14 확인, 사이트 v2.5 Built 2026-10-11, 스펙 분석 R12)
+  - 문구 "Enjoyed testing this app? Level up with hands-on software testing courses." 와 링크 [Explore courses], `data-test="course-promo"`
+  - 상품 그리드 바로 위에 보인다(데스크톱 1280px 기준 배너 상단 약 440px, 첫 상품 카드 약 522px). 그리드가 그만큼 아래로 밀린다.
+  - [Explore courses]는 외부 사이트(onlinecourses.testsmith.io)를 새 탭으로 연다.
+  - 페이지 제목 `<h1>` "Practice Software Testing - Toolshop"이 있다. 셀렉터로 `h1`을 쓰면 이 요소가 잡힌다.
+  - 화면 아래 "LEARN & EXPLORE" 영역(Learn Test Automation, API Spector, GitHub 링크)이 있다.
 - 정렬 드롭다운 옵션(6개): Name (A - Z), Name (Z - A), Price (High - Low), Price (Low - High), CO₂ Rating (A - E), CO₂ Rating (E - A)
 - Price Range 슬라이더: 범위 표시 0~200, 기본 선택 1~100
 - 상품 카드에 CO₂ 등급 배지(A~E), 친환경 상품은 "ECO" 배지가 붙는다. Eco-friendly 필터를 켜면 ECO 배지 상품만 남는다(2026-10-11 확인).
@@ -118,9 +124,10 @@
 - 분기: 결제 확정은 [Check payment]와 [Confirm] 두 번 클릭이다.
 - 미확인: 결제 방법별 입력값 검증 문구, Cash on Delivery 외 결제 방법의 확정 결과
 
-## 결제 완료 (/checkout) — 확인 2026-10-10
+## 결제 완료 (/checkout) — 확인 2026-10-10, 배너 2026-10-14
 - 진입 경로: 4단계 [Confirm]
 - 주요 요소: 문구 "Thanks for your order! Your invoice number is INV-<번호>." (번호는 매번 다르다)
+- 강좌 홍보 배너(2026-10-14 확인): 완료 문구 바로 아래에 홈과 같은 배너(`data-test="course-promo"`, [Explore courses] 새 탭)가 나온다. 완료 문구와 인보이스 번호를 가리지 않는다(문구 아래 약 16px 떨어져 시작). 홈 배너와 `data-test`가 같아서, 셀렉터로 구분하려면 화면 안 위치(ex: 완료 영역 아래)로 좁혀야 한다.
 - 상태 조건: 헤더 장바구니 아이콘이 사라진다. 이후 `/checkout`에 직접 들어가면 빈 장바구니 화면(본문 없음)이다.
 - 다음 화면: 헤더 메뉴로만 이동한다. 완료 화면에 다른 버튼은 없다.
 - 미확인: 사용자 메뉴 [My invoices]에서 새 인보이스 확인
