@@ -43,6 +43,10 @@ argument-hint: "[ui|api]"
 - 리포트: `python3 scripts/gen_test_report.py --type <ui|api>`로 그 폴더의 `test-results/test-report.md`를 만든다.
 - 보관: 그 폴더의 `test-results/`를 `test-runs/<YYYY-MM-DD-HHMM>-<ui|api>/`로 복사한다. 다음 실행이 `test-results/`를 지우므로, 이후 triage와 결과 보고서는 보관본을 근거로 쓴다.
 - `test-runs/`는 git에 올리지 않는다.
+- 결과 탭(2026-10-14): Iteration 실행이면 TC 시트에 `<플랜>_Iteration<N>` 탭(ex: `v5.0_Iteration3`)을 만들어 TC별 결과를 남긴다. 실행 결과는 TC 탭에 열로 붙이지 않는다.
+  - 열: TC ID, 대분류, 기능(API는 테스트 시나리오), 중요도(API는 Priority), 결과, Jira 키, 실행일. TC ID, 결과, Jira 키, 실행일만 값으로 쓰고, 대분류·기능·중요도는 B2 한 칸의 `ARRAYFORMULA(VLOOKUP(...))` 수식으로 TC 탭에서 불러온다(ex: `v5.0_Iteration1` API 탭).
+  - 결과 값: Pass, Fail, Blocked, N/A, 미실행(회귀 제외). 판정은 보관본 `report.json`과 마커(`spec_undefined`, `issue`, known issue)로 정한다.
+  - 행은 Fail → Blocked → Pass → N/A → 미실행 순으로 두고, 결과 열에 색 태그(조건부 서식)를 단다.
 
 ## 5. Slack 보고
 - 요약 텍스트: `python3 scripts/run_summary.py --<ui|api> <보관본>/report.json --<ui|api>-csv <시트 CSV> --title "<실행 목적 제목>"`

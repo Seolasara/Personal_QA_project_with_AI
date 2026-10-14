@@ -4,7 +4,7 @@
 사용: python3 scripts/regression_set.py --ui-csv <UI.csv> --api-csv <API.csv> [--nodeids ui|api] [--json]
 선정 기준(.claude/docs/glossary.md, 노션 "회귀 테스트의 기준 브레인스토밍" 7번)
   1. smoke 마커  2. 중요도 High  3. 결함 주변  4. 실패 이력(test-runs 보관본)  5. 백로그 "회귀 대상"
-  - 결함 주변: API는 known issue TC와 같은 엔드포인트 경로, UI는 같은 대분류에서 시트 순서로 앞뒤 2행
+  - 결함 주변: API는 known issue TC와 같은 엔드포인트 경로, UI는 같은 대분류에서 `정렬` 열 순서로 앞뒤 2개(열이 없으면 시트 행 순서)
 제외: spec_undefined(N/A), issue 마커(known issue). 단 백로그 "회귀 대상" TC는 known issue여도 넣는다.
 """
 from __future__ import annotations
@@ -22,7 +22,7 @@ from _common import DEMOS, ROOT, tc_for  # noqa: E402
 DECO_RE = re.compile(r"^\s*@pytest\.mark\.(\w+)(?:\(\s*[\"']([^\"']*)[\"']\s*\))?")
 DEF_RE = re.compile(r"^\s*def\s+(test_\w+)\s*\(")
 BACKLOG_DIR = ROOT / ".claude" / "docs" / "backlog"
-NEAR = 2  # UI 결함 주변: 시트 순서로 앞뒤 행 수
+NEAR = 2  # UI 결함 주변: 같은 대분류에서 `정렬` 열 순서로 앞뒤 TC 수
 
 
 def parse_tests(kind: str) -> dict[str, dict]:
@@ -52,12 +52,19 @@ def parse_tests(kind: str) -> dict[str, dict]:
 def read_sheet(path: Path) -> list[dict]:
     rows = []
     with path.open(encoding="utf-8") as fh:
-        for r in csv.DictReader(fh):
+        for i, r in enumerate(csv.DictReader(fh)):
             tid = (r.get("ID") or "").strip().rstrip("*")
             if tid:
                 prio = (r.get("중요도") or r.get("Priority") or "").strip()
                 path_ = re.sub(r"\{[^}]*\}", "{}", (r.get("엔드포인트") or "").split("?")[0].strip())
-                rows.append({"id": tid, "cat": (r.get("대분류") or "").strip(), "prio": prio, "ep": path_})
+                try:
+                    key = float((r.get("정렬") or "").strip())
+                except ValueError:
+                    key = None  # 정렬 열이 없거나 비어 있으면 시트 행 순서를 쓴다
+                rows.append({"id": tid, "cat": (r.get("대분류") or "").strip(), "prio": prio, "ep": path_,
+                             "sort": (0, key, i) if key is not None else (1, i, i)})
+    # 보는 순서는 정렬 열이 정한다(ID는 이름표, 2026-10-14). 정렬 값이 있는 행을 먼저, 없는 행은 시트 순서대로 뒤에 둔다
+    rows.sort(key=lambda r: r["sort"])
     return rows
 
 
