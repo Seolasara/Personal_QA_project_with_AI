@@ -65,8 +65,9 @@
    - `.claude/docs/mcp-servers.md`: 서버별 등록 위치, 에이전트별 사용처, 알려진 제약
 12. 파이프라인 전체 설계가 필요할 때
    - `.claude/docs/pipeline-design.md`: 스킬과 에이전트 구성, 승인 지점, 만드는 순서
-
-11. 교훈과 회고
+13. 테스트가 결함을 실제로 잡는지 검증할 때
+   - `.claude/docs/fault-injection/plan.md`: 로컬 sprint5에 정답지 버그를 하나씩 심어 결함 탐지율을 재는 계획, 범위 기준, 지표
+14. 교훈과 회고
    - `.claude/docs/lessons.md`: 검수에서 바로잡힌 판단 기록과 Iteration 회고 절차
 
 ## 2. 아직 없는 문서 (만든 뒤 위 목록에 추가)
