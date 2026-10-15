@@ -8,7 +8,9 @@ from urllib.parse import urlparse
 
 from playwright.sync_api import Page, Response, expect
 
-HOME_URL = "https://practicesoftwaretesting.com"
+from config import SITE_URL
+
+HOME_URL = SITE_URL
 
 
 def is_cart_fetch(response: Response) -> bool:
@@ -442,7 +444,7 @@ def to_amount(text: str) -> float:
 class CartPage:
     """체크아웃 위저드 1단계. URL: /checkout"""
 
-    URL = "https://practicesoftwaretesting.com/checkout"
+    URL = f"{SITE_URL}/checkout"
 
     def __init__(self, page: Page):
         self.page = page

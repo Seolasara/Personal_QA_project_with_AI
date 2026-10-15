@@ -20,6 +20,8 @@ pytest -m tc        # TC 연결된 테스트만
 pytest -m "not spec_undefined"   # /test-run 전체 실행 기준
 pytest tests/payment_test.py -k checkout
 ```
+- 대상 환경: 기본은 운영 사이트다. 로컬 Toolshop(결함 주입 측정 등)에 돌릴 때만 스크립트를 고치지 않고 환경변수로 주소를 바꾼다. API 테스트는 `API_BASE_URL`(`api-demo/config.py`).
+  - `TOOLSHOP_SITE_URL=http://localhost:4200 TOOLSHOP_API_URL=http://localhost:8091 pytest --base-url http://localhost:4200`
 - 실패 시 `test-results/`에 trace(zip)/스크린샷.
 - 머신리더블: `test-results/report.json`. 사람용: `test-results/report.html`,
   `python3 ../scripts/gen_test_report.py --type ui` → `test-results/test-report.md`.

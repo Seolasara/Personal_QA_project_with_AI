@@ -4,11 +4,11 @@ from pathlib import Path
 import pytest
 from playwright.sync_api import expect
 
-from config import TOOLSHOP_EMAIL, TOOLSHOP_PASSWORD
+from config import SITE_URL, TOOLSHOP_EMAIL, TOOLSHOP_PASSWORD
 from pages.catalog_page import CatalogPage, ProductDetailPage
 from pages.login_page import LoginPage
 
-HOME_URL = "https://practicesoftwaretesting.com"
+HOME_URL = SITE_URL
 SNAPSHOT_DIR = Path(__file__).parent / "test-results" / "dom-snapshots"
 
 

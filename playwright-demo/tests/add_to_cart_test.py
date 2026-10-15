@@ -6,6 +6,7 @@ from playwright.sync_api import expect
 from pages.catalog_page import CartPage, CatalogPage, ProductDetailPage, to_amount
 from pages.login_page import LoginPage
 from pages.payment_page import PaymentPage
+from config import SITE_URL
 
 
 @pytest.mark.tc("UI_24")
@@ -292,7 +293,7 @@ def test_cart_continue_shopping_goes_home(cart):
     cart_page.continue_shopping.click()
 
     # 2. 메인 페이지 정상 이동
-    expect(cart).to_have_url("https://practicesoftwaretesting.com/")
+    expect(cart).to_have_url(f"{SITE_URL}/")
     expect(home.listed_names.first).to_be_visible()
 
 
@@ -308,12 +309,12 @@ def test_cart_kept_after_logout(cart):
     product_name = cart_page.product_titles.first.inner_text().strip()
 
     # 1. 메인 페이지 헤더 유저 이름 클릭
-    cart.goto("https://practicesoftwaretesting.com/")
+    cart.goto(f"{SITE_URL}/")
     header.header_user_menu.click()
 
     # 2. [Sign out] → 메인 페이지로 리다이렉팅, 헤더에 [Sign in] 노출
     header.header_sign_out.click()
-    expect(cart).to_have_url("https://practicesoftwaretesting.com/")
+    expect(cart).to_have_url(f"{SITE_URL}/")
     expect(header.header_sign_in).to_be_visible()
 
     # 3. 헤더 장바구니 아이콘 배지에 "1" 노출

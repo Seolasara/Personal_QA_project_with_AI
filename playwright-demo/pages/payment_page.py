@@ -1,4 +1,5 @@
 from playwright.sync_api import Page, Response, expect
+from config import API_URL
 
 
 class PaymentPage:
@@ -181,7 +182,7 @@ class PaymentPage:
     def submit_signin(self) -> None:
         self.signin_login_button.click()
 
-    API_URL = "https://api.practicesoftwaretesting.com"
+    API_URL = API_URL
 
     def open_address_step(self) -> None:
         """Sign in 단계 [Proceed to checkout]을 누르고 Billing Address 제목이 보일 때까지 기다린다."""

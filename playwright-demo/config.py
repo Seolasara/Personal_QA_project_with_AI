@@ -34,3 +34,8 @@ def _require(name: str) -> str:
 
 TOOLSHOP_EMAIL = _require("TOOLSHOP_EMAIL")
 TOOLSHOP_PASSWORD = _require("TOOLSHOP_PASSWORD")
+
+# 테스트 대상 주소. 기본값은 운영 사이트이고, 결함 주입 측정처럼 로컬 Toolshop을 대상으로 할 때만 바꾼다(2026-10-16).
+#   TOOLSHOP_SITE_URL=http://localhost:4200 TOOLSHOP_API_URL=http://localhost:8091 pytest ...
+SITE_URL = os.environ.get("TOOLSHOP_SITE_URL", "https://practicesoftwaretesting.com").rstrip("/")
+API_URL = os.environ.get("TOOLSHOP_API_URL", "https://api.practicesoftwaretesting.com").rstrip("/")

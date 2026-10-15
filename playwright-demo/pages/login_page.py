@@ -1,16 +1,18 @@
 from playwright.sync_api import Page
 
+from config import SITE_URL
+
 
 class LoginPage:
     """로그인 페이지 (`/auth/login`)."""
 
-    LOGIN_URL = "https://practicesoftwaretesting.com/auth/login"
-    ACCOUNT_URL = "https://practicesoftwaretesting.com/account"
-    # 로그인 API 요청 감시용 URL 패턴 (api.practicesoftwaretesting.com/users/login)
+    LOGIN_URL = f"{SITE_URL}/auth/login"
+    ACCOUNT_URL = f"{SITE_URL}/account"
+    # 로그인 API 요청 감시용 URL 패턴 (<API 주소>/users/login)
     LOGIN_API_PATTERN = "**/users/login"
-    HOME_URL = "https://practicesoftwaretesting.com/"
-    FORGOT_PASSWORD_URL = "https://practicesoftwaretesting.com/auth/forgot-password"
-    REGISTER_URL = "https://practicesoftwaretesting.com/auth/register"
+    HOME_URL = f"{SITE_URL}/"
+    FORGOT_PASSWORD_URL = f"{SITE_URL}/auth/forgot-password"
+    REGISTER_URL = f"{SITE_URL}/auth/register"
 
     def __init__(self, page: Page):
         self.page = page
