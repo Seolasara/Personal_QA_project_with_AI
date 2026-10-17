@@ -22,6 +22,8 @@ pytest tests/payment_test.py -k checkout
 ```
 - 대상 환경: 기본은 운영 사이트다. 로컬 Toolshop(결함 주입 측정 등)에 돌릴 때만 스크립트를 고치지 않고 환경변수로 주소를 바꾼다. API 테스트는 `API_BASE_URL`(`api-demo/config.py`).
   - `TOOLSHOP_SITE_URL=http://localhost:4200 TOOLSHOP_API_URL=http://localhost:8091 pytest --base-url http://localhost:4200`
+  - 로컬 초기화는 `local/reset.sh`, 운영에서 만들 수 없는 조건 데이터(ex: 품절 상품)는 `local/seed_data.py`. 테스트 데이터 생성은 로컬에서만 한다(운영 상품은 만들거나 지우지 않는다, 2026-10-17 사용자 결정).
+- 마커 목록과 실행 영향: `.claude/docs/glossary.md` 5번
 - 실패 시 `test-results/`에 trace(zip)/스크린샷.
 - 머신리더블: `test-results/report.json`. 사람용: `test-results/report.html`,
   `python3 ../scripts/gen_test_report.py --type ui` → `test-results/test-report.md`.
