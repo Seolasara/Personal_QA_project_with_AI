@@ -229,7 +229,7 @@ def test_cart_header_icon_and_badge_after_add(guest_catalog):
 
     # 2. 메인 > 상품 상세 페이지
     catalog.filter_by_category("Hammer")
-    catalog.open_first_product()
+    catalog.open_first_in_stock_product()
     detail = ProductDetailPage(catalog.page)
 
     # 3. [Add to cart] 클릭 → "Product added to shopping cart." 토스트 노출
@@ -323,3 +323,21 @@ def test_cart_kept_after_logout(cart):
     # 4. 헤더 장바구니 아이콘 클릭 → 로그아웃 전 담은 상품 노출
     home.open_cart_loaded()
     expect(cart_page.row(product_name)).to_have_count(1)
+
+
+@pytest.mark.tc("UI_96")
+@pytest.mark.live_ui
+def test_cart_continue_shopping_and_proceed_texts(guest_cart):
+    cart_page = CartPage(guest_cart)
+    payment = PaymentPage(guest_cart)
+
+    # 1. 장바구니 페이지 정상 이동
+    expect(guest_cart).to_have_url(CartPage.URL)
+    expect(cart_page.rows).not_to_have_count(0)
+
+    # 2-1. [Continue Shopping] 버튼 노출
+    expect(cart_page.continue_shopping).to_be_visible()
+    expect(cart_page.continue_shopping).to_have_text("Continue Shopping")
+    # 2-2. [Proceed to checkout] 버튼 노출
+    expect(payment.proceed_from_cart).to_be_visible()
+    expect(payment.proceed_from_cart).to_have_text("Proceed to checkout")

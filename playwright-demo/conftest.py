@@ -127,10 +127,15 @@ def guest_catalog(page) -> CatalogPage:
 
 @pytest.fixture
 def product_detail(catalog) -> ProductDetailPage:
-    """Hammer 카테고리 첫 상품의 상세 페이지까지 진입한 상태."""
+    """Hammer 카테고리에서 재고 있는 첫 상품의 상세 페이지까지 진입한 상태.
+
+    TC 사전 조건은 "재고 있는 상품"이라 품절 상품은 건너뛴다(카테고리 첫 상품이 품절일 수 있음, 2026-10-17).
+    """
     catalog.filter_by_category("Hammer")
-    catalog.open_first_product()
-    return ProductDetailPage(catalog.page)
+    catalog.open_first_in_stock_product()
+    detail = ProductDetailPage(catalog.page)
+    expect(detail.add_to_cart, "사전 조건 불충족(env): [Add to cart] 비활성").to_be_enabled()
+    return detail
 
 
 @pytest.fixture
@@ -152,15 +157,16 @@ def cart_ready(product_detail):
 
 @pytest.fixture
 def cart_two_items(catalog):
-    """서로 다른 상품 2종(Hammer, Pliers 카테고리 첫 상품)을 담고 장바구니 페이지로 이동한 상태의 page.
+    """서로 다른 상품 2종(Hammer, Pliers 카테고리에서 재고 있는 첫 상품)을 담고 장바구니 페이지로 이동한 상태의 page.
 
     장바구니는 브라우저 context의 sessionStorage(cart_id)에 묶여 테스트마다 새로 시작하므로 cleanup은 두지 않는다.
     """
     for category in ("Hammer", "Pliers"):
         catalog.open()
         catalog.filter_by_category(category)
-        catalog.open_first_product()
+        catalog.open_first_in_stock_product()
         detail = ProductDetailPage(catalog.page)
+        expect(detail.add_to_cart, "사전 조건 불충족(env): [Add to cart] 비활성").to_be_enabled()
         detail.add()
         expect(detail.added_toast).to_be_visible()
     catalog.open_cart_loaded()
@@ -177,14 +183,14 @@ def cart(product_detail):
 
 @pytest.fixture
 def guest_product_detail(guest_catalog) -> ProductDetailPage:
-    """비로그인 상태로 Hammer 카테고리 첫 상품의 상세 페이지까지 진입한 상태.
+    """비로그인 상태로 Hammer 카테고리에서 재고 있는 첫 상품의 상세 페이지까지 진입한 상태.
 
     로그인이 필요 없는 상세 화면 TC(UI_54~UI_58, UI_60)용. 계정 잠금과 무관하게 동작한다.
     """
     guest_catalog.check_category("Hammer")
-    guest_catalog.open_first_product()
+    guest_catalog.open_first_in_stock_product()
     detail = ProductDetailPage(guest_catalog.page)
-    expect(detail.add_to_cart).to_be_visible()
+    expect(detail.add_to_cart, "사전 조건 불충족(env): [Add to cart] 비활성").to_be_enabled()
     return detail
 
 
@@ -198,3 +204,17 @@ def guest_cart(guest_product_detail):
     expect(guest_product_detail.added_toast).to_be_visible()
     guest_product_detail.open_cart_loaded()
     return guest_product_detail.page
+
+
+@pytest.fixture
+def favorite_ready(product_detail):
+    """로그인 상태로 Hammer 카테고리에서 재고 있는 첫 상품의 상세에 진입하고, 그 상품이 즐겨찾기 목록에 없는 상태 (UI_101).
+
+    사전 조건: 이미 즐겨찾기에 있으면 API 로 먼저 지운다.
+    cleanup: 테스트가 추가한 즐겨찾기를 API 로 지운다.
+    """
+    expect(product_detail.add_to_favorites).to_be_visible()
+    product_detail.remove_favorites_of_current_product()
+    assert not product_detail.favorite_ids_of_current_product(), "사전 조건 불충족: 상품이 즐겨찾기 목록에 남아 있음"
+    yield product_detail
+    product_detail.remove_favorites_of_current_product()

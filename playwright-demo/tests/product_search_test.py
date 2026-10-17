@@ -53,10 +53,16 @@ def test_product_price_slider_max(guest_catalog):
     expect(catalog.price_min_label).to_have_text("1")
     expect(catalog.price_max_label).to_have_text("100")
 
-    catalog.lower_max_price(presses=2)
+    # 범위 밖 상품이 빠지는지 보려면, 조정 전 목록에 새 최대값보다 비싼 상품이 있어야 한다.
+    # 조정 전 첫 페이지 최고가보다 최대값이 낮아질 때까지 핸들을 내린다(가격은 고정값으로 쓰지 않는다).
+    initial_prices = catalog.listed_product_prices()
+    assert initial_prices, "조정 전 상품 리스트가 비어 있음"
+    highest_before = max(initial_prices)
+    catalog.lower_max_price_below(highest_before)
     # 2. 가격 슬라이더 최대값이 이동한 값으로 노출
     moved_max = catalog.price_max_handle.get_attribute("aria-valuenow")
     assert int(moved_max) < 100, f"최대값 핸들이 기본값보다 낮아지지 않음: {moved_max}"
+    assert int(moved_max) < highest_before, f"조정 전 최고가 {highest_before} 보다 최대값이 낮지 않음: {moved_max}"
     expect(catalog.price_max_label).to_have_text(moved_max)
 
     # 3. 상품 리스트의 모든 상품 가격이 화면에 표시된 범위 내 금액으로 노출
