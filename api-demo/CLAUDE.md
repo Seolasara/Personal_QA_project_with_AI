@@ -28,6 +28,7 @@ pytest -m "not spec_undefined"   # /test-run 전체 실행 기준
 - 의존성은 `requirements.txt`, venv는 `api-demo/.venv` (playwright-demo와 별도).
 - 컨테이너 실행: 루트 `Dockerfile`의 이미지 `qa-tests`. 명령은 `.claude/skills/test-run/SKILL.md` 3번(Iteration 3부터 기본).
 - 결과 리포트: `python3 ../scripts/gen_test_report.py --type api` → `test-results/test-report.md`.
+- 마커 목록과 실행 영향: `.claude/docs/glossary.md` 5번
 - CI: `.github/workflows/api-regression.yml`(GitHub Actions → API regression → [Run workflow]). 범위는 `regression`(회귀 TC)과 `full`. 계정은 저장소 Secrets(`API_EMAIL`, `API_PASSWORD`, `API_EMAIL2`, `API_PASSWORD2`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`)로 주입하고, 결과는 아티팩트(30일)와 Slack 요약으로 남는다.
 - 재시도와 격리
   - `pytest.ini`의 `--reruns=2 --only-rerun`이 `ConnectTimeout`, `ConnectError`(요청이 서버에 닿지 않은 경우)만 다시 실행한다. `ReadTimeout`은 쓰기 요청이 처리됐을 수 있어 재시도하지 않는다.

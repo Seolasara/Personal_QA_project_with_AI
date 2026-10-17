@@ -45,12 +45,16 @@ model: opus
 - 같은 조건에서 앱 동작이 달라지면 간헐 결함(real-bug)이다. 등급과 추적은 `.claude/guides/issue-severity.md`의 간헐 결함 규칙을 따른다.
 - 테스트 코드가 명백히 틀렸으면 test-bug가 우선이다.
 - API 응답이 스펙과 다르면 real-bug 또는 spec-change다. real-bug로 정하기 전에 헤더 같은 클라이언트 설정부터 의심한다.
+- `live_ui` 마커 테스트(라이브 UI 표기 기준)가 문구나 이동이 달라 실패하면 real-bug(low)로 두고 리포트 그룹을 "안건"으로 적는다(백로그 #28). 의도된 디자인 변경으로 확인되면 spec-change처럼 TC와 흐름 지도를 고친다.
 - 스펙이 동작이나 기대결과를 정의하지 않았으면(스펙 미정의) 분류는 real-bug(low)로 두고 리포트 그룹을 "안건"으로 적는다. 스펙이 값을 정했는데 라이브가 다르면(스펙 불일치) real-bug다(`.claude/guides/backlog-format.md` 3번).
 
 재실행
 - 원인을 가리는 데 필요하면 1회만 한다.
 - 재실행하지 않는 것: 로그인 실패 TC(계정 잠금 위험)
 - 승인 후 재실행하는 것: 결제 확정 TC(지울 수 없는 인보이스 생성). trace로 먼저 판단한다.
+
+먼저 의심할 알려진 원인(관찰 대기)
+- Billing 단계 입력 직후 우편번호 조회 응답 대기 시간 초과(UI_34~37, UI_86~89): 계정 주소 자동 채움이 늦게 와서 입력한 Country, Postcode, House number를 덮어썼을 수 있다(timing). trace에서 Billing 진입 뒤 `GET /users/me` 응답과 입력 시각을 비교한다. 같은 원인을 UI_33에서 확인하고 고친 기록과 수리 방향은 `.claude/docs/fault-injection/repair-report.md`에 있다(2026-10-17, 이 TC들에서는 아직 관찰되지 않음).
 
 원인 태그(선택): `contract`(스펙과 구조 다름), `auth`(401/403/잠금), `data`(데이터 의존), `header`(요청 헤더 문제)
 

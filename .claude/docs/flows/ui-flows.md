@@ -22,6 +22,7 @@
 - 주요 요소
   - 헤더: [Home], [Categories], [Contact], [Sign in] 또는 사용자명, 언어 [EN]
   - 왼쪽: Sort 드롭다운(Name (A - Z) 등), Price Range, Search 입력과 [Search], [X](검색 초기화), 카테고리·브랜드 필터, Eco-friendly 필터
+  - 왼쪽 영역 제목(h4, 2026-10-17 확인): "Sort", "Price Range", "Search", "Filters", "By category:", "By brand:", "Sustainability:". 검색 버튼 [Search]
   - 상품 카드: 이름, 가격, [Compare], 품절이면 "Out of stock"
   - 페이지 이동: [«], [»], 페이지 번호
 - 다음 화면: 상품 카드 → 상품 상세 / 장바구니 아이콘 → 체크아웃 1단계 / [Sign in] → 로그인

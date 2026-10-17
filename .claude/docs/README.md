@@ -49,6 +49,8 @@
    - `tc_marker_check.py`: 테스트 마커와 시트 CSV의 ID 대조
    - `repair_guard.py`: 수리 diff에서 어설션 감소, skip/xfail, 고정 대기 추가와 기대값 변경을 점검(`/test-repair`)
    - `tc_lint.py`: TC 초안(JSON 또는 CSV)을 `.claude/skills/tc-write/SKILL.md`의 서식 규칙으로 점검
+   - 로컬 Toolshop 도구(`local/`, 네트워크·docker를 쓰므로 `scripts/`와 분리): `reset.sh`(로컬 DB 초기화, 캐시 비우기, 응답 확인), `seed_data.py`(운영에서 만들 수 없는 조건 데이터 생성, ex: 품절 상품)
+   - `tc_overlap.py`: 새 TC 초안과 기존 TC(시트 CSV)의 겹침 후보를 버튼 이름과 따옴표 문구로 뽑음
    - `sheet_diff.py`: 시트 쓰기 전후 CSV를 비교해 의도하지 않은 변경을 찾음
    - `backlog_index.py`: 백로그 항목 파일에서 `00_index.md` 목록을 다시 만듦
    - `spec_split.py`: 업스트림 `v5.md`를 `.claude/docs/specs/v5/` 기능별 파일로 나눔
@@ -60,7 +62,7 @@
    - 새 스프레드시트 파일(TC 탭 하나)과 Jira 에픽을 만들고, `scripts/` 점검 스크립트를 확장할지 확인한다.
    - 루트 `CLAUDE.md`는 "규칙 문서와 폴더"의 테스트 종류 목록만 갱신한다.
 10. 테스트 표시와 결과 집계 용어가 헷갈릴 때
-   - `.claude/docs/glossary.md`: xfail, XPASS, issue 마커, Blocked, N/A의 정의와 결함 하나의 흐름
+   - `.claude/docs/glossary.md`: xfail, XPASS, issue 마커, Blocked, N/A의 정의와 결함 하나의 흐름, pytest 마커 전체 표(5번)
 11. MCP 서버의 등록 위치와 용도가 궁금할 때
    - `.claude/docs/mcp-servers.md`: 서버별 등록 위치, 에이전트별 사용처, 알려진 제약
 12. 파이프라인 전체 설계가 필요할 때
