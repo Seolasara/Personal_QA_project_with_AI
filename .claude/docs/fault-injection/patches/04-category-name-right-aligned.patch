@@ -1,0 +1,13 @@
+diff --git a/sprint5/UI/src/app/products/category/category.component.html b/sprint5/UI/src/app/products/category/category.component.html
+index 642c35f..17fc442 100644
+--- a/sprint5/UI/src/app/products/category/category.component.html
++++ b/sprint5/UI/src/app/products/category/category.component.html
+@@ -110,7 +110,7 @@
+               </button>
+             </div>
+             <div class="card-body">
+-              <h5 data-test="product-name" class="card-title">
++              <h5 data-test="product-name" class="card-title" [class.text-end]="$index % 3 === 0">
+                 {{ item.name }}
+               </h5>
+               @if (item.co2_rating && isCo2ScaleEnabled()) {

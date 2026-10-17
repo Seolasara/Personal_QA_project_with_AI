@@ -1,0 +1,13 @@
+diff --git a/sprint5/UI/src/app/products/overview/overview.component.html b/sprint5/UI/src/app/products/overview/overview.component.html
+index 4329395..d24bf23 100644
+--- a/sprint5/UI/src/app/products/overview/overview.component.html
++++ b/sprint5/UI/src/app/products/overview/overview.component.html
+@@ -71,7 +71,7 @@
+         <button (click)="reset()" class="btn btn-warning" type="reset"
+                 data-test="search-reset">X
+         </button>
+-        <button class="btn btn-secondary" type="submit" data-test="search-submit">{{ t('pages.overview.search') }}
++        <button class="btn btn-secondary" type="submit" data-test="search-submit">Serch
+         </button>
+       </div>
+     </form>

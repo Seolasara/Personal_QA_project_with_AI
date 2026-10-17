@@ -1,0 +1,22 @@
+diff --git a/sprint5/UI/src/app/products/detail/detail.component.html b/sprint5/UI/src/app/products/detail/detail.component.html
+index 86fe34d..238af59 100644
+--- a/sprint5/UI/src/app/products/detail/detail.component.html
++++ b/sprint5/UI/src/app/products/detail/detail.component.html
+@@ -69,7 +69,7 @@
+         <div class="input-group quantity">
+           <!-- Button to decrease quantity -->
+           <button [disabled]="!product.in_stock" class="btn btn-secondary" data-test="decrease-quantity"
+-                  id="btn-decrease-quantity" (click)="minus()" attr.aria-label="{{ t('pages.product-detail.decrease-quantity') }}"><fa-icon [icon]="['fas', 'minus']"></fa-icon>
++                  id="btn-decrease-quantity" (click)="0" attr.aria-label="{{ t('pages.product-detail.decrease-quantity') }}"><fa-icon [icon]="['fas', 'minus']"></fa-icon>
+           </button>
+           <!-- Quantity input field with associated label -->
+           <!-- Label for the input, visually hidden but accessible to screen readers -->
+@@ -78,7 +78,7 @@
+                  [(ngModel)]="quantity" (input)="validateQuantity($event)" id="quantity-input" attr.aria-labelledby="{{ t('pages.product-detail.quantity') }}">
+           <!-- Button to increase quantity -->
+           <button [disabled]="!product.in_stock" class="btn btn-secondary" data-test="increase-quantity"
+-                  id="btn-increase-quantity" (click)="plus()" attr.aria-label="{{ t('pages.product-detail.increase-quantity') }}"><fa-icon [icon]="['fas', 'plus']"></fa-icon>
++                  id="btn-increase-quantity" (click)="0" attr.aria-label="{{ t('pages.product-detail.increase-quantity') }}"><fa-icon [icon]="['fas', 'plus']"></fa-icon>
+           </button>
+         </div>
+       }

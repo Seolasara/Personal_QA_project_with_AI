@@ -1,0 +1,13 @@
+diff --git a/sprint5/UI/src/app/header/header.component.html b/sprint5/UI/src/app/header/header.component.html
+index 9e733ca..536f20f 100644
+--- a/sprint5/UI/src/app/header/header.component.html
++++ b/sprint5/UI/src/app/header/header.component.html
+@@ -85,7 +85,7 @@
+           <ul class="dropdown-menu" aria-label="nav-categories">
+             <li><a class="dropdown-item" data-test="nav-hand-tools" routerLink="/category/hand-tools">{{ t('header.menu.hand-tools') }}</a>
+             </li>
+-            <li><a class="dropdown-item" data-test="nav-power-tools" routerLink="/category/power-tools">{{ t('header.menu.power-tools') }}</a>
++            <li><a class="dropdown-item" data-test="nav-power-tools" routerLink="/category/power-toolz">{{ t('header.menu.power-tools') }}</a>
+             </li>
+             <li><a class="dropdown-item" data-test="nav-other" routerLink="/category/other">{{ t('header.menu.other') }}</a>
+             </li>

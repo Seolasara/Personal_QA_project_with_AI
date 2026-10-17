@@ -1,0 +1,15 @@
+diff --git a/sprint5/UI/src/app/auth/login/login.component.ts b/sprint5/UI/src/app/auth/login/login.component.ts
+index 45b3487..e6fca5b 100644
+--- a/sprint5/UI/src/app/auth/login/login.component.ts
++++ b/sprint5/UI/src/app/auth/login/login.component.ts
+@@ -59,8 +59,8 @@ export class LoginComponent implements OnInit {
+     }
+ 
+     this.form = this.formBuilder.group({
+-      email: ['', [Validators.required, Validators.email]],
+-      password: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(40)]],
++      email: ['', []],
++      password: ['', []],
+       totp: ['']
+     });
+   }

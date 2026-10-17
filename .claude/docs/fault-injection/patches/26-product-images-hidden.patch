@@ -1,0 +1,13 @@
+diff --git a/sprint5/UI/src/app/products/overview/overview.component.html b/sprint5/UI/src/app/products/overview/overview.component.html
+index 4329395..670a43c 100644
+--- a/sprint5/UI/src/app/products/overview/overview.component.html
++++ b/sprint5/UI/src/app/products/overview/overview.component.html
+@@ -171,7 +171,7 @@
+           <a attr.data-test="product-{{item.id}}" routerLink="/product/{{item.id}}"
+              class="card" style="text-decoration: none; color: black;">
+             <div class="card-img-wrapper position-relative">
+-              <img class="card-img-top" alt="{{ item.name }}"
++              <img class="card-img-top" alt="{{ item.name }}" [class.d-none]="$index % 4 === 1"
+                    loading="lazy"
+                    src="assets/img/products/{{item.product_image.file_name}}">
+               @if (item.is_eco_friendly && isEcoBadgeEnabled()) {

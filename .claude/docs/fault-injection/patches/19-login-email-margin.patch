@@ -1,0 +1,13 @@
+diff --git a/sprint5/UI/src/app/auth/login/login.component.html b/sprint5/UI/src/app/auth/login/login.component.html
+index 963f391..0685730 100644
+--- a/sprint5/UI/src/app/auth/login/login.component.html
++++ b/sprint5/UI/src/app/auth/login/login.component.html
+@@ -24,7 +24,7 @@
+             <input formControlName="email"
+                    class="form-control"
+                    id="email"
+-                   data-test="email"
++                   data-test="email" style="margin-left:40px"
+                    [ngClass]="{ 'is-invalid': submitted && cf['email'].errors }" type="email"
+                    placeholder="{{ t('fields.email.placeholder') }}"
+                    aria-required="true"

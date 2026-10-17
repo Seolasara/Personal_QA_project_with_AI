@@ -1,0 +1,13 @@
+diff --git a/sprint5/UI/src/app/_services/product.service.ts b/sprint5/UI/src/app/_services/product.service.ts
+index 7281b57..b7f4551 100644
+--- a/sprint5/UI/src/app/_services/product.service.ts
++++ b/sprint5/UI/src/app/_services/product.service.ts
+@@ -26,7 +26,7 @@ export class ProductService {
+ 
+     if (searchQuery) criteria['q'] = searchQuery;
+     if (sorting) criteria['sort'] = sorting;
+-    if (minPrice && maxPrice) criteria['between'] = `price,${minPrice},${maxPrice}`;
++    if (minPrice && maxPrice) criteria['between'] = `price,${minPrice},100`;
+     if (categoryIds) criteria['by_category'] = categoryIds;
+     if (brandIds) criteria['by_brand'] = brandIds;
+     if (ecoFriendly) criteria['eco_friendly'] = 'true';

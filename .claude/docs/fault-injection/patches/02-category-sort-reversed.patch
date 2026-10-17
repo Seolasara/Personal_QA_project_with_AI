@@ -1,0 +1,13 @@
+diff --git a/sprint5/UI/src/app/products/category/category.component.ts b/sprint5/UI/src/app/products/category/category.component.ts
+index a1746e7..6e16fd2 100644
+--- a/sprint5/UI/src/app/products/category/category.component.ts
++++ b/sprint5/UI/src/app/products/category/category.component.ts
+@@ -188,7 +188,7 @@ export class CategoryComponent implements OnInit, OnDestroy {
+   }
+ 
+   changeSorting(event: Event) {
+-    this.sorting = (event.target as HTMLSelectElement).value;
++    this.sorting = (event.target as HTMLSelectElement).value.replace(/asc|desc/, m => m === 'asc' ? 'desc' : 'asc');
+ 
+     this.resultState = 'sorting_started';
+     this.productService.getProductsByCategoryAndBrand(this.categoriesFilter.toString(), this.brandsFilter.toString(), this.sorting, this.slug, this.ecoFriendlyFilter, this.buildSpecFilterString()).subscribe(res => {
