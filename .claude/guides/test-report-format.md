@@ -29,14 +29,17 @@
      - Tester: 사라(AI QA 리더), 검토자
      - Comment: 순서대로 쓴다.
        1. `총 N건의 케이스 중 Pass N건, Fail N건, Blocked N건입니다.` N/A 건수는 Test Result 표에만 쓴다(2026-10-12 사용자 수정본). Blocked가 0이면 뺀다.
-       2. `주요 Fail 유형은 <유형>, <유형>, <유형>입니다.` 한 줄. 괄호로 예시를 덧붙이지 않는다(가독성). ex: `주요 Fail 유형은 스펙과 다른 화면 문구와 누락된 화면 요소, 입력값 처리 차이입니다.`
-       3. `Fail N건은 Jira에 이슈로 등록하였으며, 자세한 내용은 아래 대시보드에서 확인 가능합니다.`
+       2. 실패 상황(2026-10-17 사용자 수정본, UI Iteration 1 기준): `실패 상황` 불릿 아래에 요약 한 문장을 쓰고, 그 아래에 이슈 키마다 한 줄씩 쓴다.
+          - 요약: `<기능>, <기능> 파트에서 사양과 기대결과가 일치하지 않는 케이스가 총 N건 발견되었고, 모두 이슈로 등록한 상태입니다.`
+          - 키별 한 줄: `<키>: <기능>에서 <짧은 증상>`. 한 이슈에 TC가 여럿이면 끝에 `(N건)`을 붙인다. ex: `QA-11: 상품 조회 및 장바구니에서 수량 100 이상 보정 실패 (2건)`
+       3. 전체 영향 요약 한 줄(ex: 핵심 흐름을 막는 결함이 있는지)과 `이슈에 대한 자세한 사항은 아래 BTS Status에서 확인 가능합니다.`
        4. 사인오프 기준 항목별 값(해당 종류 QA plan(UI 65702, API 5996545)의 사인오프 기준). 항목은 `실행률`, `Priority High TC 통과율`, `Priority Medium/Low TC 통과율`(API) 또는 `통과율`(UI), `미해결 High 결함`이고, High/Medium/Low 글자에 색 강조(High `#ffd5d2`, Medium `#f8e6a0`, Low `#b3d4ff`)를 넣는다. 미달이 있으면 `, 기준 미달`을 붙인다.
        5. 다음 Iteration 계획
-       - 특이사항이 있으면 2~3번 자리에 쓴다. Blocked가 있으면 Blocked 사유를, flaky(env)가 있으면 어떤 TC가 왜 실패했고 재실행 결과와 Jira 미등록 사유를 쓴다. 건수 문장에는 Blocked도 넣는다.
+       - 특이사항이 있으면 3번 앞에 쓴다. Blocked가 있으면 Blocked 사유를, flaky(env)가 있으면 어떤 TC가 왜 실패했고 재실행 결과와 Jira 미등록 사유를 쓴다. 건수 문장에는 Blocked도 넣는다.
 2. Test Scope
    - 대상 기능 칸 아래 불릿으로 TC 대상을 쓴다(ex: `전체 TC 대상`, `회귀 TC 대상 (Smoke, High priority, 이슈 영향 범위, 실패 이력 케이스)`). 제외 칸은 `N/A: ...`, `Blocked: ...` 불릿으로 쓴다.
    - 2열 표(왼쪽 머리글 셀) 세 행으로 쓴다: 대상 기능(대분류), 제외(스펙에 정확한 기대결과가 없는 TC는 N/A로 제외), 범위 밖. 건수와 TC ID는 쓰지 않는다.
+   - Iteration 3(Regression)은 대상 기능 칸에 회귀 범위를 무엇을 기준으로 잡았는지와 그렇게 고른 TC 수를 쓴다. 기준은 smoke, 중요도 High, Jira 결함이 걸린 기능, Iteration 1·2 실패 이력, 간헐 후보다(2026-10-17 사용자 결정).
 3. Test Result
    - 표 한 줄: Total, Pass, Fail, N/A, Blocked, Pass Rate. 단위는 TC다(파라미터로 나뉜 테스트는 모두 통과해야 그 TC가 Pass).
      - Total: 시트 TC 수
@@ -48,13 +51,13 @@
 4. BTS Status
    - 새로 등록한 이슈가 없으면 `0건` 불릿 하나를 쓴다.
    - Jira 실시간 목록(jira 매크로)만 둔다. JQL은 매크로 안에만 두고 본문에 적지 않는다. 다른 표나 설명을 두지 않는다.
-     - 이번 실행에서 등록한 이슈: `project = QA AND type = 버그 AND labels = <ui|api> AND created >= "<실행 날짜>" ORDER BY priority DESC` 새로 등록한 이슈가 없으면 목록 대신 `이번 실행에서 새로 등록한 이슈는 없습니다.` 한 줄을 쓴다.
+     - 이번 실행에서 등록한 이슈: `project = QA AND type = 버그 AND key in (<이번 실행에서 등록한 키>) ORDER BY priority DESC`. 등록 날짜로 거르면 이전·이후 실행의 이슈가 섞여서 키로 고정한다(2026-10-17). 사인오프 보고서는 전체 Iteration에서 등록한 키를 넣는다. 새로 등록한 이슈가 없으면 목록 대신 `이번 실행에서 새로 등록한 이슈는 없습니다.` 한 줄을 쓴다.
      - Total remaining issues: `project = QA AND type = 버그 AND labels = <ui|api> AND statusCategory != Done ORDER BY priority DESC`
      - Known Issues: 개발이나 PM이 서비스 이용에 영향이 거의 없다고 답해 수정하지 않기로 한 이슈만 넣는다. 해당 이슈에 Jira 레이블 `known-issue`를 붙이고, 목록은 `project = QA AND type = 버그 AND labels = <ui|api> AND labels = known-issue ORDER BY priority DESC`로 둔다(해당 이슈가 없으면 빈 목록).
 
 ## 3. 사인오프용 최종 보고서 (2026-10-13, 사용자 수정본 기준)
 - Summary 표 맨 위 행을 `Test Result | PASS`(또는 FAIL)로 두고, Test Period는 `Iteration 1 ~ 3` 기간을 쓴다.
-- Comment: 건수 문장 → Iteration별 경과 한 줄씩 → Blocked(known issue 사인오프 예외)와 N/A(안건 관리) 설명 → 사인오프 기준 항목별 값 → `위 Sign-off 기준을 모두 충족합니다.`
+- Comment: 건수 문장 → Iteration별 경과 한 줄씩 → 판단이 필요한 이슈(키 링크와 이유, ex: 스펙 의도 확인이 필요한 Medium 결함)와 `나머지 N건은 ~로 사용 흐름에 영향이 적어 보입니다.` → Blocked(known issue 사인오프 예외)와 N/A(안건 관리) 설명 → 핵심 흐름 영향 요약과 BTS Status 안내 → 사인오프 기준 항목별 값 → `위 Sign-off 기준을 모두 충족합니다.` (2026-10-17 사용자 수정본)
 - Test Scope의 대상 기능은 기능 목록만 쓴다.
 - Test Result 표는 TC별 최종 결과(마지막으로 실행한 결과)로 센다. 아래에 `Iteration별 결과` 불릿으로 Iteration마다 Pass/Fail/Blocked를 쓰고, Iteration 3은 회귀 TC 대상 설명을 하위 불릿으로 단다.
 - BTS Status는 `전체 Iteration에서 등록한 이슈 N건(...)` 한 줄이다.
