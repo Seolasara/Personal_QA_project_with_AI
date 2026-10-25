@@ -1,0 +1,13 @@
+diff --git a/sprint5/UI/src/app/products/detail/detail.component.html b/sprint5/UI/src/app/products/detail/detail.component.html
+index 86fe34d..9376906 100644
+--- a/sprint5/UI/src/app/products/detail/detail.component.html
++++ b/sprint5/UI/src/app/products/detail/detail.component.html
+@@ -96,7 +96,7 @@
+                 id="btn-add-to-cart" (click)="addToCart(product)">
+           <fa-icon [icon]="['fas', 'shopping-cart']" class="px-1"></fa-icon>{{ t('pages.product-detail.add-to-cart-btn') }}
+         </button>
+-        <button class="btn btn-warning"
++        <button class="btn btn-warning" style="margin-left:-80px"
+                 data-test="add-to-favorites" id="btn-add-to-favorites" (click)="addToFavorites(product)"><fa-icon [icon]="['fas', 'star']" class="px-1"></fa-icon> {{ t('pages.product-detail.add-to-favorites-btn') }}
+         </button>
+         <button class="btn"

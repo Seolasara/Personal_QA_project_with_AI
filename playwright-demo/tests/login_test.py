@@ -1,14 +1,14 @@
 import pytest
 from playwright.sync_api import expect
 
-from config import TOOLSHOP_EMAIL, TOOLSHOP_PASSWORD
+from config import SITE_URL, TOOLSHOP_EMAIL, TOOLSHOP_PASSWORD
 from pages.login_page import LoginPage
 
 
 @pytest.mark.tc("UI_01")
 @pytest.mark.smoke
 def test_landing_page(page):
-    page.goto("https://practicesoftwaretesting.com")
+    page.goto(SITE_URL)
     expect(page).to_have_title("Practice Software Testing - Toolshop - v5.0")
 
 
@@ -88,7 +88,7 @@ def test_password_length_invalid(login_page, blocked_login_requests):
 def test_login(login_page):
     login_page.login(TOOLSHOP_EMAIL, TOOLSHOP_PASSWORD)
 
-    expect(login_page.page).to_have_url("https://practicesoftwaretesting.com/account")
+    expect(login_page.page).to_have_url(f"{SITE_URL}/account")
     expect(login_page.page.get_by_role("heading", name="My account")).to_be_visible()
     expect(login_page.page.get_by_role("button", name="Jack Howe")).to_be_visible()
 
@@ -96,7 +96,7 @@ def test_login(login_page):
 @pytest.mark.tc("UI_08")
 def test_loggedin_home(loggedin_home):
     page = loggedin_home
-    expect(page).to_have_url("https://practicesoftwaretesting.com/")
+    expect(page).to_have_url(f"{SITE_URL}/")
     expect(page.get_by_role("button", name="Jack Howe")).to_be_visible()
 
 
@@ -215,3 +215,21 @@ def test_header_sign_in_opens_login_page(page):
 
     expect(page).to_have_url(LoginPage.LOGIN_URL)
     expect(login_page.heading).to_be_visible()
+
+
+@pytest.mark.tc("UI_94")
+@pytest.mark.live_ui
+def test_login_button_and_link_texts(login_page):
+    # 1. 로그인 페이지 정상 노출
+    expect(login_page.page).to_have_url(login_page.LOGIN_URL)
+    expect(login_page.form).to_be_visible()
+
+    # 2-1. [Login] 버튼 노출 (input submit 이라 표시 문구는 value)
+    expect(login_page.login_button).to_be_visible()
+    expect(login_page.login_button).to_have_value("Login")
+    # 2-2. [Register your account] 링크 노출
+    expect(login_page.register_link).to_be_visible()
+    expect(login_page.register_link).to_have_text("Register your account")
+    # 2-3. [Forgot your Password?] 링크 노출
+    expect(login_page.forgot_password_link).to_be_visible()
+    expect(login_page.forgot_password_link).to_have_text("Forgot your Password?")

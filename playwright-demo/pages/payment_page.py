@@ -1,4 +1,5 @@
 from playwright.sync_api import Page, Response, expect
+from config import API_URL
 
 
 class PaymentPage:
@@ -21,8 +22,9 @@ class PaymentPage:
         self.proceed_from_signin = page.locator('[data-test="proceed-2"]')
 
         # step 3: billing address (모든 필드 required)
+        # 제목이 바뀐 경우(ex: "Type Billing Address")를 놓치지 않게 정확 일치로 찾는다.
         self.address_heading = page.get_by_role(
-            "heading", name="Billing Address", level=3
+            "heading", name="Billing Address", level=3, exact=True
         )
         self.country = page.locator('[data-test="country"]')
         self.postcode = page.locator('[data-test="postal_code"]')
@@ -34,6 +36,9 @@ class PaymentPage:
 
         # step 4: payment
         self.payment_method = page.locator('[data-test="payment-method"]')
+        # 단계 제목 "Payment"(h3)는 data-test 가 없어 결제 단계 컴포넌트(app-payment) 안의 h3 을 쓴다 (UI_98, 2026-10-17 확인).
+        # 결제 단계는 aw-wizard-step 이 아니라 aw-wizard-completion-step 아래에 있다.
+        self.payment_heading = page.locator("app-payment h3")
         self.confirm = page.locator('[data-test="finish"]')
         self.success_message = page.locator('[data-test="payment-success-message"]')
         # 같은 finish 버튼이 첫 클릭 전에는 "Check payment", 결제 검증 성공 후에는 "Confirm" 라벨이 된다.
@@ -54,6 +59,45 @@ class PaymentPage:
         # 로그인 사용자는 저장된 주소가 비동기로 자동 채워진다(getDetails).
         # 그 전에 폼을 채우면 값이 덮어써지므로 네트워크가 잦아들 때까지 대기.
         self.page.wait_for_load_state("networkidle")
+
+    # --- 계정 주소 자동 채움을 비운 Billing 진입 (UI_33, UI_85, UI_90, UI_91) ------
+    # 사전 조건 "프로필에 주소를 등록하지 않은 상태"를 맞춘다. 테스트 계정은 주소가 등록되어 있고 따로 만들 수 없다.
+    # 화면은 체크아웃 진입 때와 Billing 단계 진입 때(아직 주소를 못 받았으면) GET /users/me 응답을
+    # 폼에 patchValue 한다. 응답이 입력보다 늦으면 입력한 Country, Postcode, House number 를 덮어쓰므로(2026-10-17 trace)
+    # 자동 채움이 끝난 것을 확인한 뒤에 비운다. 먼저 비우면 늦게 온 응답이 다시 채운다.
+    @property
+    def autofill_fields(self):
+        """자동 채움을 비우는 칸. Country 는 안내 옵션이 선택할 수 없는 옵션(disabled, hidden)이라 비울 수 없고,
+        계정 국가도 선택되지 않는다(백로그 #31, 2026-10-17 로컬 확인). 테스트가 첫 입력으로 국가를 고른다."""
+        return (self.street, self.city, self.state, self.postcode, self.house_number)
+
+    def _is_account_fetch(self, request) -> bool:
+        return "/users/me" in request.url and request.method == "GET"
+
+    def go_to_address_step_with_autofill_cleared(self) -> None:
+        """Billing Address 단계로 가서 계정 주소 자동 채움이 끝난 뒤 자동 채워진 칸을 모두 비운다."""
+        fetches = []
+
+        def _collect(request) -> None:
+            if self._is_account_fetch(request):
+                fetches.append(request)
+
+        self.page.on("request", _collect)
+        try:
+            self.proceed_from_signin.click()
+            expect(self.address_heading).to_be_visible()
+        finally:
+            self.page.remove_listener("request", _collect)
+        # Billing 진입 때 다시 조회했으면(운영 2026-10-17 확인) 그 응답 본문까지 기다린다.
+        # Response.finished()는 페이지가 닫힐 때 끝나지 않은 내부 대기를 남겨 teardown 로그 오류가 나서 body()를 쓴다.
+        for request in fetches:
+            response = request.response()
+            if response:
+                response.body()
+        # 체크아웃 진입 때 보낸 조회는 응답을 직접 볼 수 없어, 계정 Street 가 칸에 반영된 것으로 자동 채움 완료를 확인한다.
+        account_street = self.fetch_account()["address"]["street"]
+        expect(self.street).to_have_value(account_street, timeout=15000)
+        self.clear_fields(*self.autofill_fields)
 
     def go_to_payment_step(self) -> None:
         # 우편번호 자동조회(debounce 300ms) 등으로 유효성 재계산이 늦을 수 있음.
@@ -82,11 +126,14 @@ class PaymentPage:
             self.house_number.fill(house_number)
         return self._wait_lookup_applied(info.value)
 
-    def refill_postcode(self, postcode: str) -> dict:
-        """Postcode 만 다시 입력하고 우편번호 조회 응답(JSON)을 돌려준다."""
-        with self.page.expect_response(self._is_postcode_lookup) as info:
-            self.postcode.fill(postcode)
-        return self._wait_lookup_applied(info.value)
+    def refill_postcode(self, postcode: str) -> None:
+        """비운 Postcode 에 값을 다시 입력한다.
+
+        화면은 postal_code 를 debounceTime(300) + distinctUntilChanged 로 보고 조회하므로,
+        비운 직후 같은 값을 넣으면 조회 요청이 일어나지 않을 수 있다(2026-10-17 trace 확인).
+        조회 응답은 기다리지 않고, 호출하는 쪽에서 입력값과 버튼 상태를 기다린다.
+        """
+        self.postcode.fill(postcode)
 
     def clear_postcode(self) -> None:
         self.postcode.fill("")
@@ -181,7 +228,7 @@ class PaymentPage:
     def submit_signin(self) -> None:
         self.signin_login_button.click()
 
-    API_URL = "https://api.practicesoftwaretesting.com"
+    API_URL = API_URL
 
     def open_address_step(self) -> None:
         """Sign in 단계 [Proceed to checkout]을 누르고 Billing Address 제목이 보일 때까지 기다린다."""

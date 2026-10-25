@@ -1,7 +1,7 @@
 import pytest
 from playwright.sync_api import expect
 
-from config import TOOLSHOP_EMAIL, TOOLSHOP_PASSWORD
+from config import SITE_URL, TOOLSHOP_EMAIL, TOOLSHOP_PASSWORD
 from pages.login_page import LoginPage
 
 
@@ -20,7 +20,7 @@ def test_logout(loggedin_home):
     sign_out.click()
 
     # 로그아웃 확인
-    expect(page).to_have_url("https://practicesoftwaretesting.com/")
+    expect(page).to_have_url(f"{SITE_URL}/")
     expect(usermenu).not_to_be_visible()
 
 

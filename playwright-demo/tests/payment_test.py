@@ -12,12 +12,21 @@ POSTCODE = "12345"
 HOUSE_NUMBER = "123"
 
 
-def _go_to_address_step(payment: PaymentPage) -> None:
-    """장바구니 → Sign in(로그인 상태) → Billing Address 단계까지 진행한다."""
+def _go_to_address_step(payment: PaymentPage, *, clear_autofill: bool = False) -> None:
+    """장바구니 → Sign in(로그인 상태) → Billing Address 단계까지 진행한다.
+
+    clear_autofill: 사전 조건 "프로필에 주소를 등록하지 않은 상태"(UI_33, UI_85, UI_90, UI_91)를 맞추려고
+    계정 주소 자동 채움이 끝난 뒤 자동 채워진 칸을 비운다. 자동 채움을 확인하는 UI_84 에는 쓰지 않는다.
+    """
     expect(payment.cart_items).not_to_have_count(0)
     payment.go_to_signin_step()
     expect(payment.already_logged_in).to_be_visible()
-    payment.go_to_address_step()
+    if clear_autofill:
+        payment.go_to_address_step_with_autofill_cleared()
+        for field in payment.autofill_fields:
+            expect(field).to_have_value("")
+    else:
+        payment.go_to_address_step()
     expect(payment.address_heading).to_be_visible()
 
 
@@ -50,7 +59,7 @@ def test_billing_required_field_disables_proceed(cart):
     payment = PaymentPage(cart)
 
     # 1. BILLING ADDRESS 페이지 정상 노출
-    _go_to_address_step(payment)
+    _go_to_address_step(payment, clear_autofill=True)
 
     lookup = payment.fill_address_by_lookup(COUNTRY, postcode=POSTCODE, house_number=HOUSE_NUMBER)
     # 2. [Country] 필드에 선택한 국가 노출
@@ -75,6 +84,7 @@ def test_billing_required_field_disables_proceed(cart):
     expect(payment.proceed_from_address).to_be_disabled()
 
     # 8. [Postcode] 필드에 입력한 값 노출
+    # 같은 값을 다시 넣으면 우편번호 조회가 다시 돌지 않을 수 있어(TC 기대결과에도 없음) 값과 버튼 상태를 기다린다.
     payment.refill_postcode(POSTCODE)
     expect(payment.postcode).to_have_value(POSTCODE)
     # 9. 활성 상태의 [Proceed to checkout] 버튼 노출
@@ -153,7 +163,7 @@ def test_payment_confirm_empties_cart(cart):
 @pytest.mark.tc("UI_85")
 def test_billing_city_state_empty_disables_proceed(cart):
     payment = PaymentPage(cart)
-    _go_to_address_step(payment)
+    _go_to_address_step(payment, clear_autofill=True)
 
     lookup = payment.fill_address_by_lookup(COUNTRY, postcode=POSTCODE, house_number=HOUSE_NUMBER)
     # 2. 입력 필드 내 입력한 값 노출
@@ -237,7 +247,7 @@ def test_payment_step_indicator(cart):
 @pytest.mark.tc("UI_90")
 def test_billing_street_state_empty_disables_proceed(cart):
     payment = PaymentPage(cart)
-    _go_to_address_step(payment)
+    _go_to_address_step(payment, clear_autofill=True)
 
     lookup = payment.fill_address_by_lookup(COUNTRY, postcode=POSTCODE, house_number=HOUSE_NUMBER)
     # 2. 입력 필드 내 입력한 값 노출
@@ -256,7 +266,7 @@ def test_billing_street_state_empty_disables_proceed(cart):
 @pytest.mark.tc("UI_91")
 def test_billing_street_city_empty_disables_proceed(cart):
     payment = PaymentPage(cart)
-    _go_to_address_step(payment)
+    _go_to_address_step(payment, clear_autofill=True)
 
     lookup = payment.fill_address_by_lookup(COUNTRY, postcode=POSTCODE, house_number=HOUSE_NUMBER)
     # 2. 입력 필드 내 입력한 값 노출
@@ -270,3 +280,32 @@ def test_billing_street_city_empty_disables_proceed(cart):
     # 4. 비활성 상태의 [Proceed to checkout] 버튼 노출
     expect(payment.proceed_from_address).to_be_visible()
     expect(payment.proceed_from_address).to_be_disabled()
+
+
+@pytest.mark.tc("UI_97")
+@pytest.mark.live_ui
+def test_billing_proceed_button_text(cart):
+    payment = PaymentPage(cart)
+    # 입력 없이 버튼 문구만 보므로 계정 주소 자동 채움을 비우지 않는다
+    _go_to_address_step(payment)
+
+    # 1. BILLING ADDRESS 페이지 정상 노출
+    expect(payment.address_heading).to_be_visible()
+
+    # 2. [Proceed to checkout] 버튼 노출
+    expect(payment.proceed_from_address).to_be_visible()
+    expect(payment.proceed_from_address).to_have_text("Proceed to checkout")
+
+
+@pytest.mark.tc("UI_98")
+@pytest.mark.live_ui
+def test_payment_step_title(cart):
+    payment = PaymentPage(cart)
+    _go_to_payment_step(payment)
+
+    # 1. PAYMENT 페이지 정상 노출
+    expect(payment.payment_method).to_be_visible()
+
+    # 2. "Payment" 제목 노출
+    expect(payment.payment_heading).to_be_visible()
+    expect(payment.payment_heading).to_have_text("Payment")

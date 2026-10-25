@@ -1,0 +1,13 @@
+diff --git a/sprint5/API/app/Services/UserService.php b/sprint5/API/app/Services/UserService.php
+index d155cdb..c8877f0 100644
+--- a/sprint5/API/app/Services/UserService.php
++++ b/sprint5/API/app/Services/UserService.php
+@@ -21,7 +21,7 @@
+ 
+ class UserService
+ {
+-    const MAX_LOGIN_ATTEMPTS = 3;
++    const MAX_LOGIN_ATTEMPTS = 1;
+ 
+     public function getAllUsers()
+     {

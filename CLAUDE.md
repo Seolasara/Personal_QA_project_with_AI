@@ -63,6 +63,7 @@
 - 실패는 반드시 먼저 `test-triage` 스킬의 6분류로 분류한다. 결과 보고서에서는 4그룹으로 묶는다.
   - 리얼버그: `real-bug` / 테스트버그: `test-bug`, `selector-drift`, `spec-change` / flaky: `timing`, `env`
   - 스펙이 정한 값과 라이브가 다르면 real-bug, 스펙이 기대결과를 정하지 않았으면 안건이다(`.claude/guides/backlog-format.md` 3번). 안건 TC는 `spec_undefined` 마커로 전체 실행에서 빼고 보고서에 N/A로 쓴다.
+  - 예외: 화면 문구와 헤더 메뉴 이동처럼 스펙 대신 라이브 UI 표기와 동작을 기준으로 쓴 TC는 `live_ui` 마커를 붙여 전체 실행에 포함하고, 실패하면 안건으로 올린다(의도된 변경이면 TC와 흐름 지도를 고친다).
 - 리얼버그만 Jira에 올린다. 테스트버그와 flaky는 보고서에만 쓰고, 안건은 wiki 문서로 올린다.
 - **`real-bug`로 분류되면 코드를 수정하지 않는다.** 근거와 함께 보고만 한다.
 - 수리할 때 실패를 숨기지 않는다. 어설션 삭제·약화, `skip`, 임의 `xfail`을 금지한다. 백로그에 등록된 real-bug만 xfail로 고정할 수 있고, Jira에 등록되면 xfail을 풀고 `@pytest.mark.issue("QA-N")`로 표시해 실패로 집계한다(방법은 `script-write` 스킬의 "xfail 규칙"). 종류 전용 금지 항목은 각 폴더 `CLAUDE.md`에 있다.

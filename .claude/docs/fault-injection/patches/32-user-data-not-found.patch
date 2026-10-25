@@ -1,0 +1,13 @@
+diff --git a/sprint5/UI/src/app/header/header.component.ts b/sprint5/UI/src/app/header/header.component.ts
+index 4b01715..cda89be 100644
+--- a/sprint5/UI/src/app/header/header.component.ts
++++ b/sprint5/UI/src/app/header/header.component.ts
+@@ -95,7 +95,7 @@ export class HeaderComponent implements OnDestroy, OnInit {
+   getSignedInUser() {
+     this.auth.getDetails().subscribe(res => {
+       this.role = this.auth.getRole();
+-      this.name = res.first_name + ' ' + res.last_name;
++      this.name = 'User Data not found';
+     })
+   }
+ 

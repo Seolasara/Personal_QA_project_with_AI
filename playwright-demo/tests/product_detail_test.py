@@ -119,3 +119,37 @@ def test_add_to_favorites_requires_login(guest_product_detail):
     # 2. "Unauthorized, can not add product to your favorite list." 알림 노출
     expect(detail.toast_message).to_be_visible()
     expect(detail.toast_message).to_have_text("Unauthorized, can not add product to your favorite list.")
+
+
+@pytest.mark.tc("UI_95")
+@pytest.mark.live_ui
+def test_product_detail_cart_and_favorites_button_texts(guest_product_detail):
+    detail = guest_product_detail
+    expect(detail.out_of_stock_label, "사전 조건 불충족(env): 상품 재고가 없음").to_be_hidden()
+
+    # 1. 상품 상세 페이지 정상 노출
+    expect(detail.page).to_have_url(re.compile(r"/product/"))
+    expect(detail.name).to_be_visible()
+
+    # 2-1. [Add to cart] 버튼 노출
+    expect(detail.add_to_cart).to_be_visible()
+    expect(detail.add_to_cart).to_have_text("Add to cart")
+    # 2-2. [Add to favourites] 버튼 노출
+    expect(detail.add_to_favorites).to_be_visible()
+    expect(detail.add_to_favorites).to_have_text("Add to favourites")
+
+
+@pytest.mark.tc("UI_101")
+def test_add_to_favorites_when_logged_in(favorite_ready):
+    detail = favorite_ready
+
+    # 1. 상품 상세 페이지 진입 (로그인 상태, 상품이 즐겨찾기 목록에 없는 상태는 fixture 가 맞춘다)
+    expect(detail.page).to_have_url(re.compile(r"/product/"))
+    expect(detail.name).to_be_visible()
+
+    detail.add_favorite()
+    # 2. "Product added to your favorites list." 알림 노출
+    expect(detail.toast_message).to_be_visible()
+    expect(detail.toast_message).to_have_text("Product added to your favorites list.")
+    # 목적: 즐겨찾기 추가 성공 (계정 즐겨찾기 목록에 상품이 들어감)
+    assert detail.favorite_ids_of_current_product(), "즐겨찾기 목록에 상품이 추가되지 않음"

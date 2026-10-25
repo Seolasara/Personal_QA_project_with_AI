@@ -4,11 +4,14 @@
 - ProductDetailPage: 상품 상세 페이지
 - CartPage: 체크아웃 1단계(장바구니) 목록
 """
+import re
 from urllib.parse import urlparse
 
 from playwright.sync_api import Page, Response, expect
 
-HOME_URL = "https://practicesoftwaretesting.com"
+from config import API_URL, SITE_URL
+
+HOME_URL = SITE_URL
 
 
 def is_cart_fetch(response: Response) -> bool:
@@ -48,6 +51,22 @@ class CatalogPage:
     def cart_badge(self):
         return self.nav_cart.locator('[data-test="cart-quantity"]')
 
+    # --- 헤더 [Home], [Contact] (UI_92, UI_93). [Categories]는 CategoryPage, [Sign in]은 LoginPage 에 있다 ---
+    @property
+    def nav_home(self):
+        return self.page.locator('[data-test="nav-home"]')
+
+    @property
+    def nav_contact(self):
+        return self.page.locator('[data-test="nav-contact"]')
+
+    # --- 메인 좌측 영역 제목 (UI_92) ---
+    @property
+    def sidebar_titles(self):
+        # 좌측 영역 제목 h4 "Sort", "Price Range", "Search", "Filters"는 data-test 가 없어 grid-title 클래스를 쓴다.
+        # 필터 소제목 h4("By category:" 등)에는 이 클래스가 없다 (2026-10-17 확인)
+        return self.page.locator('[data-test="filters"] h4.grid-title')
+
     def category_checkbox(self, name: str):
         # 카테고리 체크박스는 data-test 가 category-<id> 라 이름 기반이 안정적
         return self.page.get_by_role("checkbox", name=name)
@@ -57,6 +76,24 @@ class CatalogPage:
 
     def open_first_product(self) -> None:
         self.product_cards.first.click()
+
+    @property
+    def in_stock_cards(self):
+        # 품절 카드에는 data-test="out-of-stock" 표시가 있다 (2026-10-10 확인).
+        # product_cards 는 카드 안의 product-name 등도 잡으므로 카드 링크(a)만 거른다
+        return self.product_grid.locator('a[data-test^="product-"]').filter(
+            has_not=self.page.locator('[data-test="out-of-stock"]')
+        )
+
+    def open_first_in_stock_product(self) -> None:
+        """현재 목록(첫 페이지)에서 품절 표시가 없는 첫 상품의 상세로 이동한다.
+
+        카테고리 첫 상품이 품절이면 [Add to cart]가 비활성이라 장바구니 사전 조건을 만들 수 없다
+        (2026-10-17 운영 Hammer 첫 상품 품절 확인). 재고 있는 상품이 없으면 사전 조건 불충족(env)으로 실패한다.
+        """
+        expect(self.product_grid.locator('a[data-test^="product-"]').first).to_be_visible()
+        assert self.in_stock_cards.count(), "사전 조건 불충족(env): 현재 목록에 재고 있는 상품이 없음"
+        self.in_stock_cards.first.click()
 
     def open_cart(self) -> None:
         self.nav_cart.click()
@@ -150,11 +187,18 @@ class CatalogPage:
     def sort_by(self, label: str) -> None:
         self._apply_and_wait(lambda: self.sort_select.select_option(label=label))
 
-    def lower_max_price(self, presses: int) -> None:
-        """가격 슬라이더 최대값 핸들을 키보드(PageDown)로 presses 번 내린다. 한 번에 한 응답씩 기다린다."""
+    def lower_max_price_below(self, price: float) -> None:
+        """가격 슬라이더 최대값 핸들을 키보드(PageDown)로 한 번씩 내려, 최대값이 price 보다 낮아질 때까지 옮긴다.
+
+        한 번에 한 응답씩 기다린다. 핸들이 더 내려가지 않으면 멈추고 실패한다.
+        """
         self.price_max_handle.focus()
-        for _ in range(presses):
+        current = float(self.price_max_handle.get_attribute("aria-valuenow"))
+        while current >= price:
             self._apply_and_wait(lambda: self.price_max_handle.press("PageDown"))
+            moved = float(self.price_max_handle.get_attribute("aria-valuenow"))
+            assert moved < current, f"최대값 핸들이 더 내려가지 않음: {moved} (목표: {price} 미만)"
+            current = moved
 
     def fill_search(self, term: str) -> None:
         self.search_query.fill(term)
@@ -429,6 +473,35 @@ class ProductDetailPage:
     def add_favorite(self) -> None:
         self.add_to_favorites.click()
 
+    # --- 로그인 상태 즐겨찾기 사전 조건과 정리 (UI_101) ---
+    # 로그인한 브라우저의 토큰(localStorage auth-token)으로 즐겨찾기 API 를 호출한다.
+    # 2026-10-17 확인: 추가는 POST /favorites(201), 목록은 GET /favorites, 삭제는 DELETE /favorites/{id}(204).
+    FAVORITES_API = f"{API_URL}/favorites"
+
+    def _auth_headers(self) -> dict:
+        token = self.page.evaluate("() => localStorage.getItem('auth-token')")
+        return {"Authorization": f"Bearer {token}"}
+
+    def current_product_id(self) -> str:
+        """상세 페이지 URL(/product/<id>)의 상품 id."""
+        expect(self.page).to_have_url(re.compile(r"/product/[^/?#]+"))
+        return re.search(r"/product/([^/?#]+)", self.page.url).group(1)
+
+    def favorite_ids_of_current_product(self) -> list[str]:
+        """로그인한 계정의 즐겨찾기 중 지금 상세 페이지 상품의 즐겨찾기 id 목록."""
+        response = self.page.request.get(self.FAVORITES_API, headers=self._auth_headers())
+        assert response.ok, f"GET /favorites 실패: {response.status}"
+        product_id = self.current_product_id()
+        return [item["id"] for item in response.json() if item["product_id"] == product_id]
+
+    def remove_favorites_of_current_product(self) -> None:
+        """지금 상세 페이지 상품을 로그인한 계정의 즐겨찾기에서 지운다. 없으면 아무것도 하지 않는다."""
+        for favorite_id in self.favorite_ids_of_current_product():
+            response = self.page.request.delete(
+                f"{self.FAVORITES_API}/{favorite_id}", headers=self._auth_headers()
+            )
+            assert response.ok, f"DELETE /favorites/{favorite_id} 실패: {response.status}"
+
     def type_quantity(self, text: str) -> None:
         """수량 입력란에 키보드로 한 글자씩 입력한다. 숫자 입력란이라 fill 은 문자를 거부한다."""
         self.quantity.press_sequentially(text)
@@ -442,7 +515,7 @@ def to_amount(text: str) -> float:
 class CartPage:
     """체크아웃 위저드 1단계. URL: /checkout"""
 
-    URL = "https://practicesoftwaretesting.com/checkout"
+    URL = f"{SITE_URL}/checkout"
 
     def __init__(self, page: Page):
         self.page = page

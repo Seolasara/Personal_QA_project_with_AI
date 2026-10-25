@@ -1,0 +1,13 @@
+diff --git a/sprint5/UI/src/app/products/detail/detail.component.html b/sprint5/UI/src/app/products/detail/detail.component.html
+index 86fe34d..4eb6a83 100644
+--- a/sprint5/UI/src/app/products/detail/detail.component.html
++++ b/sprint5/UI/src/app/products/detail/detail.component.html
+@@ -23,7 +23,7 @@
+         }
+       </h1>
+       <p><span aria-label="category"
+-               class="badge rounded-pill bg-secondary me-1">{{ product.category.name }}</span><span
++               class="badge rounded-pill bg-secondary me-1" style="color:#000">{{ product.category.name }}</span><span
+         aria-label="brand" class="badge rounded-pill bg-secondary me-1">{{ product.brand.name }}
+     </span>@if (product.discount_price) {
+         <span

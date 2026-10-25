@@ -1,0 +1,13 @@
+diff --git a/sprint5/UI/src/app/header/header.component.html b/sprint5/UI/src/app/header/header.component.html
+index 9e733ca..82afe70 100644
+--- a/sprint5/UI/src/app/header/header.component.html
++++ b/sprint5/UI/src/app/header/header.component.html
+@@ -74,7 +74,7 @@
+     <div class="collapse navbar-collapse" id="navbarSupportedContent">
+       <ul class="navbar-nav ms-auto mb-2 mb-lg-0" role="menubar" aria-label="Main menu">
+         <li class="nav-item" role="menuitem">
+-          <a class="nav-link active" data-test="nav-home" aria-current="page" href="/">{{ t('header.menu.home') }}</a>
++          <a class="nav-link active" data-test="nav-home" aria-current="page" href="/contact">{{ t('header.menu.home') }}</a>
+         </li>
+         <li class="nav-item dropdown" role="menuitem">
+           <button type="button" class="nav-link dropdown-toggle btn-link-style" data-test="nav-categories"

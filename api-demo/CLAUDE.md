@@ -14,6 +14,7 @@ API 테스트의 구조와 규칙이다. 프로젝트 공통 QA 규칙은 루트
 - `clients/` — 리소스별 HTTP 클라이언트. `httpx.Client`를 받아 엔드포인트 메서드만 노출한다 (UI의 Page Object에 해당).
 - `schemas/` — pydantic 응답 모델. 스펙 원본 `api-docs.json`의 `components/schemas`를 옮기고, 모두 `schemas/common.py`의 `StrictModel`을 상속한다.
 - `tests/` — 리소스별 테스트 파일 (`brand_test.py` 등).
+- `account_lock.py` — 테스트 계정 잠금(423) 해제. 실행 전 점검과 로그인 준비 코드에서만 쓴다(아래 "재시도와 격리").
 - `conftest.py` — fixture: `api_client`(인증 없음), `authed_client`/`auth_token`(customer3 토큰), `other_user_client`(두 번째 고객 계정, 다른 사용자 데이터 접근 검증용), `admin_client`(관리자 토큰, 계정 잠금 해제 등 관리자 작업용), `cart_id`(종료 시 삭제), `cart_cleanup`(테스트가 만든 장바구니 정리), `product_id`, `address_info`.
 - 테스트가 데이터를 남기면 fixture의 `yield` 뒤에서 정리한다. 인보이스는 삭제 API가 없어 정리하지 못한다.
 
@@ -28,11 +29,17 @@ pytest -m "not spec_undefined"   # /test-run 전체 실행 기준
 - 의존성은 `requirements.txt`, venv는 `api-demo/.venv` (playwright-demo와 별도).
 - 컨테이너 실행: 루트 `Dockerfile`의 이미지 `qa-tests`. 명령은 `.claude/skills/test-run/SKILL.md` 3번(Iteration 3부터 기본).
 - 결과 리포트: `python3 ../scripts/gen_test_report.py --type api` → `test-results/test-report.md`.
+- 마커 목록과 실행 영향: `.claude/docs/glossary.md` 5번
 - CI: `.github/workflows/api-regression.yml`(GitHub Actions → API regression → [Run workflow]). 범위는 `regression`(회귀 TC)과 `full`. 계정은 저장소 Secrets(`API_EMAIL`, `API_PASSWORD`, `API_EMAIL2`, `API_PASSWORD2`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`)로 주입하고, 결과는 아티팩트(30일)와 Slack 요약으로 남는다.
 - 재시도와 격리
   - `pytest.ini`의 `--reruns=2 --only-rerun`이 `ConnectTimeout`, `ConnectError`(요청이 서버에 닿지 않은 경우)만 다시 실행한다. `ReadTimeout`은 쓰기 요청이 처리됐을 수 있어 재시도하지 않는다.
   - 재시도하면 데이터가 중복될 수 있는 테스트를 새로 쓰면 `@pytest.mark.flaky(reruns=0)`를 붙인다.
   - `quarantine` 마커: 원인을 고치기 전까지 격리한 flaky 테스트. CI에서 빌드를 막지 않는 별도 단계로 돈다.
+  - 계정 잠금(423): 공개 데모 계정이라 외부 사용으로도 잠긴다(2026-10-25 야간 실행 6건 실패). 관리자 계정으로 풀고 진행한다(2026-10-25 사용자 결정).
+    - 실행 전 점검: `pytest_sessionstart`가 `API_EMAIL`, `API_EMAIL2`의 `failed_login_attempts`가 3 이상이면 0으로 되돌린다.
+    - 테스트 중: `auth_token`, `other_user_client`가 로그인에서 423을 받으면 풀고 한 번만 다시 로그인한다(`login_or_unlock`).
+    - 해제 기록은 report.json `account_unlocks`, 터미널 요약, Slack 요약 한 줄로 남는다. 관리자 계정 값이 없으면 해제하지 않고 원래대로 실패한다.
+    - 잠금 동작 자체를 확인하는 TC는 `login_or_unlock`을 쓰지 않는다. 로그인 응답을 직접 확인하는 TC(ex: API_09)는 실행 전 점검만 받는다.
 - 계정은 코드에 쓰지 않고 `config.py`가 `.env`에서 읽는다. 최초 1회 `cp .env.example .env`.
 - 계정별 용도
   - customer3(`API_EMAIL`): API 테스트 기본 계정. UI 계정(customer2)과 분리해 한쪽 계정 잠금(423)이 다른 쪽에 영향 주지 않게 한다.

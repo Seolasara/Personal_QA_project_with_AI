@@ -1,0 +1,13 @@
+diff --git a/sprint5/UI/src/app/products/overview/overview.component.html b/sprint5/UI/src/app/products/overview/overview.component.html
+index 4329395..3debf20 100644
+--- a/sprint5/UI/src/app/products/overview/overview.component.html
++++ b/sprint5/UI/src/app/products/overview/overview.component.html
+@@ -59,7 +59,7 @@
+     </div>
+ 
+     <h4 class="grid-title">
+-      <fa-icon [icon]="['fas', 'search']"></fa-icon>
++      <img src="broken.png">
+       {{ t('pages.overview.search') }}
+     </h4>
+     <hr>

@@ -1,11 +1,29 @@
 import pytest
 
+from account_lock import UNLOCKS, login_or_unlock, unlock_if_locked
 from config import ADMIN_EMAIL, ADMIN_PASSWORD, API_EMAIL, API_EMAIL2, API_PASSWORD, API_PASSWORD2
 from clients.base_client import get_client
 from clients.cart_client import CartClient
 from clients.login_client import LoginClient
 from clients.postcode_client import PostcodeClient
 from clients.product_client import ProductClient
+
+
+# 실행 전 점검: 테스트 계정이 잠겨 있으면 관리자 계정으로 풀고 시작한다(백로그 #8). 해제 기록은 report.json과 Slack 요약에 남는다
+def pytest_sessionstart(session):
+    for email, account in ((API_EMAIL, "API_EMAIL"), (API_EMAIL2, "API_EMAIL2")):
+        if email:
+            unlock_if_locked(email, account, "실행 전 점검")
+
+
+def pytest_json_modifyreport(json_report):
+    json_report["account_unlocks"] = UNLOCKS
+
+
+def pytest_terminal_summary(terminalreporter):
+    if UNLOCKS:
+        terminalreporter.write_line(f"계정 잠금 해제 {len(UNLOCKS)}회: " + ", ".join(
+            f"{u['account']}({u['stage']}{' ' + u['where'] if u['where'] else ''})" for u in UNLOCKS))
 
 
 @pytest.fixture
@@ -16,9 +34,8 @@ def api_client():
 
 
 @pytest.fixture
-def auth_token(api_client):
-    login_client = LoginClient(api_client)
-    login = login_client.login(API_EMAIL, API_PASSWORD)
+def auth_token(api_client, request):
+    login = login_or_unlock(api_client, API_EMAIL, API_PASSWORD, "API_EMAIL", request.node.nodeid)
     token = login.json()["access_token"]
     return token
 
@@ -30,12 +47,12 @@ def authed_client(api_client, auth_token):
 
 
 @pytest.fixture
-def other_user_client():
+def other_user_client(request):
     """두 번째 고객 계정 클라이언트. 다른 사용자 데이터에 접근하는지 검증할 때 쓴다."""
     if not (API_EMAIL2 and API_PASSWORD2):
         raise RuntimeError("API_EMAIL2/API_PASSWORD2가 없습니다. api-demo/.env에 값을 채우세요.")
     client = get_client()
-    token = LoginClient(client).login(API_EMAIL2, API_PASSWORD2).json()["access_token"]
+    token = login_or_unlock(client, API_EMAIL2, API_PASSWORD2, "API_EMAIL2", request.node.nodeid).json()["access_token"]
     client.headers["Authorization"] = f"Bearer {token}"
     yield client
     client.close()

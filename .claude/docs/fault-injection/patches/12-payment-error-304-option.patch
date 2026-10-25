@@ -1,0 +1,12 @@
+diff --git a/sprint5/UI/src/app/checkout/payment/payment.component.html b/sprint5/UI/src/app/checkout/payment/payment.component.html
+index 0194d04..484a13d 100644
+--- a/sprint5/UI/src/app/checkout/payment/payment.component.html
++++ b/sprint5/UI/src/app/checkout/payment/payment.component.html
+@@ -29,6 +29,7 @@
+               <option value="credit-card">{{ t('pages.checkout.payment.options.credit-card') }}</option>
+               <option value="buy-now-pay-later">{{ t('pages.checkout.payment.options.buy-now-pay-later') }}</option>
+               <option value="gift-card">{{ t('pages.checkout.payment.options.gift-card') }}</option>
++              <option value="error">Errror 304 - Missing Payment Gateway</option>
+             </select>
+           </div>
+           @if (p['payment_method'].invalid && (p['payment_method'].dirty || p['payment_method'].touched)) {

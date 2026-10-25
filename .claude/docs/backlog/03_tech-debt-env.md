@@ -17,7 +17,9 @@
 - 문제 정의: 로그인 3회 실패로 잠긴 계정은 올바른 비밀번호로도 풀리지 않고, 시간 기반 자동 해제가 없다. `PATCH /users/{userId}`로 `failed_login_attempts: 0`을 설정해야만 풀린다.
 - 발생 배경: 로그인 테스트 설계 중 확인. UI/API 테스트 계정을 customer2/customer3로 분리한 이유다.
 - 추정 원인과 근거: `UserService.php`의 `MAX_LOGIN_ATTEMPTS=3`이고 잠금 체크가 비밀번호 검증보다 먼저 실행된다. 스펙 v5 User Login AC4(3회 실패 후 423)와 일치한다.
-- 분류와 상태: 운영 메모(이슈 아님) / 발견 날짜 미상, 마지막 확인 2026-10-08 분류
+- 분류와 상태: 운영 메모(이슈 아님) / 발견 날짜 미상, 마지막 확인 2026-10-25
+- 자동 해제(2026-10-25): 10-25 야간 CI에서 API 계정(customer3)이 잠겨 6건이 실패했다(API_09는 423, 나머지 5건은 로그인 준비 단계 `KeyError: 'access_token'`). 우리 회귀 실행에는 틀린 비밀번호 요청이 없어 공개 계정의 외부 사용으로 추정한다. 같은 실행을 다시 돌려 38건 모두 통과했다.
+  - 대응: `api-demo/account_lock.py`로 실행 전 점검과 로그인 준비 코드에서 관리자 계정으로 해제하고, 해제 횟수를 Slack 요약에 남긴다. 상세는 `api-demo/CLAUDE.md` "재시도와 격리". UI는 아직 적용하지 않았다.
 
 ### #10 `.env` 값의 따옴표를 벗기지 않음
 - 문제 정의: `api-demo/config.py`, `playwright-demo/config.py`의 `_load_dotenv`가 `KEY="value"`의 따옴표를 벗기지 않아 값에 따옴표가 그대로 들어간다.

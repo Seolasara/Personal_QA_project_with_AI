@@ -1,0 +1,13 @@
+diff --git a/sprint5/UI/src/app/checkout/address/address.component.html b/sprint5/UI/src/app/checkout/address/address.component.html
+index 17b9e34..84bd703 100644
+--- a/sprint5/UI/src/app/checkout/address/address.component.html
++++ b/sprint5/UI/src/app/checkout/address/address.component.html
+@@ -94,7 +94,7 @@
+ 
+       <div class="float-end">
+         <button data-test="proceed-3" [disabled]="!cusAddress.valid" type="button" class="btn btn-success"
+-                awNextStep>{{ t('pages.checkout.btn') }}
++                awNextStep>
+         </button>
+       </div>
+     </div>

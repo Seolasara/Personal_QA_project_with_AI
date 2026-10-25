@@ -1,0 +1,13 @@
+diff --git a/sprint5/UI/src/app/checkout/cart/cart.component.html b/sprint5/UI/src/app/checkout/cart/cart.component.html
+index 9f803ef..77a6632 100644
+--- a/sprint5/UI/src/app/checkout/cart/cart.component.html
++++ b/sprint5/UI/src/app/checkout/cart/cart.component.html
+@@ -52,7 +52,7 @@
+                   data-test="offer-price">$<span
+                   id="discount-total-price">{{ item.quantity * item.discounted_price | number: '1.2-2' }}</span></span>
+               }</td>
+-            <td class="col-md-1 align-middle"><a class="btn btn-danger" (click)="delete(item.product_id)"><fa-icon [icon]="['fas', 'remove']"></fa-icon></a></td>
++            <td class="col-md-1 align-middle"><a class="btn btn-danger disabled" (click)="delete(item.product_id)"><fa-icon [icon]="['fas', 'remove']"></fa-icon></a></td>
+           </tr>
+         }
+         @if (cart.additional_discount_percentage || ecoDiscount > 0) {

@@ -1,0 +1,13 @@
+diff --git a/sprint5/UI/src/app/products/overview/overview.component.html b/sprint5/UI/src/app/products/overview/overview.component.html
+index 4329395..f938152 100644
+--- a/sprint5/UI/src/app/products/overview/overview.component.html
++++ b/sprint5/UI/src/app/products/overview/overview.component.html
+@@ -29,7 +29,7 @@
+   <div data-test="filters" id="filters" class="collapse d-md-block col-md-3 mb-3">
+     <h4 class="grid-title">
+       <fa-icon [icon]="['fas', 'arrows-up-down']"></fa-icon>
+-      {{ t('pages.overview.sort') }}
++      Sorth
+     </h4>
+     <hr>
+     <form autocomplete=off>

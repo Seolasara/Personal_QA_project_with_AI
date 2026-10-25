@@ -1,0 +1,13 @@
+diff --git a/sprint5/UI/src/app/products/detail/detail.component.ts b/sprint5/UI/src/app/products/detail/detail.component.ts
+index f649837..9b7e42b 100644
+--- a/sprint5/UI/src/app/products/detail/detail.component.ts
++++ b/sprint5/UI/src/app/products/detail/detail.component.ts
+@@ -135,7 +135,7 @@ export class DetailComponent implements OnInit, OnDestroy {
+ 
+     this.favoriteService.addFavorite(payload).subscribe({
+       next: () => {
+-        this.toastr.success(this.translocoService.translate('toasts.product-added-to-favorites'), null, { progressBar: true });
++        this.toastr.error('Upsss... something wrong', null, { progressBar: true });
+       },
+       error: (response) => {
+         if (response.error.message === 'Duplicate Entry') {

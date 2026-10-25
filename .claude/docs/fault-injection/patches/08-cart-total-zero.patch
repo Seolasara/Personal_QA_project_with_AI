@@ -1,0 +1,13 @@
+diff --git a/sprint5/UI/src/app/checkout/cart/cart.component.ts b/sprint5/UI/src/app/checkout/cart/cart.component.ts
+index d11913c..bfbad47 100644
+--- a/sprint5/UI/src/app/checkout/cart/cart.component.ts
++++ b/sprint5/UI/src/app/checkout/cart/cart.component.ts
+@@ -96,7 +96,7 @@ export class CartComponent implements OnInit {
+     return items.reduce((sum, cartItem) => {
+       const quantity = cartItem.quantity || 0;
+       const price = cartItem.discount_percentage ? cartItem.discounted_price : cartItem.product?.price || 0;
+-      return sum + (quantity * price);
++      return 0;
+     }, 0);
+   }
+ 
