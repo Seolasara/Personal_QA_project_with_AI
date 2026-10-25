@@ -10,6 +10,7 @@
 - 근거는 실패 위치(파일:줄)와, TC ID가 백로그 인덱스(`.claude/docs/backlog/00_index.md`)에 있으면 그 번호다.
   번호에는 GitHub의 해당 항목 링크(현재 브랜치 기준)를 건다. 링크는 push된 내용만 열린다.
 - 실패 메시지의 이메일, 토큰 형태 문자열은 가린다.
+- report.json에 `account_unlocks`(api-demo/account_lock.py)가 있으면 본문에 계정 잠금 해제 횟수를 한 줄 붙인다.
 """
 from __future__ import annotations
 
@@ -184,6 +185,7 @@ def load(kind: str, path: Path) -> dict:
         "xpasses": [r for r in rows if r[1] == "xpassed"],
         "passes": [r for r in rows if r[1] in ("passed", "rerun")],
         "reruns": [r for r in rows if r[1] == "rerun"],
+        "unlocks": data.get("account_unlocks", []),
     }
 
 
@@ -226,6 +228,12 @@ def main() -> int:
         *[f"• {count_line(r)}" for r in results],
         f"• 판정: {verdict}",
     ]
+    # 테스트 계정 잠금을 관리자 계정으로 푼 기록(api-demo/account_lock.py). 숨기지 않고 횟수와 단계를 보인다
+    unlocks = [u for r in results for u in r["unlocks"]]
+    if unlocks:
+        stages = {s: sum(u["stage"] == s for u in unlocks) for s in dict.fromkeys(u["stage"] for u in unlocks)}
+        body.append(f"• 계정 잠금 해제 {len(unlocks)}회(" + ", ".join(f"{s} {n}" for s, n in stages.items())
+                    + "): 잠긴 테스트 계정을 관리자 계정으로 풀고 진행(env, 백로그 #8)")
 
     names: dict[str, str] = {}
     for f in (args.ui_csv, args.api_csv):
