@@ -103,7 +103,7 @@ def main():
             row = {k.split(" (")[0]: v for k, v in row.items()}
             if a.only_new and not row.get("ID", "").endswith("*"):
                 continue
-            if row.get("ID"):
+            if row.get("ID") and not (row.get("Note") or "").lstrip().startswith(("[삭제]", "[결번]")):  # 지운 TC(취소선 행) 제외
                 data.append(row)
     else:
         data = json.load(open(a.file) if a.file else sys.stdin)

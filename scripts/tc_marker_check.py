@@ -14,7 +14,9 @@ PATTERN = re.compile(r'@pytest\.mark\.tc\(\s*["\']([A-Z]+_\d+)["\']\s*\)')
 
 
 def sheet_ids(path):
-    return [r["ID"].strip() for r in csv.DictReader(open(path, encoding="utf-8")) if r.get("ID", "").strip()]
+    # Note가 [삭제]·[결번]으로 시작하는 행은 취소선으로 남긴 지운 TC라 세지 않는다
+    return [r["ID"].strip() for r in csv.DictReader(open(path, encoding="utf-8"))
+            if r.get("ID", "").strip() and not (r.get("Note") or "").lstrip().startswith(("[삭제]", "[결번]"))]
 
 
 def markers(tests_dir):
