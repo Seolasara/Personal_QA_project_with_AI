@@ -25,7 +25,8 @@ def main():
     ap.add_argument("draft", help="TC 초안 JSON")
     args = ap.parse_args()
 
-    existing = {r["ID"].rstrip("*"): r for r in csv.DictReader(open(args.sheet, encoding="utf-8")) if r.get("ID")}
+    existing = {r["ID"].rstrip("*"): r for r in csv.DictReader(open(args.sheet, encoding="utf-8"))
+                if r.get("ID") and not (r.get("Note") or "").lstrip().startswith(("[삭제]", "[결번]"))}  # 지운 TC(취소선 행)는 빼고 대조
     draft = json.load(open(args.draft, encoding="utf-8"))
     new_ids = {t.get("ID", "").rstrip("*") for t in draft}
 

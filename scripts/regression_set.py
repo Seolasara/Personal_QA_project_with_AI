@@ -54,7 +54,7 @@ def read_sheet(path: Path) -> list[dict]:
     with path.open(encoding="utf-8") as fh:
         for i, r in enumerate(csv.DictReader(fh)):
             tid = (r.get("ID") or "").strip().rstrip("*")
-            if tid:
+            if tid and not (r.get("Note") or "").lstrip().startswith(("[삭제]", "[결번]")):  # 지운 TC(취소선 행) 제외
                 prio = (r.get("중요도") or r.get("Priority") or "").strip()
                 path_ = re.sub(r"\{[^}]*\}", "{}", (r.get("엔드포인트") or "").split("?")[0].strip())
                 try:
